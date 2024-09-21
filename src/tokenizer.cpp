@@ -6,6 +6,8 @@
 namespace lox
 {
 
+static int a = 123;
+
 inline namespace tokenizer
 {
 

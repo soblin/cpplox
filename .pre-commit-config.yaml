@@ -38,10 +38,12 @@ repos:
       - id: yamllint
         args: [--strict]
 
-  - repo: local
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: master
     hooks:
       - id: clang-tidy
-        name: apply clang-tidy
-        entry: bash -c 'clang-tidy -p build/ --config-file ./.clang-tidy'
-        types_or: [c, c++, c#, objective-c]
-        language: system
+        args: [--config-file=./.clang-tidy]
+      - id: cppcheck
+        entry: bash -c 'cppcheck=/snap/bin/cppcheck'
+        args: [--enable=all --inconclusive --check-level=exhaustive \
+        --error-exitcode=1 --xml --inline-suppr -j]
