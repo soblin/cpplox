@@ -1,0 +1,3 @@
+---
+# See clang-tidy -dump-config
+Checks: '-clang-analyzer-cplusplus.NewDelete'
