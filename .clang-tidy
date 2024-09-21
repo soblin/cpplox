@@ -2,3 +2,4 @@
 # See clang-tidy -dump-config
 # You can write plugins: https://github.com/coveooss/clang-tidy-plugin-examples/
 Checks: '-clang-analyzer-cplusplus.NewDelete'
+WarningsAsErrors: 'clang-diagnostic-unused-variable'

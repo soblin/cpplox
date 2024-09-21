@@ -8,16 +8,12 @@ namespace lox
 inline namespace parser
 {
 
-static int a = 123;
-static int b = 123;
-
 Parser::Parser(const Tokens & tokens) : tokens_(tokens)
 {
   if (tokens_.empty() or tokens_.back().type != TokenType::Eof) {
     tokens_.emplace_back(TokenType::Eof, "<EOF>", 0);
   }
   assert(tokens_.size() >= 1);
-  int a = 123;
 }
 
 auto Parser::expression() -> std::optional<Expr>
