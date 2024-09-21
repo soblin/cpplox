@@ -37,3 +37,15 @@ repos:
     hooks:
       - id: yamllint
         args: [--strict]
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: master
+    hooks:
+      - id: clang-tidy
+        args: [--config-file=./.clang-tidy]
+        # Currently this has no effect
+        # - id: cppcheck
+        #  entry: bash -c 'cppcheck=/snap/bin/cppcheck'
+        # You can test this by 'pre-commit run cppcheck --verbose'
+        # args: [--enable=all --inconclusive --check-level=exhaustive \
+        # --error-exitcode=1 --xml --inline-suppr -j]
