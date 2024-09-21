@@ -37,3 +37,11 @@ repos:
     hooks:
       - id: yamllint
         args: [--strict]
+
+  - repo: local
+    hooks:
+      - id: clang-tidy
+        name: apply clang-tidy
+        entry: bash -c 'clang-tidy -p build/ --config-file ./.clang-tidy'
+        types_or: [c, c++, c#, objective-c]
+        language: system
