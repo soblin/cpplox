@@ -1,0 +1,39 @@
+Language: Cpp
+BasedOnStyle: Google
+
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortFunctionsOnASingleLine: InlineOnly
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
+ConstructorInitializerIndentWidth: 0
+ContinuationIndentWidth: 2
+DerivePointerAlignment: false
+PointerAlignment: Middle
+ReflowComments: true
+IncludeCategories:
+  # C++ system headers
+  - Regex: <[a-z_]*>
+    Priority: 5
+    CaseSensitive: true
+  # C system headers
+  - Regex: <.*\.h>
+    Priority: 4
+    CaseSensitive: true
+  # Boost headers
+  - Regex: boost/.*
+    Priority: 3
+    CaseSensitive: true
+  # this project headers
+  - Regex: cpplox/.*
+    Priority: 2
+    CaseSensitive: true
+  # other package headers
+  - Regex: '".*"'
+    Priority: 1
+    CaseSensitive: true
