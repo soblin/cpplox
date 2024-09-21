@@ -5,6 +5,7 @@ yaml-files:
   - '*.yml'
   - '.yamllint'
   - '.clang-format'
+  - '.clang-tidy'
 
 rules:
   braces: enable
