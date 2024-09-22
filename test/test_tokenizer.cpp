@@ -89,18 +89,24 @@ TEST(Tokenizer, scan_semicolun_comment)
   EXPECT_EQ(tokens.size(), 4);
 
   EXPECT_EQ(tokens[0].type, lox::TokenType::Plus);
+  EXPECT_EQ(tokens[0].lexeme, "+");
   EXPECT_EQ(tokens[0].line, 1);
+  EXPECT_EQ(tokens[0].column, 1);
 
   EXPECT_EQ(tokens[1].type, lox::TokenType::Semicolun);
-  EXPECT_EQ(tokens[1].line, 1);
   EXPECT_EQ(tokens[1].lexeme, ";");
+  EXPECT_EQ(tokens[1].line, 1);
+  EXPECT_EQ(tokens[1].column, 2);
 
   EXPECT_EQ(tokens[2].type, lox::TokenType::Slash);
-  EXPECT_EQ(tokens[2].line, 3);
   EXPECT_EQ(tokens[2].lexeme, "/");
+  EXPECT_EQ(tokens[2].line, 3);
+  EXPECT_EQ(tokens[2].column, 1);
 
   EXPECT_EQ(tokens[3].type, lox::TokenType::Semicolun);
+  EXPECT_EQ(tokens[3].lexeme, ";");
   EXPECT_EQ(tokens[3].line, 4);
+  EXPECT_EQ(tokens[3].column, 1);
 }
 
 TEST(Tokenizer, scan_plus_minus_star_slash)
@@ -196,20 +202,24 @@ TEST(Tokenizer, scan_skip)
   EXPECT_EQ(tokens.size(), 4);
 
   EXPECT_EQ(tokens[0].type, lox::TokenType::Plus);
-  EXPECT_EQ(tokens[0].line, 1);
   EXPECT_EQ(tokens[0].lexeme, "+");
+  EXPECT_EQ(tokens[0].line, 1);
+  EXPECT_EQ(tokens[0].column, 1);
 
   EXPECT_EQ(tokens[1].type, lox::TokenType::Minus);
-  EXPECT_EQ(tokens[1].line, 1);
   EXPECT_EQ(tokens[1].lexeme, "-");
+  EXPECT_EQ(tokens[1].line, 1);
+  EXPECT_EQ(tokens[1].column, 3);
 
   EXPECT_EQ(tokens[2].type, lox::TokenType::Star);
-  EXPECT_EQ(tokens[2].line, 2);
   EXPECT_EQ(tokens[2].lexeme, "*");
+  EXPECT_EQ(tokens[2].line, 2);
+  EXPECT_EQ(tokens[2].column, 2);
 
   EXPECT_EQ(tokens[3].type, lox::TokenType::Slash);
-  EXPECT_EQ(tokens[3].line, 2);
   EXPECT_EQ(tokens[3].lexeme, "/");
+  EXPECT_EQ(tokens[3].line, 2);
+  EXPECT_EQ(tokens[3].column, 4);
 }
 
 TEST(Tokenizer, scan_string)
@@ -225,20 +235,24 @@ This is a very long comment 3.")";
   EXPECT_EQ(tokens.size(), 5);
 
   EXPECT_EQ(tokens[0].type, lox::TokenType::Equal);
-  EXPECT_EQ(tokens[0].line, 1);
   EXPECT_EQ(tokens[0].lexeme, "=");
+  EXPECT_EQ(tokens[0].line, 1);
+  EXPECT_EQ(tokens[0].column, 1);
 
   EXPECT_EQ(tokens[1].type, lox::TokenType::String);
-  EXPECT_EQ(tokens[1].line, 1);
   EXPECT_EQ(tokens[1].lexeme, R"(xyz)");
+  EXPECT_EQ(tokens[1].line, 1);
+  EXPECT_EQ(tokens[1].column, 3);
 
   EXPECT_EQ(tokens[2].type, lox::TokenType::Semicolun);
-  EXPECT_EQ(tokens[2].line, 1);
   EXPECT_EQ(tokens[2].lexeme, ";");
+  EXPECT_EQ(tokens[2].line, 1);
+  EXPECT_EQ(tokens[2].column, 8);
 
   EXPECT_EQ(tokens[3].type, lox::TokenType::Equal);
-  EXPECT_EQ(tokens[3].line, 2);
   EXPECT_EQ(tokens[3].lexeme, "=");
+  EXPECT_EQ(tokens[3].line, 2);
+  EXPECT_EQ(tokens[3].column, 1);
 
   EXPECT_EQ(tokens[4].type, lox::TokenType::String);
   EXPECT_EQ(tokens[4].lexeme, R"(This is a very long comment 1.
@@ -261,12 +275,18 @@ TEST(Tokenizer, scan_number)
 
   EXPECT_EQ(tokens[1].type, lox::TokenType::Number);
   EXPECT_EQ(tokens[1].lexeme, "123");
+  EXPECT_EQ(tokens[1].line, 1);
+  EXPECT_EQ(tokens[1].column, 3);
 
   EXPECT_EQ(tokens[4].type, lox::TokenType::Number);
   EXPECT_EQ(tokens[4].lexeme, "123.456");
+  EXPECT_EQ(tokens[4].line, 2);
+  EXPECT_EQ(tokens[4].column, 3);
 
   EXPECT_EQ(tokens[7].type, lox::TokenType::Number);
   EXPECT_EQ(tokens[7].lexeme, "0.123");
+  EXPECT_EQ(tokens[7].line, 3);
+  EXPECT_EQ(tokens[7].column, 3);
 }
 
 TEST(Tokenizer, scan_invalid_number)

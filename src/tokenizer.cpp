@@ -47,7 +47,7 @@ auto Tokenizer::add_token(const TokenType & token_type) -> void
   const auto len =
     (token_type == TokenType::String) ? (current_ - start_ - 2) : (current_ - start_);
   const auto text = source_.substr(start, len);
-  const auto column = (start_ + 1 == current_) ? column_ : start_ + 1;
+  const auto column = (token_type == TokenType::String) ? column_ - len - 1 : column_ - len + 1;
   if (token_type == TokenType::Identifier and is_keyword(text)) {
     tokens_.emplace_back(keyword_map.find(text)->second, text, line_, column);
     return;
@@ -262,7 +262,7 @@ auto Tokenizer::add_identifier_token() -> std::optional<ParseError>
 auto Tokenizer::handle_newline() -> void
 {
   line_++;
-  column_ = 1;
+  column_ = 0;
 }
 
 auto Tokenizer::advance_cursor() -> void
