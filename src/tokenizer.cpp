@@ -262,11 +262,7 @@ auto Tokenizer::add_identifier_token() -> std::optional<ParseError>
 auto Tokenizer::handle_newline() -> void
 {
   line_++;
-<<<<<<< HEAD
   column_ = 0;
-=======
-  column_ = 1;
->>>>>>> efcf3ba (adding test for column)
 }
 
 auto Tokenizer::advance_cursor() -> void
