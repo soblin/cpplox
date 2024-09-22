@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -21,7 +21,7 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v13.0.1"
+    rev: "v18.1.8"
     hooks:
       - id: clang-format
         types_or: [c++, c]
@@ -33,13 +33,13 @@ repos:
         args: [--quiet]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.29.0
+    rev: v1.35.1
     hooks:
       - id: yamllint
         args: [--strict]
 
   - repo: https://github.com/pocc/pre-commit-hooks
-    rev: master
+    rev: v1.3.5
     hooks:
       - id: clang-tidy
         args: [--config-file=./.clang-tidy]
