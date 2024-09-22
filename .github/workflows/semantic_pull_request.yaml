@@ -1,0 +1,30 @@
+name: semantic-pull-request
+
+on:  # yamllint disable-line rule:truthy
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+  #  yamllint disable-line rule:truthy
+  workflow_call:
+
+jobs:
+  semantic-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        with:
+          type: |
+            feat
+            fix
+            refactor
+            perf
+            test
+            ci
+            chore
+            docs
+            style
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
