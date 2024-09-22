@@ -34,10 +34,13 @@ private:
   auto add_number_token() -> std::optional<ParseError>;
   auto peek_next() const noexcept -> char;
   auto add_identifier_token() -> std::optional<ParseError>;
+  auto handle_newline() -> void;
+  auto advance_cursor() -> void;
 
   size_t start_{0};
   size_t current_{0};
   size_t line_{1};
+  size_t column_{0};
 };
 
 auto is_digit(const char c) -> bool
