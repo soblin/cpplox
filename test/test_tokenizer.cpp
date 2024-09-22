@@ -166,15 +166,23 @@ TEST(Tokenizer, scan_compare)
 
   EXPECT_EQ(tokens[8].type, lox::TokenType::Less);
   EXPECT_EQ(tokens[8].lexeme, "<");
+  EXPECT_EQ(tokens[8].line, 1);
+  EXPECT_EQ(tokens[8].column, 15);
 
   EXPECT_EQ(tokens[10].type, lox::TokenType::Greater);
   EXPECT_EQ(tokens[10].lexeme, ">");
+  EXPECT_EQ(tokens[10].line, 1);
+  EXPECT_EQ(tokens[10].column, 18);
 
   EXPECT_EQ(tokens[12].type, lox::TokenType::LessEqual);
   EXPECT_EQ(tokens[12].lexeme, "<=");
+  EXPECT_EQ(tokens[12].line, 1);
+  EXPECT_EQ(tokens[12].column, 21);
 
   EXPECT_EQ(tokens[14].type, lox::TokenType::GreaterEqual);
   EXPECT_EQ(tokens[14].lexeme, ">=");
+  EXPECT_EQ(tokens[14].line, 1);
+  EXPECT_EQ(tokens[14].column, 25);
 }
 
 TEST(Tokenizer, scan_skip)
