@@ -89,14 +89,18 @@ inline auto is_keyword(const std::string & str) -> bool
 class Token
 {
 public:
-  Token(const TokenType type, const std::string & lexeme, const size_t line)
-  : type(type), lexeme(lexeme), line(line)
+  Token(const TokenType type, const std::string & lexeme, const size_t line, const size_t column)
+  : type(type), lexeme(lexeme), line(line), column(column)
   {
   }
-  Token(const Token & other) : type(other.type), lexeme(other.lexeme), line(other.line) {}
+  Token(const Token & other)
+  : type(other.type), lexeme(other.lexeme), line(other.line), column(other.column)
+  {
+  }
   const TokenType type;
   const std::string lexeme;
   const size_t line;
+  const size_t column;
 };
 
 using Tokens = std::vector<Token>;

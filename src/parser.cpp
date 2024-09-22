@@ -11,7 +11,7 @@ inline namespace parser
 Parser::Parser(const Tokens & tokens) : tokens_(tokens)
 {
   if (tokens_.empty() or tokens_.back().type != TokenType::Eof) {
-    tokens_.emplace_back(TokenType::Eof, "<EOF>", 0);
+    tokens_.emplace_back(TokenType::Eof, "<EOF>", 0, 0);
   }
   assert(tokens_.size() >= 1);
 }
@@ -116,7 +116,7 @@ auto Parser::primary() -> std::optional<Expr>
   if (match(
         TokenType::Number, TokenType::String, TokenType::True, TokenType::False, TokenType::Nil)) {
     const auto & token = advance();
-    return Literal{token.type, token.lexeme, token.line};
+    return Literal{token.type, token.lexeme, token.line, token.column};
   }
   if (match(TokenType::LeftParen)) {
     advance();  // just consume '('
