@@ -35,7 +35,7 @@ jobs:
 
       - name: Measure Coverage
         run: |
-          echo "CWD=`pwd`" >> ${GITHUB_ENV}
+          echo "CWD=`pwd`" >> "${GITHUB_ENV}"
           echo env.CWD is ${{ env.CWD }}
           sudo apt-get install lcov llvm
           cd build
