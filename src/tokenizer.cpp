@@ -34,7 +34,7 @@ auto Tokenizer::advance() noexcept -> std::optional<char>
 {
   if (!is_at_end()) {
     auto c = source_.at(current_);
-    current_++;
+    advance_cursor();
     return c;
   } else {
     return std::nullopt;
@@ -47,11 +47,12 @@ auto Tokenizer::add_token(const TokenType & token_type) -> void
   const auto len =
     (token_type == TokenType::String) ? (current_ - start_ - 2) : (current_ - start_);
   const auto text = source_.substr(start, len);
+  const auto column = (start_ + 1 == current_) ? column_ : start_ + 1;
   if (token_type == TokenType::Identifier and is_keyword(text)) {
-    tokens_.emplace_back(keyword_map.find(text)->second, text, line_);
+    tokens_.emplace_back(keyword_map.find(text)->second, text, line_, column);
     return;
   }
-  tokens_.emplace_back(token_type, text, line_);
+  tokens_.emplace_back(token_type, text, line_, column);
 }
 
 auto Tokenizer::scan_new_token() -> std::optional<ParseError>
@@ -134,7 +135,7 @@ auto Tokenizer::scan_new_token() -> std::optional<ParseError>
     return std::nullopt;
   }
   if (c == '\n') {
-    line_++;
+    handle_newline();
     return std::nullopt;
   }
   if (c == '"') {
@@ -169,7 +170,7 @@ auto Tokenizer::match(const char expected) noexcept -> bool
   if (source_.at(current_) != expected) {
     return false;
   }
-  current_++;
+  advance_cursor();
   return true;
 }
 
@@ -185,7 +186,7 @@ auto Tokenizer::add_string_token() -> std::optional<ParseError>
 {
   while (peek() != '"' and !is_at_end()) {
     if (peek() == '\n') {
-      line_++;
+      handle_newline();
     }
     advance();
   }
@@ -256,6 +257,18 @@ auto Tokenizer::add_identifier_token() -> std::optional<ParseError>
   }
   add_token(TokenType::Identifier);
   return std::nullopt;
+}
+
+auto Tokenizer::handle_newline() -> void
+{
+  line_++;
+  column_ = 1;
+}
+
+auto Tokenizer::advance_cursor() -> void
+{
+  current_++;
+  column_++;
 }
 
 }  // namespace tokenizer

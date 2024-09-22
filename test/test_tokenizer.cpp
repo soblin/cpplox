@@ -115,15 +115,23 @@ TEST(Tokenizer, scan_plus_minus_star_slash)
 
   EXPECT_EQ(tokens[0].type, lox::TokenType::Plus);
   EXPECT_EQ(tokens[0].lexeme, "+");
+  EXPECT_EQ(tokens[0].line, 1);
+  EXPECT_EQ(tokens[0].column, 1);
 
   EXPECT_EQ(tokens[1].type, lox::TokenType::Minus);
   EXPECT_EQ(tokens[1].lexeme, "-");
+  EXPECT_EQ(tokens[1].line, 1);
+  EXPECT_EQ(tokens[1].column, 3);
 
   EXPECT_EQ(tokens[2].type, lox::TokenType::Star);
   EXPECT_EQ(tokens[2].lexeme, "*");
+  EXPECT_EQ(tokens[2].line, 1);
+  EXPECT_EQ(tokens[2].column, 5);
 
   EXPECT_EQ(tokens[3].type, lox::TokenType::Slash);
   EXPECT_EQ(tokens[3].lexeme, "/");
+  EXPECT_EQ(tokens[3].line, 1);
+  EXPECT_EQ(tokens[3].column, 7);
 }
 
 TEST(Tokenizer, scan_compare)
@@ -138,15 +146,23 @@ TEST(Tokenizer, scan_compare)
 
   EXPECT_EQ(tokens[0].type, lox::TokenType::Bang);
   EXPECT_EQ(tokens[0].lexeme, "!");
+  EXPECT_EQ(tokens[0].line, 1);
+  EXPECT_EQ(tokens[0].column, 1);
 
   EXPECT_EQ(tokens[2].type, lox::TokenType::Equal);
   EXPECT_EQ(tokens[2].lexeme, "=");
+  EXPECT_EQ(tokens[2].line, 1);
+  EXPECT_EQ(tokens[2].column, 4);
 
   EXPECT_EQ(tokens[4].type, lox::TokenType::BangEqual);
   EXPECT_EQ(tokens[4].lexeme, "!=");
+  EXPECT_EQ(tokens[4].line, 1);
+  EXPECT_EQ(tokens[4].column, 7);
 
   EXPECT_EQ(tokens[6].type, lox::TokenType::EqualEqual);
   EXPECT_EQ(tokens[6].lexeme, "==");
+  EXPECT_EQ(tokens[6].line, 1);
+  EXPECT_EQ(tokens[6].column, 11);
 
   EXPECT_EQ(tokens[8].type, lox::TokenType::Less);
   EXPECT_EQ(tokens[8].lexeme, "<");
