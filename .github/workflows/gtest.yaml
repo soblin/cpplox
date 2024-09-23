@@ -36,13 +36,13 @@ jobs:
 
       - name: Measure Coverage
         run: |
-          echo ${{ GITHUB_WORKSPACE }}
+          echo ${{ github.workspace }}
           sudo apt-get install lcov llvm
           cd build
           pwd
-          lcov -c -d . -o lcov.info --gcov-tool ${{ GITHUB_WORKSPACE }}/test/llvm-gcov.sh
+          lcov -c -d . -o lcov.info --gcov-tool ${{ github.workspace }}/test/llvm-gcov.sh
           lcov --remove lcov.info '/usr/*' --output-file lcov.info
-          lcov --remove lcov.info ${{ env.CWD }}/test --output-file / lcov.info
+          lcov --remove lcov.info ${{ github.workspace }}/test --output-file / lcov.info
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
