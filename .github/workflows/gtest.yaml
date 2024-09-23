@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 name: gtest
 
 on:  # yamllint disable-line rule:truthy
@@ -35,11 +36,11 @@ jobs:
 
       - name: Measure Coverage
         run: |
-          echo "CWD=`pwd`" >> "${GITHUB_ENV}"
-          echo env.CWD is ${{ env.CWD }}
+          echo ${{ GITHUB_WORKSPACE }}
           sudo apt-get install lcov llvm
           cd build
-          lcov -c -d . -o lcov.info --gcov-tool ${{ env.CWD }}/test/llvm-gcov.sh
+          pwd
+          lcov -c -d . -o lcov.info --gcov-tool ${{ GITHUB_WORKSPACE }}/test/llvm-gcov.sh
           lcov --remove lcov.info '/usr/*' --output-file lcov.info
           lcov --remove lcov.info ${{ env.CWD }}/test --output-file / lcov.info
 
