@@ -1,3 +1,4 @@
+#include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
 #include <cpplox/parser.hpp>
 
@@ -10,6 +11,8 @@
 #include <optional>
 #include <sstream>
 #include <string>
+
+#include <magic_enum.hpp>
 
 enum class EvalKind {
   Ok,
@@ -135,5 +138,6 @@ auto main() -> int
       std::cout << "parse success" << std::endl;
     }
   }
+  std::cout << magic_enum::enum_name<lox::ParseErrorKind::InvalidLiteralError>() << std::endl;
   return 0;
 }
