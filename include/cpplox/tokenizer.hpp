@@ -36,6 +36,7 @@ private:
   auto add_identifier_token() -> std::optional<ParseError>;
   auto handle_newline() -> void;
   auto advance_cursor() -> void;
+  auto get_token_start_column() const noexcept -> size_t;
 
   size_t start_{0};
   size_t current_{0};
