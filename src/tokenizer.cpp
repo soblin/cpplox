@@ -159,7 +159,7 @@ auto Tokenizer::scan_new_token() -> std::optional<ParseError>
     }
     return std::nullopt;
   }
-  return InvalidCharacterError{c, line_, 0};
+  return ParseError{ParseErrorKind::InvalidCharacterError, line_, column_};
 }
 
 auto Tokenizer::match(const char expected) noexcept -> bool
@@ -192,7 +192,7 @@ auto Tokenizer::add_string_token() -> std::optional<ParseError>
   }
   if (is_at_end()) {
     const auto str = source_.substr(start_, current_ - start_);
-    return std::make_optional<NonTerminatedStringError>(str, line_);
+    return std::make_optional<ParseError>(ParseErrorKind::NonTerminatedStringError, line_, column_);
   } else {
     // NOTE: we need to skip the last '"'
     advance();
@@ -209,13 +209,13 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
 
   if (is_at_end()) {
     const auto str = source_.substr(start_, current_ - start_);
-    return std::make_optional<NonTerminatedNumberError>(str, line_);
+    return std::make_optional<ParseError>(ParseErrorKind::NonTerminatedNumberError, line_, column_);
   }
 
   if (peek() == '.') {
     if (!is_digit(peek_next())) {
       const auto str = source_.substr(start_, current_ - start_ + 2);
-      return std::make_optional<InvalidNumberError>(str, line_);
+      return std::make_optional<ParseError>(ParseErrorKind::InvalidNumberError, line_, column_);
     }
     advance();  // consume '.'
     while ((is_digit(peek()) or is_alpha(peek())) and !is_at_end()) {
@@ -223,7 +223,8 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
     }
     if (is_at_end()) {
       const auto str = source_.substr(start_, current_ - start_);
-      return std::make_optional<NonTerminatedNumberError>(str, line_);
+      return std::make_optional<ParseError>(
+        ParseErrorKind::NonTerminatedNumberError, line_, column_);
     }
   }
 
@@ -232,7 +233,7 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
     [[maybe_unused]] const double d = boost::lexical_cast<double>(str);
     add_token(TokenType::Number);
   } catch (...) {
-    return std::make_optional<InvalidNumberError>(str, line_);
+    return std::make_optional<ParseError>(ParseErrorKind::InvalidNumberError, line_, column_);
   }
   return std::nullopt;
 }
@@ -253,7 +254,7 @@ auto Tokenizer::add_identifier_token() -> std::optional<ParseError>
   }
   if (is_at_end()) {
     const auto str = source_.substr(start_, current_ - start_);
-    return std::make_optional<InvalidIdentifierError>(str, line_);
+    return std::make_optional<ParseError>(ParseErrorKind::InvalidIdentifierError, line_, column_);
   }
   add_token(TokenType::Identifier);
   return std::nullopt;

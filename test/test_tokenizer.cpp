@@ -298,7 +298,7 @@ TEST(Tokenizer, scan_invalid_number)
   EXPECT_EQ(lox::is_variant_v<lox::ParseError>(result), true);
 
   const auto & parse_error = lox::as_variant<lox::ParseError>(result);
-  EXPECT_EQ(lox::is_variant_v<lox::InvalidNumberError>(parse_error), true);
+  EXPECT_EQ(parse_error.kind, lox::ParseErrorKind::InvalidNumberError);
 }
 
 TEST(Tokenizer, scan_identifier)
