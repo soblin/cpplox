@@ -172,7 +172,7 @@ public:
     }
 
     // A != B
-    if (binary.op.type == TokenType::EqualEqual) {
+    if (binary.op.type == TokenType::BangEqual) {
       return !is_equal(left, right);
     }
 
