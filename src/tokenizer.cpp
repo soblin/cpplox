@@ -18,7 +18,7 @@ auto Tokenizer::is_at_end() const noexcept -> bool
   return current_ >= source_.size();
 }
 
-auto Tokenizer::take_tokens() -> std::variant<Tokens, ParseError>
+auto Tokenizer::take_tokens() -> std::variant<Tokens, SyntaxError>
 {
   while (!is_at_end()) {
     start_ = current_;
@@ -59,7 +59,7 @@ auto Tokenizer::add_token(const TokenType & token_type) -> void
   tokens_.emplace_back(token_type, text, line_, get_token_start_column());
 }
 
-auto Tokenizer::scan_new_token() -> std::optional<ParseError>
+auto Tokenizer::scan_new_token() -> std::optional<SyntaxError>
 {
   const auto c_opt = advance();
   if (!c_opt) {
@@ -163,7 +163,7 @@ auto Tokenizer::scan_new_token() -> std::optional<ParseError>
     }
     return std::nullopt;
   }
-  return ParseError{ParseErrorKind::InvalidCharacterError, line_, get_token_start_column()};
+  return SyntaxError{SyntaxErrorKind::InvalidCharacterError, line_, get_token_start_column()};
 }
 
 auto Tokenizer::match(const char expected) noexcept -> bool
@@ -186,7 +186,7 @@ auto Tokenizer::peek() noexcept -> char
   return source_.at(current_);
 }
 
-auto Tokenizer::add_string_token() -> std::optional<ParseError>
+auto Tokenizer::add_string_token() -> std::optional<SyntaxError>
 {
   while (peek() != '"' and !is_at_end()) {
     if (peek() == '\n') {
@@ -205,7 +205,7 @@ auto Tokenizer::add_string_token() -> std::optional<ParseError>
   return std::nullopt;
 }
 
-auto Tokenizer::add_number_token() -> std::optional<ParseError>
+auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
 {
   auto is_convertible = [](const std::string & str) {
     try {
@@ -224,14 +224,14 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
       add_token(TokenType::Number);
       return std::nullopt;
     } else {
-      return std::make_optional<ParseError>(
-        ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
+      return std::make_optional<SyntaxError>(
+        SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
     }
   }
   if (peek() == '.') {
     if (!is_digit(peek_next())) {
-      return std::make_optional<ParseError>(
-        ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
+      return std::make_optional<SyntaxError>(
+        SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
     }
     advance();  // consume '.'
     while ((is_digit(peek()) or is_alpha(peek())) and !is_at_end()) {
@@ -242,8 +242,8 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
         add_token(TokenType::Number);
         return std::nullopt;
       } else {
-        return std::make_optional<ParseError>(
-          ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
+        return std::make_optional<SyntaxError>(
+          SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
       }
     }
   }
@@ -252,8 +252,8 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
     add_token(TokenType::Number);
     return std::nullopt;
   } else {
-    return std::make_optional<ParseError>(
-      ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
+    return std::make_optional<SyntaxError>(
+      SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
   }
 }
 
@@ -265,7 +265,7 @@ auto Tokenizer::peek_next() const noexcept -> char
   return source_.at(current_ + 1);
 }
 
-auto Tokenizer::add_identifier_token() -> std::optional<ParseError>
+auto Tokenizer::add_identifier_token() -> std::optional<SyntaxError>
 {
   auto is_alpha_or_digit = [](const auto c) { return is_alpha(c) or is_digit(c); };
   while (is_alpha_or_digit(peek()) and !is_at_end()) {
