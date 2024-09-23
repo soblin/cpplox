@@ -97,7 +97,7 @@ public:
 
     // A * B
     if (binary.op.type == TokenType::Star) {
-      if (!is_variant_v<double>(left) || !is_variant_v<double>(right)) {
+      if (left.index() != helper::double_Index || right.index() != helper::double_Index) {
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
@@ -106,7 +106,7 @@ public:
 
     // A / B
     if (binary.op.type == TokenType::Slash) {
-      if (!is_variant_v<double>(left) || !is_variant_v<double>(right)) {
+      if (left.index() != helper::double_Index || right.index() != helper::double_Index) {
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
@@ -116,7 +116,7 @@ public:
 
     // A - B
     if (binary.op.type == TokenType::Minus) {
-      if (!is_variant_v<double>(left) || !is_variant_v<double>(right)) {
+      if (left.index() != helper::double_Index || right.index() != helper::double_Index) {
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
@@ -125,42 +125,45 @@ public:
 
     // A + B
     if (binary.op.type == TokenType::Plus) {
-      if (is_variant_v<double>(left) && is_variant_v<double>(right)) {
+      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
         return as_variant<double>(left) + as_variant<double>(right);
       }
-      if (is_variant_v<std::string>(left) && is_variant_v<std::string>(right)) {
+      if (left.index() == helper::str_Index && right.index() == helper::str_Index) {
         return as_variant<std::string>(left) + as_variant<std::string>(right);
-      } else {
-        return as_variant<double>(left) - as_variant<double>(right);
       }
+      return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A > B
     if (binary.op.type == TokenType::Greater) {
-      if (is_variant_v<double>(left) && is_variant_v<double>(right)) {
+      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
         return as_variant<double>(left) > as_variant<double>(right);
       }
+      return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A >= B
     if (binary.op.type == TokenType::GreaterEqual) {
-      if (is_variant_v<double>(left) && is_variant_v<double>(right)) {
+      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
         return as_variant<double>(left) >= as_variant<double>(right);
       }
+      return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A < B
     if (binary.op.type == TokenType::Less) {
-      if (is_variant_v<double>(left) && is_variant_v<double>(right)) {
+      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
         return as_variant<double>(left) < as_variant<double>(right);
       }
+      return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A <= B
     if (binary.op.type == TokenType::LessEqual) {
-      if (is_variant_v<double>(left) && is_variant_v<double>(right)) {
+      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
         return as_variant<double>(left) <= as_variant<double>(right);
       }
+      return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A == B
