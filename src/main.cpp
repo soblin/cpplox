@@ -1,6 +1,7 @@
 #include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
 #include <cpplox/parser.hpp>
+#include <cpplox/variant.hpp>
 
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -122,7 +123,7 @@ auto main() -> int
       Token{lox::TokenType::Number, "45.67", 1, 0}, Token{lox::TokenType::RightParen, ")", 1, 0}};
     auto parser = lox::Parser(tokens);
     auto parsed = parser.expression();
-    if (parsed) {
+    if (lox::is_variant_v<lox::Expr>(parsed)) {
       std::cout << "parse success" << std::endl;
     }
   }
@@ -134,7 +135,7 @@ auto main() -> int
       Token{lox::TokenType::Number, "45.67", 1, 0}};
     auto parser = lox::Parser(tokens);
     auto parsed = parser.expression();
-    if (parsed) {
+    if (lox::is_variant_v<lox::Expr>(parsed)) {
       std::cout << "parse success" << std::endl;
     }
   }

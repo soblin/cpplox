@@ -1,4 +1,5 @@
 #include <cpplox/parser.hpp>
+#include <cpplox/variant.hpp>
 
 #include <cassert>
 
@@ -16,102 +17,102 @@ Parser::Parser(const Tokens & tokens) : tokens_(tokens)
   assert(tokens_.size() >= 1);
 }
 
-auto Parser::expression() -> std::optional<Expr>
+auto Parser::expression() -> std::variant<Expr, ParseError>
 {
   return equality();
 }
 
-auto Parser::equality() -> std::optional<Expr>
+auto Parser::equality() -> std::variant<Expr, ParseError>
 {
   const auto expr_opt = comparison();
-  if (!expr_opt) {
-    return std::nullopt;
+  if (is_variant_v<ParseError>(expr_opt)) {
+    return expr_opt;
   }
-  std::vector<Expr> exprs{expr_opt.value()};
+  std::vector<Expr> exprs{as_variant<Expr>(expr_opt)};
   while (match(TokenType::BangEqual, TokenType::EqualEqual)) {
     const auto & op = advance();
     const auto right_opt = comparison();
-    if (!right_opt) {
-      return std::nullopt;
+    if (is_variant_v<ParseError>(right_opt)) {
+      return right_opt;
     }
-    const auto binary = Binary{exprs.back(), op, right_opt.value()};
+    const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
     exprs.push_back(binary);
   }
   return exprs.back();
 }
 
-auto Parser::comparison() -> std::optional<Expr>
+auto Parser::comparison() -> std::variant<Expr, ParseError>
 {
   const auto expr_opt = term();
-  if (!expr_opt) {
-    return std::nullopt;
+  if (is_variant_v<ParseError>(expr_opt)) {
+    return expr_opt;
   }
-  std::vector<Expr> exprs{expr_opt.value()};
+  std::vector<Expr> exprs{as_variant<Expr>(expr_opt)};
   while (
     match(TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual)) {
     const auto & op = advance();
     const auto right_opt = term();
-    if (!right_opt) {
-      return std::nullopt;
+    if (is_variant_v<ParseError>(right_opt)) {
+      return right_opt;
     }
-    const auto binary = Binary{exprs.back(), op, right_opt.value()};
+    const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
     exprs.push_back(binary);
   }
   return exprs.back();
 }
 
-auto Parser::term() -> std::optional<Expr>
+auto Parser::term() -> std::variant<Expr, ParseError>
 {
   const auto factor_opt = factor();
-  if (!factor_opt) {
-    return std::nullopt;
+  if (is_variant_v<ParseError>(factor_opt)) {
+    return factor_opt;
   }
-  std::vector<Expr> exprs{factor_opt.value()};
+  std::vector<Expr> exprs{as_variant<Expr>(factor_opt)};
   while (match(TokenType::Plus, TokenType::Minus)) {
     const auto & op = advance();
     const auto right_opt = factor();
-    if (!right_opt) {
-      return std::nullopt;
+    if (is_variant_v<ParseError>(right_opt)) {
+      return right_opt;
     }
-    const auto binary = Binary{exprs.back(), op, right_opt.value()};
+    const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
     exprs.push_back(binary);
   }
   return exprs.back();
 }
 
-auto Parser::factor() -> std::optional<Expr>
+auto Parser::factor() -> std::variant<Expr, ParseError>
 {
   const auto unary_opt = unary();
-  if (!unary_opt) {
-    return std::nullopt;
+  if (is_variant_v<ParseError>(unary_opt)) {
+    return unary_opt;
   }
-  std::vector<Expr> exprs{unary_opt.value()};
+  std::vector<Expr> exprs{as_variant<Expr>(unary_opt)};
   while (match(TokenType::Slash, TokenType::Star)) {
     const auto & op = advance();
     const auto right_opt = unary();
-    if (!right_opt) {
-      return std::nullopt;
+    if (is_variant_v<ParseError>(right_opt)) {
+      return right_opt;
     }
-    const auto binary = Binary{exprs.back(), op, right_opt.value()};
+    const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
     exprs.push_back(binary);
   }
   return exprs.back();
 }
 
-auto Parser::unary() -> std::optional<Expr>
+auto Parser::unary() -> std::variant<Expr, ParseError>
 {
   if (match(TokenType::Bang, TokenType::Minus)) {
     const auto & op = advance();
     const auto unary_next_opt = unary();
-    if (!unary_next_opt) {
-      return std::nullopt;
+    if (is_variant_v<ParseError>(unary_next_opt)) {
+      return unary_next_opt;
     }
-    return Unary{op, unary_next_opt.value()};
+    return Unary{op, as_variant<Expr>(unary_next_opt)};
   }
   return primary();
 }
 
-auto Parser::primary() -> std::optional<Expr>
+auto Parser::primary() -> std::variant<Expr, ParseError>
 {
   if (match(
         TokenType::Number, TokenType::String, TokenType::True, TokenType::False, TokenType::Nil)) {
@@ -119,18 +120,19 @@ auto Parser::primary() -> std::optional<Expr>
     return Literal{token.type, token.lexeme, token.line, token.column};
   }
   if (match(TokenType::LeftParen)) {
+    const auto left_anchor = peek();
     advance();  // just consume '('
     const auto expr_opt = expression();
-    if (!expr_opt) {
-      return std::nullopt;
+    if (is_variant_v<ParseError>(expr_opt)) {
+      return expr_opt;
     }
     if (match(TokenType::RightParen)) {
       advance();  // just consume ')'
-      return Group{expr_opt.value()};
+      return Group{as_variant<Expr>(expr_opt)};
     }
-    return std::nullopt;
+    return ParseError{ParseErrorKind::UnmatchedParenError, left_anchor.line, left_anchor.column};
   }
-  return std::nullopt;
+  return ParseError{ParseErrorKind::InvalidLiteralError, peek().line, peek().column};
 }
 
 auto Parser::is_at_end() const noexcept -> bool

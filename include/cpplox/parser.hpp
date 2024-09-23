@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
 #include <cpplox/token.hpp>
 
@@ -15,7 +16,7 @@ public:
   /**
     @brief <expression> ::= <equality>
    */
-  auto expression() -> std::optional<Expr>;
+  auto expression() -> std::variant<Expr, ParseError>;
 
 private:
   Tokens tokens_;
@@ -24,32 +25,32 @@ private:
   /**
     @brief <equality> ::= <comparison> (("==" | "!=") <comparison>)*
    */
-  auto equality() -> std::optional<Expr>;
+  auto equality() -> std::variant<Expr, ParseError>;
 
   /**
    * @brief <comparison> ::= <term> ((">" | "<" | ">=" | "<=") <term>)*
    */
-  auto comparison() -> std::optional<Expr>;
+  auto comparison() -> std::variant<Expr, ParseError>;
 
   /**
    * @brief <term> ::= <factor> (("-" | "+") <factor>)*
    */
-  auto term() -> std::optional<Expr>;
+  auto term() -> std::variant<Expr, ParseError>;
 
   /**
    * @brief <factor> ::= <unary> (("/" | "*") <unary>)*
    */
-  auto factor() -> std::optional<Expr>;
+  auto factor() -> std::variant<Expr, ParseError>;
 
   /**
    * @brief <unary> ::= ("!" | "-") <unary> | <primary>
    */
-  auto unary() -> std::optional<Expr>;
+  auto unary() -> std::variant<Expr, ParseError>;
 
   /**
    * @brief <primary> ::= NUMBER | STRING | "true" | "false" | "nil" | "(" <expression> ")"
    */
-  auto primary() -> std::optional<Expr>;
+  auto primary() -> std::variant<Expr, ParseError>;
 
   template <typename... Types>
   auto match(const Types... types) const -> bool;

@@ -16,9 +16,10 @@ TEST(Tokenizer, parse_success_simple_expr)
 
   auto parser = lox::Parser(tokens);
   const auto parse_result = parser.expression();
-  EXPECT_EQ(parse_result.has_value(), true);
+  EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
-  EXPECT_EQ(lox::to_lisp_repr(parse_result.value()), "(* (- 123) (group 45.67))");
+  const auto & expr = lox::as_variant<lox::Expr>(parse_result);
+  EXPECT_EQ(lox::to_lisp_repr(expr), "(* (- 123) (group 45.67))");
 }
 
 TEST(Tokenizer, parse_fail_simple_expr)
@@ -33,7 +34,11 @@ TEST(Tokenizer, parse_fail_simple_expr)
   auto parser = lox::Parser(tokens);
   const auto parse_result = parser.expression();
 
-  EXPECT_EQ(parse_result.has_value(), false);
+  EXPECT_EQ(lox::is_variant_v<lox::ParseError>(parse_result), true);
+  const auto & err = lox::as_variant<lox::ParseError>(parse_result);
+  EXPECT_EQ(err.kind, lox::ParseErrorKind::UnmatchedParenError);
+  EXPECT_EQ(err.line, 1);
+  EXPECT_EQ(err.column, 8);
 }
 
 int main(int argc, char ** argv)
