@@ -195,9 +195,8 @@ auto Tokenizer::add_string_token() -> std::optional<ParseError>
     advance();
   }
   if (is_at_end()) {
-    const auto str = source_.substr(start_, current_ - start_);
-    return std::make_optional<ParseError>(
-      ParseErrorKind::NonTerminatedStringError, line_, get_token_start_column());
+    add_token(TokenType::String);
+    return std::nullopt;
   } else {
     // NOTE: we need to skip the last '"'
     advance();
@@ -208,15 +207,27 @@ auto Tokenizer::add_string_token() -> std::optional<ParseError>
 
 auto Tokenizer::add_number_token() -> std::optional<ParseError>
 {
+  auto is_convertible = [](const std::string & str) {
+    try {
+      [[maybe_unused]] const double d = boost::lexical_cast<double>(str);
+      return true;
+    } catch (...) {
+      return false;
+    }
+  };
+
   while ((is_digit(peek()) or is_alpha(peek())) and !is_at_end()) {
     advance();
   }
-
   if (is_at_end()) {
-    return std::make_optional<ParseError>(
-      ParseErrorKind::NonTerminatedNumberError, line_, get_token_start_column());
+    if (is_convertible(source_.substr(start_, current_ - start_))) {
+      add_token(TokenType::Number);
+      return std::nullopt;
+    } else {
+      return std::make_optional<ParseError>(
+        ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
+    }
   }
-
   if (peek() == '.') {
     if (!is_digit(peek_next())) {
       return std::make_optional<ParseError>(
@@ -227,20 +238,23 @@ auto Tokenizer::add_number_token() -> std::optional<ParseError>
       advance();
     }
     if (is_at_end()) {
-      return std::make_optional<ParseError>(
-        ParseErrorKind::NonTerminatedNumberError, line_, get_token_start_column());
+      if (is_convertible(source_.substr(start_, current_ - start_))) {
+        add_token(TokenType::Number);
+        return std::nullopt;
+      } else {
+        return std::make_optional<ParseError>(
+          ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
+      }
     }
   }
 
-  const auto str = source_.substr(start_, current_ - start_);
-  try {
-    [[maybe_unused]] const double d = boost::lexical_cast<double>(str);
+  if (is_convertible(source_.substr(start_, current_ - start_))) {
     add_token(TokenType::Number);
-  } catch (...) {
+    return std::nullopt;
+  } else {
     return std::make_optional<ParseError>(
       ParseErrorKind::InvalidNumberError, line_, get_token_start_column());
   }
-  return std::nullopt;
 }
 
 auto Tokenizer::peek_next() const noexcept -> char
@@ -258,8 +272,8 @@ auto Tokenizer::add_identifier_token() -> std::optional<ParseError>
     advance();
   }
   if (is_at_end()) {
-    return std::make_optional<ParseError>(
-      ParseErrorKind::InvalidIdentifierError, line_, get_token_start_column());
+    add_token(TokenType::Identifier);
+    return std::nullopt;
   }
   add_token(TokenType::Identifier);
   return std::nullopt;
