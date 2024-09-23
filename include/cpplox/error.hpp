@@ -16,13 +16,12 @@ inline namespace error
  */
 
 enum class SyntaxErrorKind {
-  InvalidCharacterError,     // unsupported character like '@'
-  NonTerminatedStringError,  // '"' does not end
-  NonTerminatedNumberError,  // "123<EOF>"
-  InvalidNumberError,        // "123.a", "123abc"
-  InvalidIdentifierError,
+  InvalidCharacterError,  // unsupported character like '@'
+  // NonTerminatedStringError,  // '"' does not end
+  InvalidNumberError,  // "123.a", "123abc"
+  // InvalidIdentifierError,
   InvalidLiteralError,
-  UnmatchedParenError
+  UnmatchedParenError,
 };
 
 struct SyntaxError
@@ -37,6 +36,15 @@ struct SyntaxError
 };
 
 auto format_parse_error(const SyntaxError & error) -> std::string;
+
+enum class InterpretErrorKind {
+  TypeError,  // 1 + "2"
+};
+
+struct InterpretError
+{
+  const InterpretErrorKind kind;
+};
 
 }  // namespace error
 }  // namespace lox

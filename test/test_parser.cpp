@@ -20,6 +20,12 @@ TEST(Tokenizer, parse_success_simple_expr)
 
   const auto & expr = lox::as_variant<lox::Expr>(parse_result);
   EXPECT_EQ(lox::to_lisp_repr(expr), "(* (- 123) (group 45.67))");
+
+  const auto & eval_opt = lox::evaluate_expr(expr);
+  EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
+  const auto & eval = lox::as_variant<lox::Value>(eval_opt);
+  EXPECT_EQ(lox::is_variant_v<double>(eval), true);
+  EXPECT_FLOAT_EQ(lox::as_variant<double>(eval), -123 * 45.67);
 }
 
 TEST(Tokenizer, parse_fail_simple_expr)
