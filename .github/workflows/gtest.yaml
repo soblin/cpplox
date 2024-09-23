@@ -2,7 +2,12 @@
 name: gtest
 
 on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   # this should be the name used in "Require status checks to pass"
