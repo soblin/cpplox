@@ -17,22 +17,22 @@ Parser::Parser(const Tokens & tokens) : tokens_(tokens)
   assert(tokens_.size() >= 1);
 }
 
-auto Parser::expression() -> std::variant<Expr, ParseError>
+auto Parser::expression() -> std::variant<Expr, SyntaxError>
 {
   return equality();
 }
 
-auto Parser::equality() -> std::variant<Expr, ParseError>
+auto Parser::equality() -> std::variant<Expr, SyntaxError>
 {
   const auto expr_opt = comparison();
-  if (is_variant_v<ParseError>(expr_opt)) {
+  if (is_variant_v<SyntaxError>(expr_opt)) {
     return expr_opt;
   }
   std::vector<Expr> exprs{as_variant<Expr>(expr_opt)};
   while (match(TokenType::BangEqual, TokenType::EqualEqual)) {
     const auto & op = advance();
     const auto right_opt = comparison();
-    if (is_variant_v<ParseError>(right_opt)) {
+    if (is_variant_v<SyntaxError>(right_opt)) {
       return right_opt;
     }
     const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
@@ -41,10 +41,10 @@ auto Parser::equality() -> std::variant<Expr, ParseError>
   return exprs.back();
 }
 
-auto Parser::comparison() -> std::variant<Expr, ParseError>
+auto Parser::comparison() -> std::variant<Expr, SyntaxError>
 {
   const auto expr_opt = term();
-  if (is_variant_v<ParseError>(expr_opt)) {
+  if (is_variant_v<SyntaxError>(expr_opt)) {
     return expr_opt;
   }
   std::vector<Expr> exprs{as_variant<Expr>(expr_opt)};
@@ -52,7 +52,7 @@ auto Parser::comparison() -> std::variant<Expr, ParseError>
     match(TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual)) {
     const auto & op = advance();
     const auto right_opt = term();
-    if (is_variant_v<ParseError>(right_opt)) {
+    if (is_variant_v<SyntaxError>(right_opt)) {
       return right_opt;
     }
     const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
@@ -61,17 +61,17 @@ auto Parser::comparison() -> std::variant<Expr, ParseError>
   return exprs.back();
 }
 
-auto Parser::term() -> std::variant<Expr, ParseError>
+auto Parser::term() -> std::variant<Expr, SyntaxError>
 {
   const auto factor_opt = factor();
-  if (is_variant_v<ParseError>(factor_opt)) {
+  if (is_variant_v<SyntaxError>(factor_opt)) {
     return factor_opt;
   }
   std::vector<Expr> exprs{as_variant<Expr>(factor_opt)};
   while (match(TokenType::Plus, TokenType::Minus)) {
     const auto & op = advance();
     const auto right_opt = factor();
-    if (is_variant_v<ParseError>(right_opt)) {
+    if (is_variant_v<SyntaxError>(right_opt)) {
       return right_opt;
     }
     const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
@@ -80,17 +80,17 @@ auto Parser::term() -> std::variant<Expr, ParseError>
   return exprs.back();
 }
 
-auto Parser::factor() -> std::variant<Expr, ParseError>
+auto Parser::factor() -> std::variant<Expr, SyntaxError>
 {
   const auto unary_opt = unary();
-  if (is_variant_v<ParseError>(unary_opt)) {
+  if (is_variant_v<SyntaxError>(unary_opt)) {
     return unary_opt;
   }
   std::vector<Expr> exprs{as_variant<Expr>(unary_opt)};
   while (match(TokenType::Slash, TokenType::Star)) {
     const auto & op = advance();
     const auto right_opt = unary();
-    if (is_variant_v<ParseError>(right_opt)) {
+    if (is_variant_v<SyntaxError>(right_opt)) {
       return right_opt;
     }
     const auto binary = Binary{exprs.back(), op, as_variant<Expr>(right_opt)};
@@ -99,12 +99,12 @@ auto Parser::factor() -> std::variant<Expr, ParseError>
   return exprs.back();
 }
 
-auto Parser::unary() -> std::variant<Expr, ParseError>
+auto Parser::unary() -> std::variant<Expr, SyntaxError>
 {
   if (match(TokenType::Bang, TokenType::Minus)) {
     const auto & op = advance();
     const auto unary_next_opt = unary();
-    if (is_variant_v<ParseError>(unary_next_opt)) {
+    if (is_variant_v<SyntaxError>(unary_next_opt)) {
       return unary_next_opt;
     }
     return Unary{op, as_variant<Expr>(unary_next_opt)};
@@ -112,7 +112,7 @@ auto Parser::unary() -> std::variant<Expr, ParseError>
   return primary();
 }
 
-auto Parser::primary() -> std::variant<Expr, ParseError>
+auto Parser::primary() -> std::variant<Expr, SyntaxError>
 {
   if (match(
         TokenType::Number, TokenType::String, TokenType::True, TokenType::False, TokenType::Nil)) {
@@ -123,16 +123,16 @@ auto Parser::primary() -> std::variant<Expr, ParseError>
     const auto left_anchor = peek();
     advance();  // just consume '('
     const auto expr_opt = expression();
-    if (is_variant_v<ParseError>(expr_opt)) {
+    if (is_variant_v<SyntaxError>(expr_opt)) {
       return expr_opt;
     }
     if (match(TokenType::RightParen)) {
       advance();  // just consume ')'
       return Group{as_variant<Expr>(expr_opt)};
     }
-    return ParseError{ParseErrorKind::UnmatchedParenError, left_anchor.line, left_anchor.column};
+    return SyntaxError{SyntaxErrorKind::UnmatchedParenError, left_anchor.line, left_anchor.column};
   }
-  return ParseError{ParseErrorKind::InvalidLiteralError, peek().line, peek().column};
+  return SyntaxError{SyntaxErrorKind::InvalidLiteralError, peek().line, peek().column};
 }
 
 auto Parser::is_at_end() const noexcept -> bool

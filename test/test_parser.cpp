@@ -34,9 +34,9 @@ TEST(Tokenizer, parse_fail_simple_expr)
   auto parser = lox::Parser(tokens);
   const auto parse_result = parser.expression();
 
-  EXPECT_EQ(lox::is_variant_v<lox::ParseError>(parse_result), true);
-  const auto & err = lox::as_variant<lox::ParseError>(parse_result);
-  EXPECT_EQ(err.kind, lox::ParseErrorKind::UnmatchedParenError);
+  EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+  const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+  EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedParenError);
   EXPECT_EQ(err.line, 1);
   EXPECT_EQ(err.column, 8);
 }

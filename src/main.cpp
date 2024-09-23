@@ -139,6 +139,6 @@ auto main() -> int
       std::cout << "parse success" << std::endl;
     }
   }
-  std::cout << magic_enum::enum_name<lox::ParseErrorKind::InvalidLiteralError>() << std::endl;
+  std::cout << magic_enum::enum_name<lox::SyntaxErrorKind::InvalidLiteralError>() << std::endl;
   return 0;
 }

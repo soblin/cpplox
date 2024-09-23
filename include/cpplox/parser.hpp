@@ -16,7 +16,7 @@ public:
   /**
     @brief <expression> ::= <equality>
    */
-  auto expression() -> std::variant<Expr, ParseError>;
+  auto expression() -> std::variant<Expr, SyntaxError>;
 
 private:
   Tokens tokens_;
@@ -25,32 +25,32 @@ private:
   /**
     @brief <equality> ::= <comparison> (("==" | "!=") <comparison>)*
    */
-  auto equality() -> std::variant<Expr, ParseError>;
+  auto equality() -> std::variant<Expr, SyntaxError>;
 
   /**
    * @brief <comparison> ::= <term> ((">" | "<" | ">=" | "<=") <term>)*
    */
-  auto comparison() -> std::variant<Expr, ParseError>;
+  auto comparison() -> std::variant<Expr, SyntaxError>;
 
   /**
    * @brief <term> ::= <factor> (("-" | "+") <factor>)*
    */
-  auto term() -> std::variant<Expr, ParseError>;
+  auto term() -> std::variant<Expr, SyntaxError>;
 
   /**
    * @brief <factor> ::= <unary> (("/" | "*") <unary>)*
    */
-  auto factor() -> std::variant<Expr, ParseError>;
+  auto factor() -> std::variant<Expr, SyntaxError>;
 
   /**
    * @brief <unary> ::= ("!" | "-") <unary> | <primary>
    */
-  auto unary() -> std::variant<Expr, ParseError>;
+  auto unary() -> std::variant<Expr, SyntaxError>;
 
   /**
    * @brief <primary> ::= NUMBER | STRING | "true" | "false" | "nil" | "(" <expression> ")"
    */
-  auto primary() -> std::variant<Expr, ParseError>;
+  auto primary() -> std::variant<Expr, SyntaxError>;
 
   template <typename... Types>
   auto match(const Types... types) const -> bool;

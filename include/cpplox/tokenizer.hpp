@@ -19,7 +19,7 @@ public:
 
   auto is_at_end() const noexcept -> bool;
 
-  auto take_tokens() -> std::variant<Tokens, ParseError>;
+  auto take_tokens() -> std::variant<Tokens, SyntaxError>;
 
 private:
   const std::string source_;
@@ -27,13 +27,13 @@ private:
 
   auto advance() noexcept -> std::optional<char>;
   auto add_token(const TokenType & token_type) -> void;
-  auto scan_new_token() -> std::optional<ParseError>;
+  auto scan_new_token() -> std::optional<SyntaxError>;
   auto match(const char expected) noexcept -> bool;
   auto peek() noexcept -> char;
-  auto add_string_token() -> std::optional<ParseError>;
-  auto add_number_token() -> std::optional<ParseError>;
+  auto add_string_token() -> std::optional<SyntaxError>;
+  auto add_number_token() -> std::optional<SyntaxError>;
   auto peek_next() const noexcept -> char;
-  auto add_identifier_token() -> std::optional<ParseError>;
+  auto add_identifier_token() -> std::optional<SyntaxError>;
   auto handle_newline() -> void;
   auto advance_cursor() -> void;
   auto get_token_start_column() const noexcept -> size_t;

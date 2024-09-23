@@ -7,7 +7,7 @@ namespace lox
 inline namespace error
 {
 
-auto format_parse_error(const ParseError & error) -> std::string
+auto format_parse_error(const SyntaxError & error) -> std::string
 {
   const std::string desc = "";
   return desc + ": at line " + std::to_string(error.line) + ", column " +

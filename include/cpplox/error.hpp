@@ -15,7 +15,7 @@ inline namespace error
   TODO(soblin): report source file if the env is not REPL
  */
 
-enum class ParseErrorKind {
+enum class SyntaxErrorKind {
   InvalidCharacterError,     // unsupported character like '@'
   NonTerminatedStringError,  // '"' does not end
   NonTerminatedNumberError,  // "123<EOF>"
@@ -25,18 +25,18 @@ enum class ParseErrorKind {
   UnmatchedParenError
 };
 
-struct ParseError
+struct SyntaxError
 {
-  ParseError(const ParseErrorKind kind, const size_t line, const size_t column)
+  SyntaxError(const SyntaxErrorKind kind, const size_t line, const size_t column)
   : kind(kind), line(line), column(column)
   {
   }
-  const ParseErrorKind kind;
+  const SyntaxErrorKind kind;
   const size_t line;
   const size_t column;
 };
 
-auto format_parse_error(const ParseError & error) -> std::string;
+auto format_parse_error(const SyntaxError & error) -> std::string;
 
 }  // namespace error
 }  // namespace lox
