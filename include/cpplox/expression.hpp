@@ -1,4 +1,5 @@
 #pragma once
+#include <cpplox/error.hpp>
 #include <cpplox/token.hpp>
 
 #include <boost/variant/recursive_variant.hpp>
@@ -47,6 +48,23 @@ struct Group
  * @brief convert Binary('1', '+', '2') to list-style "(+ 1 2)"
  */
 auto to_lisp_repr(const Expr & expr) -> std::string;
+
+using Nil = std::monostate;
+using Value = std::variant<Nil, bool, double, std::string>;
+
+namespace helper
+{
+constexpr size_t Nil_Index = 0;
+constexpr size_t bool_Index = 1;
+constexpr size_t double_Index = 2;
+constexpr size_t str_Index = 3;
+};  // namespace helper
+
+auto is_truthy(const Value & value) -> bool;
+
+auto is_equal(const Value & left, const Value & right) -> bool;
+
+auto evaluate_expr(const Expr & expr) -> std::variant<Value, InterpretError>;
 
 }  // namespace expression
 }  // namespace lox
