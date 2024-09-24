@@ -195,8 +195,8 @@ auto Tokenizer::add_string_token() -> std::optional<SyntaxError>
     advance();
   }
   if (is_at_end()) {
-    add_token(TokenType::String);
-    return std::nullopt;
+    return std::make_optional<SyntaxError>(
+      SyntaxErrorKind::NonTerminatedStringError, line_, get_token_start_column());
   } else {
     // NOTE: we need to skip the last '"'
     advance();
