@@ -16,9 +16,9 @@ inline namespace error
  */
 
 enum class SyntaxErrorKind {
-  InvalidCharacterError,  // unsupported character like '@'
-  // NonTerminatedStringError,  // '"' does not end
-  InvalidNumberError,  // "123.a", "123abc"
+  InvalidCharacterError,     // unsupported character like '@'
+  NonTerminatedStringError,  // '"' does not end
+  InvalidNumberError,        // "123.a", "123abc"
   // InvalidIdentifierError,
   InvalidLiteralError,
   UnmatchedParenError,
