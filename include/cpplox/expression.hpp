@@ -1,6 +1,7 @@
 #pragma once
 #include <cpplox/error.hpp>
 #include <cpplox/token.hpp>
+#include <cpplox/variant.hpp>
 
 #include <boost/variant/recursive_variant.hpp>
 
@@ -50,14 +51,58 @@ struct Group
 auto to_lisp_repr(const Expr & expr) -> std::string;
 
 using Nil = std::monostate;
-using Value = std::variant<Nil, bool, double, std::string>;
+using Value = std::variant<Nil, bool, int64_t, double, std::string>;
 
 namespace helper
 {
 constexpr size_t Nil_Index = 0;
 constexpr size_t bool_Index = 1;
-constexpr size_t double_Index = 2;
-constexpr size_t str_Index = 3;
+constexpr size_t long_Index = 2;
+constexpr size_t double_Index = 3;
+constexpr size_t str_Index = 4;
+
+inline auto is_nil(const Value & value) -> bool
+{
+  return value.index() == Nil_Index;
+}
+
+inline auto is_bool(const Value & value) -> bool
+{
+  return value.index() == bool_Index;
+}
+
+inline auto is_long(const Value & value) -> bool
+{
+  return value.index() == long_Index;
+}
+inline auto is_double(const Value & value) -> bool
+{
+  return value.index() == double_Index;
+}
+
+inline auto is_numeric(const Value & value) -> bool
+{
+  return value.index() == long_Index || value.index() == double_Index;
+}
+
+inline auto is_str(const Value & value) -> bool
+{
+  return value.index() == str_Index;
+}
+
+template <typename F>
+auto apply_binary_op(F f, const Value & left_numeric, const Value & right_numeric) -> decltype(auto)
+{
+  if (helper::is_long(left_numeric)) {
+    return helper::is_long(right_numeric)
+             ? f(as_variant<int64_t>(left_numeric), as_variant<int64_t>(right_numeric))
+             : f(as_variant<int64_t>(left_numeric), as_variant<double>(right_numeric));
+  }
+  return helper::is_long(right_numeric)
+           ? f(as_variant<double>(left_numeric), as_variant<int64_t>(right_numeric))
+           : f(as_variant<double>(left_numeric), as_variant<double>(right_numeric));
+}
+
 };  // namespace helper
 
 auto is_truthy(const Value & value) -> bool;

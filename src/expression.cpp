@@ -3,6 +3,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <functional>
+
 namespace lox
 {
 
@@ -51,7 +53,11 @@ public:
       return literal.lexeme;
     }
     if (literal.type == TokenType::Number) {
-      return boost::lexical_cast<double>(literal.lexeme);
+      const double d = boost::lexical_cast<double>(literal.lexeme);
+      if (literal.lexeme.find('.') != std::string::npos) {
+        return d;
+      }
+      return static_cast<int64_t>(d);
     }
 
     // this is unreachable actually
@@ -67,11 +73,12 @@ public:
     }
     const auto & right_value = as_variant<Value>(right);
     if (unary.op.type == TokenType::Minus) {
-      if (!is_variant_v<double>(right_value)) {
+      if (!helper::is_numeric(right_value)) {
         // TODO(soblin): like -"123"
         return InterpretError{InterpretErrorKind::TypeError};
       }
-      return -1.0 * as_variant<double>(right_value);
+      return helper::is_long(right_value) ? -as_variant<int64_t>(right_value)
+                                          : -1.0 * as_variant<double>(right_value);
     }
     if (unary.op.type == TokenType::Bang) {
       return !is_truthy(right_value);
@@ -97,38 +104,38 @@ public:
 
     // A * B
     if (binary.op.type == TokenType::Star) {
-      if (left.index() != helper::double_Index || right.index() != helper::double_Index) {
+      if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
-      return as_variant<double>(left) * as_variant<double>(right);
+      return helper::apply_binary_op(std::multiplies(), left, right);
     }
 
     // A / B
     if (binary.op.type == TokenType::Slash) {
-      if (left.index() != helper::double_Index || right.index() != helper::double_Index) {
+      if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
       // TODO(soblin): ZeroDivisionError
-      return as_variant<double>(left) / as_variant<double>(right);
+      return helper::apply_binary_op(std::divides(), left, right);
     }
 
     // A - B
     if (binary.op.type == TokenType::Minus) {
-      if (left.index() != helper::double_Index || right.index() != helper::double_Index) {
+      if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
-      return as_variant<double>(left) - as_variant<double>(right);
+      return helper::apply_binary_op(std::minus(), left, right);
     }
 
     // A + B
     if (binary.op.type == TokenType::Plus) {
-      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
-        return as_variant<double>(left) + as_variant<double>(right);
+      if (helper::is_numeric(left) && helper::is_numeric(right)) {
+        return helper::apply_binary_op(std::plus(), left, right);
       }
-      if (left.index() == helper::str_Index && right.index() == helper::str_Index) {
+      if (helper::is_str(left) && helper::is_str(right)) {
         return as_variant<std::string>(left) + as_variant<std::string>(right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
@@ -136,32 +143,32 @@ public:
 
     // A > B
     if (binary.op.type == TokenType::Greater) {
-      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
-        return as_variant<double>(left) > as_variant<double>(right);
+      if (helper::is_numeric(left) && helper::is_numeric(right)) {
+        return helper::apply_binary_op(std::greater(), left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A >= B
     if (binary.op.type == TokenType::GreaterEqual) {
-      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
-        return as_variant<double>(left) >= as_variant<double>(right);
+      if (helper::is_numeric(left) && helper::is_numeric(right)) {
+        return helper::apply_binary_op(std::greater_equal(), left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A < B
     if (binary.op.type == TokenType::Less) {
-      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
-        return as_variant<double>(left) < as_variant<double>(right);
+      if (helper::is_numeric(left) && helper::is_numeric(right)) {
+        return helper::apply_binary_op(std::less(), left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
 
     // A <= B
     if (binary.op.type == TokenType::LessEqual) {
-      if (left.index() == helper::double_Index && right.index() == helper::double_Index) {
-        return as_variant<double>(left) <= as_variant<double>(right);
+      if (helper::is_numeric(left) && helper::is_numeric(right)) {
+        return helper::apply_binary_op(std::less_equal(), left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
@@ -204,17 +211,20 @@ auto is_equal(const Value & left, const Value & right) -> bool
     return false;
   }
   // Now both have same Type
-  if (is_variant_v<Nil>(left)) {
+  if (helper::is_nil(left)) {
     // right is also Nil
     return true;
   }
-  if (is_variant_v<bool>(left)) {
+  if (helper::is_bool(left)) {
     return as_variant<bool>(left) == as_variant<bool>(right);
   }
-  if (is_variant_v<double>(left)) {
+  if (helper::is_long(left)) {
+    return as_variant<int64_t>(left) == as_variant<int64_t>(right);
+  }
+  if (helper::is_double(left)) {
     return as_variant<double>(left) == as_variant<double>(right);
   }
-  if (is_variant_v<std::string>(left)) {
+  if (helper::is_str(left)) {
     return as_variant<std::string>(left) == as_variant<std::string>(right);
   }
   assert(false);
