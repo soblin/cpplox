@@ -304,16 +304,41 @@ TEST(Tokenizer, scan_invalid_number2)
 
 TEST(Tokenizer, scan_invalid_number1)
 {
-  const std::string source = R"(= 123;
+  {
+    const std::string source = R"(= 123;
 =   12abbbbb.456;)";
-  auto tokenizer = lox::Tokenizer(source);
-  const auto result = tokenizer.take_tokens();
-  EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(result), true);
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(result), true);
 
-  const auto & parse_error = lox::as_variant<lox::SyntaxError>(result);
-  EXPECT_EQ(parse_error.kind, lox::SyntaxErrorKind::InvalidNumberError);
-  EXPECT_EQ(parse_error.line, 2);
-  EXPECT_EQ(parse_error.column, 5);
+    const auto & parse_error = lox::as_variant<lox::SyntaxError>(result);
+    EXPECT_EQ(parse_error.kind, lox::SyntaxErrorKind::InvalidNumberError);
+    EXPECT_EQ(parse_error.line, 2);
+    EXPECT_EQ(parse_error.column, 5);
+  }
+  {
+    const std::string source = R"(= 123;
+=   12abbbbb.456)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(result), true);
+
+    const auto & parse_error = lox::as_variant<lox::SyntaxError>(result);
+    EXPECT_EQ(parse_error.kind, lox::SyntaxErrorKind::InvalidNumberError);
+    EXPECT_EQ(parse_error.line, 2);
+    EXPECT_EQ(parse_error.column, 5);
+  }
+  {
+    const std::string source = R"(= 123a)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(result), true);
+
+    const auto & parse_error = lox::as_variant<lox::SyntaxError>(result);
+    EXPECT_EQ(parse_error.kind, lox::SyntaxErrorKind::InvalidNumberError);
+    EXPECT_EQ(parse_error.line, 1);
+    EXPECT_EQ(parse_error.column, 3);
+  }
 }
 
 TEST(Tokenizer, scan_identifier)
