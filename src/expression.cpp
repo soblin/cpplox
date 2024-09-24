@@ -91,7 +91,8 @@ public:
       if (literal.lexeme.find('.') != std::string::npos) {
         return d;
       }
-      return static_cast<int64_t>(d);
+      Value v = static_cast<int64_t>(d);
+      return v;
     }
 
     // this is unreachable actually
