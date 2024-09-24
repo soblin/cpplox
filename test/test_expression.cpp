@@ -47,6 +47,7 @@ TEST(Evaluate, math)
 TEST(Evaluate, compare)
 {
   {
+    // NOTE: '\n' is skipped
     const std::string source = R"(
 (-123 * ((45.67) / (89.0))) > (-124 * ((45.67) / (89.0)))
 )";
