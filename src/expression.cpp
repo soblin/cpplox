@@ -35,6 +35,40 @@ auto to_lisp_repr(const Expr & expr) -> std::string
   return boost::apply_visitor(LispReprVisitor(), expr);
 }
 
+template <template <typename> class F>
+auto apply_binary_op_scalar(const Value & left_numeric, const Value & right_numeric) -> Value
+{
+  if (helper::is_long(left_numeric)) {
+    return helper::is_long(right_numeric)
+             ? Value{static_cast<int64_t>(F<int64_t>()(
+                 as_variant<int64_t>(left_numeric), as_variant<int64_t>(right_numeric)))}
+             : Value{static_cast<double>(F<double>()(
+                 as_variant<int64_t>(left_numeric), as_variant<double>(right_numeric)))};
+  }
+  return helper::is_long(right_numeric)
+           ? Value{static_cast<double>(
+               F<double>()(as_variant<double>(left_numeric), as_variant<int64_t>(right_numeric)))}
+           : Value{static_cast<double>(
+               F<double>()(as_variant<double>(left_numeric), as_variant<double>(right_numeric)))};
+}
+
+template <template <typename> class F>
+auto apply_binary_op_bool(const Value & left_numeric, const Value & right_numeric) -> Value
+{
+  if (helper::is_long(left_numeric)) {
+    return helper::is_long(right_numeric)
+             ? Value{static_cast<bool>(F<int64_t>()(
+                 as_variant<int64_t>(left_numeric), as_variant<int64_t>(right_numeric)))}
+             : Value{static_cast<bool>(F<double>()(
+                 as_variant<int64_t>(left_numeric), as_variant<double>(right_numeric)))};
+  }
+  return helper::is_long(right_numeric)
+           ? Value{static_cast<bool>(
+               F<double>()(as_variant<double>(left_numeric), as_variant<int64_t>(right_numeric)))}
+           : Value{static_cast<bool>(
+               F<double>()(as_variant<double>(left_numeric), as_variant<double>(right_numeric)))};
+}
+
 class EvaluateExprVisitor : boost::static_visitor<std::variant<Value, InterpretError>>
 {
 public:
@@ -57,7 +91,8 @@ public:
       if (literal.lexeme.find('.') != std::string::npos) {
         return d;
       }
-      return static_cast<int64_t>(d);
+      Value v = static_cast<int64_t>(d);
+      return v;
     }
 
     // this is unreachable actually
@@ -108,7 +143,7 @@ public:
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
-      return helper::apply_binary_op(std::multiplies(), left, right);
+      return apply_binary_op_scalar<std::multiplies>(left, right);
     }
 
     // A / B
@@ -118,7 +153,7 @@ public:
         return InterpretError{InterpretErrorKind::TypeError};
       }
       // TODO(soblin): ZeroDivisionError
-      return helper::apply_binary_op(std::divides(), left, right);
+      return apply_binary_op_scalar<std::divides>(left, right);
     }
 
     // A - B
@@ -127,13 +162,13 @@ public:
         // TODO(soblin): like "123" * true
         return InterpretError{InterpretErrorKind::TypeError};
       }
-      return helper::apply_binary_op(std::minus(), left, right);
+      return apply_binary_op_scalar<std::minus>(left, right);
     }
 
     // A + B
     if (binary.op.type == TokenType::Plus) {
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
-        return helper::apply_binary_op(std::plus(), left, right);
+        return apply_binary_op_scalar<std::plus>(left, right);
       }
       if (helper::is_str(left) && helper::is_str(right)) {
         return as_variant<std::string>(left) + as_variant<std::string>(right);
@@ -144,7 +179,7 @@ public:
     // A > B
     if (binary.op.type == TokenType::Greater) {
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
-        return helper::apply_binary_op(std::greater(), left, right);
+        return apply_binary_op_bool<std::greater>(left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
@@ -152,7 +187,7 @@ public:
     // A >= B
     if (binary.op.type == TokenType::GreaterEqual) {
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
-        return helper::apply_binary_op(std::greater_equal(), left, right);
+        return apply_binary_op_bool<std::greater_equal>(left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
@@ -160,7 +195,7 @@ public:
     // A < B
     if (binary.op.type == TokenType::Less) {
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
-        return helper::apply_binary_op(std::less(), left, right);
+        return apply_binary_op_bool<std::less>(left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }
@@ -168,7 +203,7 @@ public:
     // A <= B
     if (binary.op.type == TokenType::LessEqual) {
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
-        return helper::apply_binary_op(std::less_equal(), left, right);
+        return apply_binary_op_bool<std::less_equal>(left, right);
       }
       return InterpretError{InterpretErrorKind::TypeError};
     }

@@ -90,19 +90,6 @@ inline auto is_str(const Value & value) -> bool
   return value.index() == str_Index;
 }
 
-template <typename F>
-auto apply_binary_op(F f, const Value & left_numeric, const Value & right_numeric) -> decltype(auto)
-{
-  if (helper::is_long(left_numeric)) {
-    return helper::is_long(right_numeric)
-             ? f(as_variant<int64_t>(left_numeric), as_variant<int64_t>(right_numeric))
-             : f(as_variant<int64_t>(left_numeric), as_variant<double>(right_numeric));
-  }
-  return helper::is_long(right_numeric)
-           ? f(as_variant<double>(left_numeric), as_variant<int64_t>(right_numeric))
-           : f(as_variant<double>(left_numeric), as_variant<double>(right_numeric));
-}
-
 };  // namespace helper
 
 auto is_truthy(const Value & value) -> bool;
