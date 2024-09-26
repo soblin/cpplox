@@ -3,3 +3,9 @@
 # cpplox
 
 [codecov](https://app.codecov.io/github/soblin/cpplox/tree/main/src)
+
+# dependency
+
+- clang/clang++(18)
+- libreadline-dev
+- libgtest-dev
