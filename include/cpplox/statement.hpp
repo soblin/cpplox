@@ -1,6 +1,8 @@
 #pragma once
 #include <cpplox/expression.hpp>
 
+#include <optional>
+
 namespace lox
 {
 
@@ -17,7 +19,13 @@ struct PrintStmt
   const Expr expression;
 };
 
-using Stmt = std::variant<ExprStmt, PrintStmt>;
+struct VarDeclStmt
+{
+  const Token name;
+  const std::optional<Expr> initializer;
+};
+
+using Stmt = std::variant<ExprStmt, PrintStmt, VarDeclStmt>;
 
 }  // namespace stmt
 }  // namespace lox

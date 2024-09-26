@@ -1,3 +1,4 @@
+#include "cpplox/statement.hpp"
 #include <cpplox/expression.hpp>
 #include <cpplox/interpreter.hpp>
 
@@ -42,6 +43,10 @@ auto Interpreter::execute(const std::vector<Stmt> & program) -> std::optional<Ru
             return as_variant<RuntimeError>(eval_opt);
           }
           std::cout << "print " << stringify(as_variant<Value>(eval_opt)) << std::endl;
+          return std::nullopt;
+        },
+        [&](const VarDeclStmt & stmt) -> std::optional<RuntimeError> {
+          // TODO(soblin): 環境にvariableの値を保存しないといけない
           return std::nullopt;
         },
       },

@@ -1,4 +1,5 @@
-#include "cpplox/error.hpp"
+#include "cpplox/statement.hpp"
+#include <cpplox/error.hpp>
 #include <cpplox/parser.hpp>
 #include <cpplox/variant.hpp>
 
@@ -22,13 +23,49 @@ auto Parser::program() -> std::variant<std::vector<Stmt>, SyntaxError>
 {
   std::vector<Stmt> statements;
   while (!is_at_end()) {
-    const auto statement_opt = statement();
+    const auto statement_opt = declaration();
     if (is_variant_v<SyntaxError>(statement_opt)) {
       return as_variant<SyntaxError>(statement_opt);
     }
     statements.push_back(as_variant<Stmt>(statement_opt));
   }
   return statements;
+}
+
+auto Parser::declaration() -> std::variant<Stmt, SyntaxError>
+{
+  if (match(TokenType::Var)) {
+    advance();  // just consume 'var'
+    return var_decl();
+  }
+  return statement();
+}
+
+auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
+{
+  if (!match(TokenType::Identifier)) {
+    return SyntaxError{SyntaxErrorKind::MissingValidIdentifierDecl, peek().line, peek().column};
+  }
+  const auto & name = peek();  // save identifier
+  advance();                   // consume IDENTIFIER
+  if (match(TokenType::Equal)) {
+    advance();  // consume '='
+    const auto right_expr_opt = expression();
+    if (is_variant_v<SyntaxError>(right_expr_opt)) {
+      return as_variant<SyntaxError>(right_expr_opt);
+    }
+    const auto initializer = as_variant<Expr>(right_expr_opt);
+    if (!match(TokenType::Semicolun)) {
+      SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    }
+    advance();  // consume ';'
+    return VarDeclStmt{name, std::make_optional<Expr>(initializer)};
+  }
+  if (!match(TokenType::Semicolun)) {
+    SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+  }
+  advance();  // consume ';'
+  return VarDeclStmt{name, std::nullopt};
 }
 
 auto Parser::statement() -> std::variant<Stmt, SyntaxError>
@@ -165,6 +202,10 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
         TokenType::Number, TokenType::String, TokenType::True, TokenType::False, TokenType::Nil)) {
     const auto & token = advance();
     return Literal{token.type, token.lexeme, token.line, token.column};
+  }
+  if (match(TokenType::Identifier)) {
+    const auto & token = advance();
+    return Variable{token};
   }
   if (match(TokenType::LeftParen)) {
     const auto left_anchor = peek();

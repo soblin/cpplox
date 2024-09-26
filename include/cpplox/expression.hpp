@@ -17,10 +17,11 @@ struct Literal;
 struct Unary;
 struct Binary;
 struct Group;
+struct Variable;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
-  boost::recursive_wrapper<Group>>;
+  boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>>;
 
 struct Literal : public Token
 {
@@ -43,6 +44,11 @@ struct Binary
 struct Group
 {
   const Expr expr;
+};
+
+struct Variable
+{
+  const Token name;
 };
 
 /**

@@ -28,6 +28,7 @@ public:
   {
     return "(group " + boost::apply_visitor(LispReprVisitor(), group.expr) + ")";
   }
+  std::string operator()(const Variable & variable) { return variable.name.lexeme; }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string
@@ -226,6 +227,12 @@ public:
   std::variant<Value, RuntimeError> operator()(const Group & group)
   {
     return boost::apply_visitor(EvaluateExprVisitor(), group.expr);
+  }
+
+  std::variant<Value, RuntimeError> operator()(const Variable & variable)
+  {
+    // TODO(soblin): 環境にvariable.nameに対応するValueの値を保存しておく必要がある
+    return variable.name.lexeme;
   }
 };
 
