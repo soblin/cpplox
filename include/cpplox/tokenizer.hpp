@@ -4,7 +4,7 @@
 
 #include <optional>
 #include <string>
-#include <vector>
+#include <variant>
 
 namespace lox
 {

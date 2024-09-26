@@ -2,7 +2,10 @@
 
 #include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
+#include <cpplox/statement.hpp>
 #include <cpplox/token.hpp>
+
+#include <vector>
 
 namespace lox
 {
@@ -12,6 +15,26 @@ class Parser
 {
 public:
   explicit Parser(const Tokens & tokens);
+
+  /**
+   * @brief <program> := <statement>* EOF
+   */
+  auto program() -> std::variant<std::vector<Stmt>, SyntaxError>;
+
+  /**
+   * @brief <statement> := <expr_stmt> | <print_stmt>
+   */
+  auto statement() -> std::variant<Stmt, SyntaxError>;
+
+  /**
+   * @brief <expr_stmt> := <expression> ";"
+   */
+  auto expr_statement() -> std::variant<Stmt, SyntaxError>;
+
+  /**
+   * @brief <print_stmt> := "print" <expression> ";"
+   */
+  auto print_statement() -> std::variant<Stmt, SyntaxError>;
 
   /**
     @brief <expression> ::= <equality>
