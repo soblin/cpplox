@@ -3,8 +3,6 @@
 #include <cpplox/token.hpp>
 
 #include <string>
-#include <utility>
-#include <variant>
 
 namespace lox
 {
@@ -22,6 +20,7 @@ enum class SyntaxErrorKind {
   // InvalidIdentifierError,
   InvalidLiteralError,
   UnmatchedParenError,
+  StmtWithoutSemicolun,  // statement does not end with ';'
 };
 
 struct SyntaxError
@@ -35,15 +34,13 @@ struct SyntaxError
   const size_t column;
 };
 
-auto format_parse_error(const SyntaxError & error) -> std::string;
-
-enum class InterpretErrorKind {
+enum class RuntimeErrorKind {
   TypeError,  // 1 + "2"
 };
 
-struct InterpretError
+struct RuntimeError
 {
-  const InterpretErrorKind kind;
+  const RuntimeErrorKind kind;
 };
 
 }  // namespace error

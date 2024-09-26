@@ -544,7 +544,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"("abc" - 123)";
@@ -559,7 +559,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(123 * "abc")";
@@ -574,7 +574,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(123 / "abc")";
@@ -589,7 +589,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(-"abc")";
@@ -604,7 +604,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"("abc" < 123)";
@@ -619,7 +619,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"("abc" <= 123)";
@@ -634,7 +634,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"("abc" > 123)";
@@ -649,7 +649,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"("abc" >= 123)";
@@ -664,7 +664,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(123 + 456 * "789")";
@@ -679,7 +679,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(456 * "789" + 123)";
@@ -694,7 +694,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(123 == 456 * "123")";
@@ -709,7 +709,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(123 > 456 * "123")";
@@ -724,7 +724,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
     const std::string source = R"(-(123 * "456"))";
@@ -739,7 +739,7 @@ TEST(Evaluate, errors)
 
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = lox::evaluate_expr(expr);
-    EXPECT_EQ(lox::is_variant_v<lox::InterpretError>(eval_opt), true);
+    EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
 }
 

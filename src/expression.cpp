@@ -69,10 +69,10 @@ auto apply_binary_op_bool(const Value & left_numeric, const Value & right_numeri
                F<double>()(as_variant<double>(left_numeric), as_variant<double>(right_numeric)))};
 }
 
-class EvaluateExprVisitor : boost::static_visitor<std::variant<Value, InterpretError>>
+class EvaluateExprVisitor : boost::static_visitor<std::variant<Value, RuntimeError>>
 {
 public:
-  std::variant<Value, InterpretError> operator()(const Literal & literal)
+  std::variant<Value, RuntimeError> operator()(const Literal & literal)
   {
     if (literal.type == TokenType::Nil) {
       return expression::Nil{};
@@ -100,17 +100,17 @@ public:
     return expression::Nil{};
   }
 
-  std::variant<Value, InterpretError> operator()(const Unary & unary)
+  std::variant<Value, RuntimeError> operator()(const Unary & unary)
   {
     const auto right = boost::apply_visitor(EvaluateExprVisitor(), unary.expr);
-    if (is_variant_v<InterpretError>(right)) {
+    if (is_variant_v<RuntimeError>(right)) {
       return right;
     }
     const auto & right_value = as_variant<Value>(right);
     if (unary.op.type == TokenType::Minus) {
       if (!helper::is_numeric(right_value)) {
         // TODO(soblin): like -"123"
-        return InterpretError{InterpretErrorKind::TypeError};
+        return RuntimeError{RuntimeErrorKind::TypeError};
       }
       return helper::is_long(right_value) ? -as_variant<int64_t>(right_value)
                                           : -1.0 * as_variant<double>(right_value);
@@ -124,14 +124,14 @@ public:
     return expression::Nil{};
   }
 
-  std::variant<Value, InterpretError> operator()(const Binary & binary)
+  std::variant<Value, RuntimeError> operator()(const Binary & binary)
   {
     const auto left_opt = boost::apply_visitor(EvaluateExprVisitor(), binary.left);
-    if (is_variant_v<InterpretError>(left_opt)) {
+    if (is_variant_v<RuntimeError>(left_opt)) {
       return left_opt;
     }
     const auto right_opt = boost::apply_visitor(EvaluateExprVisitor(), binary.right);
-    if (is_variant_v<InterpretError>(right_opt)) {
+    if (is_variant_v<RuntimeError>(right_opt)) {
       return right_opt;
     }
     const auto & left = as_variant<Value>(left_opt);
@@ -141,7 +141,7 @@ public:
     if (binary.op.type == TokenType::Star) {
       if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
         // TODO(soblin): like "123" * true
-        return InterpretError{InterpretErrorKind::TypeError};
+        return RuntimeError{RuntimeErrorKind::TypeError};
       }
       return apply_binary_op_scalar<std::multiplies>(left, right);
     }
@@ -150,7 +150,7 @@ public:
     if (binary.op.type == TokenType::Slash) {
       if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
         // TODO(soblin): like "123" * true
-        return InterpretError{InterpretErrorKind::TypeError};
+        return RuntimeError{RuntimeErrorKind::TypeError};
       }
       // TODO(soblin): ZeroDivisionError
       return apply_binary_op_scalar<std::divides>(left, right);
@@ -160,7 +160,7 @@ public:
     if (binary.op.type == TokenType::Minus) {
       if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
         // TODO(soblin): like "123" * true
-        return InterpretError{InterpretErrorKind::TypeError};
+        return RuntimeError{RuntimeErrorKind::TypeError};
       }
       return apply_binary_op_scalar<std::minus>(left, right);
     }
@@ -173,7 +173,7 @@ public:
       if (helper::is_str(left) && helper::is_str(right)) {
         return as_variant<std::string>(left) + as_variant<std::string>(right);
       }
-      return InterpretError{InterpretErrorKind::TypeError};
+      return RuntimeError{RuntimeErrorKind::TypeError};
     }
 
     // A > B
@@ -181,7 +181,7 @@ public:
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
         return apply_binary_op_bool<std::greater>(left, right);
       }
-      return InterpretError{InterpretErrorKind::TypeError};
+      return RuntimeError{RuntimeErrorKind::TypeError};
     }
 
     // A >= B
@@ -189,7 +189,7 @@ public:
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
         return apply_binary_op_bool<std::greater_equal>(left, right);
       }
-      return InterpretError{InterpretErrorKind::TypeError};
+      return RuntimeError{RuntimeErrorKind::TypeError};
     }
 
     // A < B
@@ -197,7 +197,7 @@ public:
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
         return apply_binary_op_bool<std::less>(left, right);
       }
-      return InterpretError{InterpretErrorKind::TypeError};
+      return RuntimeError{RuntimeErrorKind::TypeError};
     }
 
     // A <= B
@@ -205,7 +205,7 @@ public:
       if (helper::is_numeric(left) && helper::is_numeric(right)) {
         return apply_binary_op_bool<std::less_equal>(left, right);
       }
-      return InterpretError{InterpretErrorKind::TypeError};
+      return RuntimeError{RuntimeErrorKind::TypeError};
     }
 
     // A == B
@@ -223,7 +223,7 @@ public:
     return expression::Nil{};
   }
 
-  std::variant<Value, InterpretError> operator()(const Group & group)
+  std::variant<Value, RuntimeError> operator()(const Group & group)
   {
     return boost::apply_visitor(EvaluateExprVisitor(), group.expr);
   }
@@ -266,7 +266,7 @@ auto is_equal(const Value & left, const Value & right) -> bool
   return false;
 }
 
-auto evaluate_expr(const Expr & expr) -> std::variant<Value, InterpretError>
+auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {
   return boost::apply_visitor(EvaluateExprVisitor(), expr);
 }

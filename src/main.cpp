@@ -1,6 +1,8 @@
 #include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
+#include <cpplox/interpreter.hpp>
 #include <cpplox/parser.hpp>
+#include <cpplox/tokenizer.hpp>
 #include <cpplox/variant.hpp>
 
 #include <readline/history.h>
@@ -14,11 +16,6 @@
 #include <string>
 
 #include <magic_enum.hpp>
-
-enum class EvalKind {
-  Ok,
-  Error,
-};
 
 class Readline
 {
@@ -37,10 +34,10 @@ public:
     }
   }
 
-  std::optional<std::string_view> get_input() const
+  std::optional<std::string> get_input() const
   {
     if (input_) {
-      return std::make_optional<std::string_view>(input_);
+      return std::make_optional<std::string>(input_);
     } else {
       return std::nullopt;
     }
@@ -59,32 +56,68 @@ auto error(const int line, const std::string & message) -> void
   report(line, "", message);
 }
 
-auto run(const std::string_view str) -> EvalKind
+auto run(const std::string & str)
+  -> std::variant<std::monostate, lox::SyntaxError, lox::RuntimeError>
 {
-  std::cout << str << std::endl;
-  return EvalKind::Ok;
+  lox::Interpreter interpreter;
+  auto tokenizer = lox::Tokenizer(std::string(str));
+  const auto result = tokenizer.take_tokens();
+  if (lox::is_variant_v<lox::SyntaxError>(result)) {
+    return lox::as_variant<lox::SyntaxError>(result);
+  }
+  const auto & tokens = lox::as_variant<lox::Tokens>(result);
+  auto parser = lox::Parser(tokens);
+  const auto program_result = parser.program();
+  if (lox::is_variant_v<lox::SyntaxError>(program_result)) {
+    return lox::as_variant<lox::SyntaxError>(program_result);
+  }
+  const auto exec_opt =
+    interpreter.execute(lox::as_variant<std::vector<lox::Stmt>>(program_result));
+  if (exec_opt) {
+    return exec_opt.value();
+  }
+  return std::monostate{};
 }
 
-auto runFile(const char * path) -> EvalKind
+auto runFile(const char * path) -> int
 {
   std::ifstream ifs(path);
   if (!ifs) {
-    std::cout << path << " does not exist" << std::endl;
-    return EvalKind::Error;
+    std::cerr << path << " does not exist" << std::endl;
+    return 1;
   }
   std::stringstream ss;
   ss << ifs.rdbuf();
-  return run(ss.str());
+  const auto exec_opt = run(ss.str());
+  if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
+    const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
+    std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
+              << exec.column << std::endl;
+    return 1;
+  }
+  if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
+    const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
+    std::cerr << magic_enum::enum_name(exec.kind) << std::endl;
+    return 1;
+  }
+  return 0;
 }
 
-auto runPrompt() -> void
+auto runPrompt() -> int
 {
   for (;;) {
     const auto reader = Readline(">>> ");
     if (const auto prompt_opt = reader.get_input(); prompt_opt) {
-      [[maybe_unused]] const auto eval = run(prompt_opt.value());
-    } else {
-      return;
+      const auto exec_opt = run(prompt_opt.value());
+      if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
+        const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
+        std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
+                  << exec.column << std::endl;
+      }
+      if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
+        const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
+        std::cerr << magic_enum::enum_name(exec.kind) << std::endl;
+      }
     }
   }
 }
@@ -96,49 +129,13 @@ auto REPL(int argc, char ** argv) -> int
     return 0;
   }
   if (argc == 2) {
-    runFile(argv[1]);
+    return runFile(argv[1]);
   } else {
-    runPrompt();
+    return runPrompt();
   }
-  return 0;
 }
 
-auto main() -> int
+auto main(int argc, char ** argv) -> int
 {
-  const lox::Expr expr = lox::Binary{
-    lox::Unary{
-      lox::Token{lox::TokenType::Minus, "-", 1, 0},
-      lox::Literal{lox::TokenType::Number, "123", 1, 0}},            // -123
-    lox::Token{lox::TokenType::Star, "*", 1, 0},                     // *
-    lox::Group{lox::Literal{lox::TokenType::Number, "45.67", 1, 0}}  // (45.67)
-  };
-  std::cout << lox::to_lisp_repr(expr) << std::endl;
-
-  using lox::Token;
-  using lox::Tokens;
-  {
-    Tokens tokens{
-      Token{lox::TokenType::Minus, "-", 1, 0},      Token{lox::TokenType::Number, "123", 1, 0},
-      Token{lox::TokenType::Star, "*", 1, 0},       Token{lox::TokenType::LeftParen, "(", 1, 0},
-      Token{lox::TokenType::Number, "45.67", 1, 0}, Token{lox::TokenType::RightParen, ")", 1, 0}};
-    auto parser = lox::Parser(tokens);
-    auto parsed = parser.expression();
-    if (lox::is_variant_v<lox::Expr>(parsed)) {
-      std::cout << "parse success" << std::endl;
-    }
-  }
-
-  {
-    Tokens tokens{
-      Token{lox::TokenType::Minus, "-", 1, 0}, Token{lox::TokenType::Number, "123", 1, 0},
-      Token{lox::TokenType::Star, "*", 1, 0}, Token{lox::TokenType::LeftParen, "(", 1, 0},
-      Token{lox::TokenType::Number, "45.67", 1, 0}};
-    auto parser = lox::Parser(tokens);
-    auto parsed = parser.expression();
-    if (lox::is_variant_v<lox::Expr>(parsed)) {
-      std::cout << "parse success" << std::endl;
-    }
-  }
-  std::cout << magic_enum::enum_name<lox::SyntaxErrorKind::InvalidLiteralError>() << std::endl;
-  return 0;
+  return REPL(argc, argv);
 }

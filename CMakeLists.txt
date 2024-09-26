@@ -27,7 +27,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(magic-enum)
 
 add_library(${PROJECT_NAME}_lib SHARED src/tokenizer.cpp src/expression.cpp
-                                       src/parser.cpp)
+                                       src/parser.cpp src/interpreter.cpp)
 target_link_libraries(${PROJECT_NAME}_lib readline magic_enum::magic_enum)
 
 add_executable(lox src/main.cpp)

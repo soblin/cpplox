@@ -1,3 +1,4 @@
+#include "cpplox/error.hpp"
 #include <cpplox/parser.hpp>
 #include <cpplox/variant.hpp>
 
@@ -15,6 +16,52 @@ Parser::Parser(const Tokens & tokens) : tokens_(tokens)
     tokens_.emplace_back(TokenType::Eof, "<EOF>", 0, 0);
   }
   assert(tokens_.size() >= 1);
+}
+
+auto Parser::program() -> std::variant<std::vector<Stmt>, SyntaxError>
+{
+  std::vector<Stmt> statements;
+  while (!is_at_end()) {
+    const auto statement_opt = statement();
+    if (is_variant_v<SyntaxError>(statement_opt)) {
+      return as_variant<SyntaxError>(statement_opt);
+    }
+    statements.push_back(as_variant<Stmt>(statement_opt));
+  }
+  return statements;
+}
+
+auto Parser::statement() -> std::variant<Stmt, SyntaxError>
+{
+  if (match(TokenType::Print)) {
+    advance();  // consumme 'print'
+    return print_statement();
+  }
+  return expr_statement();
+}
+
+auto Parser::print_statement() -> std::variant<Stmt, SyntaxError>
+{
+  const auto expr_opt = expression();
+  if (match(TokenType::Semicolun)) {
+    advance();  // just consume ';'
+    return PrintStmt{as_variant<Expr>(expr_opt)};
+  } else {
+    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+  }
+}
+
+auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
+{
+  const auto expr_opt = expression();
+  if (is_variant_v<SyntaxError>(expr_opt)) {
+    return as_variant<SyntaxError>(expr_opt);
+  }
+  if (match(TokenType::Semicolun)) {
+    advance();  // just consime ';'
+    return ExprStmt{as_variant<Expr>(expr_opt)};
+  }
+  return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
@@ -137,7 +184,11 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
 
 auto Parser::is_at_end() const noexcept -> bool
 {
-  if (current_ == tokens_.size()) {
+  /**
+     NOTE: not check by `current_ == tokens_.size()`, because otherwise 'EOF' is evaluated as
+     primary() which is troublesome
+  */
+  if (current_ == (tokens_.size() - 1)) {
     assert(peek().type == TokenType::Eof);
     return true;
   }
