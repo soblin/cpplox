@@ -63,11 +63,6 @@ private:
     }
     return match<TypeTail...>(tail...);
   }
-  template <>
-  auto match(const TokenType & token) const -> bool
-  {
-    return peek().type == token;
-  }
 
   /**
     @brief check if current token is at EOF
@@ -84,6 +79,12 @@ private:
    */
   auto advance() -> const Token &;
 };
+
+template <>
+auto Parser::match(const TokenType & token) const -> bool
+{
+  return peek().type == token;
+}
 
 }  // namespace parser
 }  // namespace lox
