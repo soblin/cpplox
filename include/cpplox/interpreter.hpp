@@ -4,6 +4,7 @@
 #include <cpplox/expression.hpp>
 #include <cpplox/statement.hpp>
 
+#include <optional>
 #include <vector>
 
 namespace lox

@@ -34,6 +34,7 @@ auto Parser::program() -> std::variant<std::vector<Stmt>, SyntaxError>
 auto Parser::statement() -> std::variant<Stmt, SyntaxError>
 {
   if (match(TokenType::Print)) {
+    advance();  // consumme 'print'
     return print_statement();
   }
   return expr_statement();
@@ -58,9 +59,9 @@ auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
   }
   if (match(TokenType::Semicolun)) {
     advance();  // just consime ';'
-    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    return ExprStmt{as_variant<Expr>(expr_opt)};
   }
-  return ExprStmt{as_variant<Expr>(expr_opt)};
+  return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
@@ -183,7 +184,11 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
 
 auto Parser::is_at_end() const noexcept -> bool
 {
-  if (current_ == tokens_.size()) {
+  /**
+     NOTE: not check by `current_ == tokens_.size()`, because otherwise 'EOF' is evaluated as
+     primary() which is troublesome
+  */
+  if (current_ == (tokens_.size() - 1)) {
     assert(peek().type == TokenType::Eof);
     return true;
   }
