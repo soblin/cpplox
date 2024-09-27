@@ -35,6 +35,7 @@ struct SyntaxError
 
 enum class RuntimeErrorKind {
   TypeError,  // 1 + "2"
+  UndefinedVariable,
 };
 
 struct RuntimeError

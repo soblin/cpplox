@@ -102,7 +102,5 @@ auto is_truthy(const Value & value) -> bool;
 
 auto is_equal(const Value & left, const Value & right) -> bool;
 
-auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
-
 }  // namespace expression
 }  // namespace lox
