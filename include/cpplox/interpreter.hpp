@@ -18,9 +18,8 @@ class Interpreter
 {
 public:
   auto execute(const std::vector<Stmt> & program) -> std::optional<RuntimeError>;
+  auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
 };
-
-auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
 
 }  // namespace interpreter
 }  // namespace lox

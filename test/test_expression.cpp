@@ -18,8 +18,9 @@ TEST(Evaluate, math)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<int64_t>(eval), true);
@@ -36,8 +37,9 @@ TEST(Evaluate, math)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<double>(eval), true);
@@ -54,8 +56,9 @@ TEST(Evaluate, math)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<double>(eval), true);
@@ -76,8 +79,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -94,8 +98,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -112,8 +117,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -130,8 +136,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -151,8 +158,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -170,8 +178,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -190,8 +199,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -208,8 +218,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -227,8 +238,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -245,8 +257,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -263,8 +276,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -281,8 +295,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -299,8 +314,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -318,8 +334,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -336,8 +353,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -354,8 +372,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -372,8 +391,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -390,8 +410,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -409,8 +430,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -427,8 +449,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -445,8 +468,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -463,8 +487,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -481,8 +506,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -499,8 +525,9 @@ TEST(Evaluate, compare)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
@@ -521,8 +548,9 @@ TEST(Evaluate, str)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
     const auto & eval = lox::as_variant<lox::Value>(eval_opt);
     EXPECT_EQ(lox::is_variant_v<std::string>(eval), true);
@@ -543,8 +571,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -558,8 +587,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -573,8 +603,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -588,8 +619,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -603,8 +635,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -618,8 +651,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -633,8 +667,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -648,8 +683,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -663,8 +699,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -678,8 +715,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -693,8 +731,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -708,8 +747,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -723,8 +763,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
   {
@@ -738,8 +779,9 @@ TEST(Evaluate, errors)
     const auto parse_result = parser.expression();
     EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
 
+    auto interpreter = lox::Interpreter{};
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
-    const auto & eval_opt = lox::evaluate_expr(expr);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
   }
 }

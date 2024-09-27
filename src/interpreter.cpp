@@ -262,7 +262,7 @@ public:
   }
 };
 
-auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
+auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {
   return boost::apply_visitor(EvaluateExprVisitor(), expr);
 }
