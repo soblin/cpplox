@@ -98,7 +98,12 @@ auto apply_binary_op_bool(const Value & left_numeric, const Value & right_numeri
 
 class EvaluateExprVisitor : boost::static_visitor<std::variant<Value, RuntimeError>>
 {
+private:
+  // NOTE: passing env as mutable reference does not meet the const requirement of operator()
+  std::shared_ptr<Environment> env;
+
 public:
+  explicit EvaluateExprVisitor(std::shared_ptr<Environment> env) : env(env) {}
   std::variant<Value, RuntimeError> operator()(const Literal & literal)
   {
     if (literal.type == TokenType::Nil) {
@@ -129,7 +134,7 @@ public:
 
   std::variant<Value, RuntimeError> operator()(const Unary & unary)
   {
-    const auto right = boost::apply_visitor(EvaluateExprVisitor(), unary.expr);
+    const auto right = boost::apply_visitor(*this, unary.expr);
     if (is_variant_v<RuntimeError>(right)) {
       return right;
     }
@@ -150,14 +155,13 @@ public:
     assert(false);
     return expression::Nil{};
   }
-
   std::variant<Value, RuntimeError> operator()(const Binary & binary)
   {
-    const auto left_opt = boost::apply_visitor(EvaluateExprVisitor(), binary.left);
+    const auto left_opt = boost::apply_visitor(*this, binary.left);
     if (is_variant_v<RuntimeError>(left_opt)) {
       return left_opt;
     }
-    const auto right_opt = boost::apply_visitor(EvaluateExprVisitor(), binary.right);
+    const auto right_opt = boost::apply_visitor(*this, binary.right);
     if (is_variant_v<RuntimeError>(right_opt)) {
       return right_opt;
     }
@@ -252,7 +256,7 @@ public:
 
   std::variant<Value, RuntimeError> operator()(const Group & group)
   {
-    return boost::apply_visitor(EvaluateExprVisitor(), group.expr);
+    return boost::apply_visitor(*this, group.expr);
   }
 
   std::variant<Value, RuntimeError> operator()(const Variable & variable)
@@ -264,7 +268,8 @@ public:
 
 auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {
-  return boost::apply_visitor(EvaluateExprVisitor(), expr);
+  auto evaluator = EvaluateExprVisitor(env_);
+  return boost::apply_visitor(evaluator, expr);
 }
 
 }  // namespace interpreter
