@@ -282,5 +282,13 @@ auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, Runtim
   return boost::apply_visitor(evaluator, expr);
 }
 
+auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>
+{
+  if (const auto it = env_->get(token); is_variant_v<Value>(it) == true) {
+    return as_variant<Value>(it);
+  }
+  return std::nullopt;
+}
+
 }  // namespace interpreter
 }  // namespace lox
