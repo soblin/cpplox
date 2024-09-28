@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt-get install -y libboost-dev libgtest-dev
+        run: sudo apt-get install -y libboost-dev libgtest-dev lcov llvm
 
       - name: Build
         shell: bash
@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DTRACE_COVERAGE=ON
+          cmake .. -DTRACE_COVERAGE=ON -DUSE_LTO=ON
           make -j
 
       - name: Run Tests
@@ -41,10 +41,7 @@ jobs:
 
       - name: Measure Coverage
         run: |
-          echo ${{ github.workspace }}
-          sudo apt-get install lcov llvm
           cd build
-          pwd
           lcov -c -d . -o lcov.info --gcov-tool ${{ github.workspace }}/test/llvm-gcov.sh
           lcov --remove lcov.info '/usr/*' --output-file lcov.info
 
