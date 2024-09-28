@@ -1,11 +1,11 @@
-#include "cpplox/debug.hpp"
 #include "cpplox/statement.hpp"
 #include <cpplox/error.hpp>
 #include <cpplox/parser.hpp>
 #include <cpplox/variant.hpp>
 
+#include <boost/variant.hpp>
+
 #include <cassert>
-#include <iostream>
 
 namespace lox
 {
@@ -49,11 +49,9 @@ auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
     return SyntaxError{SyntaxErrorKind::MissingValidIdentifierDecl, peek().line, peek().column};
   }
   const auto & name = peek();  // save identifier
-  std::cout << "@var_decl: consumed identifier " << name.lexeme << std::endl;
-  advance();  // consume IDENTIFIER
+  advance();                   // consume IDENTIFIER
   if (match(TokenType::Equal)) {
     advance();  // consume '='
-    std::cout << "@var_decl: consumed =" << std::endl;
     const auto right_expr_opt = expression();
     if (is_variant_v<SyntaxError>(right_expr_opt)) {
       return as_variant<SyntaxError>(right_expr_opt);
@@ -63,8 +61,6 @@ auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
       return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
     }
     advance();  // consume ';'
-    std::cout << "@var_decl: set " << to_lisp_repr(initializer) << " for " << name.lexeme
-              << std::endl;
     return VarDeclStmt{name, std::make_optional<Expr>(initializer)};
   }
   if (!match(TokenType::Semicolun)) {
@@ -115,28 +111,25 @@ auto Parser::expression() -> std::variant<Expr, SyntaxError>
 
 auto Parser::assignment() -> std::variant<Expr, SyntaxError>
 {
-  if (match(TokenType::Identifier)) {
-    const auto & name = peek();
-    advance();  // consume IDENTIFIER
-    if (!match(TokenType::Equal)) {
-      std::cout << "here1" << std::endl;
-      return SyntaxError{SyntaxErrorKind::MissingAssignmentOperator, peek().line, peek().column};
-    }
-    advance();  // consume '='
-    const auto assignee = assignment();
-    if (is_variant_v<SyntaxError>(assignee)) {
-      std::cout << "here2" << std::endl;
-      return as_variant<SyntaxError>(assignee);
-    }
-    return Assign{name, as_variant<Expr>(assignee)};
-  }
-  return equality();
-  /*
   const auto left_expr_opt = equality();
   if (is_variant_v<SyntaxError>(left_expr_opt)) {
     return as_variant<SyntaxError>(left_expr_opt);
   }
-  */
+  if (match(TokenType::Equal)) {
+    advance();  // consume '='
+    const auto rvalue_expr = assignment();
+    if (is_variant_v<SyntaxError>(rvalue_expr)) {
+      return as_variant<SyntaxError>(rvalue_expr);
+    }
+    const auto & rvalue = as_variant<Expr>(rvalue_expr);
+    const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
+    if (lvalue_expr.which() != 0 /*Literal*/) {
+      return SyntaxError{SyntaxErrorKind::InvalidAssignmentTarget, peek().line, peek().column};
+    }
+    const auto & lvalue = boost::get<Literal>(lvalue_expr);
+    return Assign{static_cast<Token>(lvalue), rvalue};
+  }
+  return left_expr_opt;
 }
 
 auto Parser::equality() -> std::variant<Expr, SyntaxError>
