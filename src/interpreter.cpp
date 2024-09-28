@@ -261,6 +261,24 @@ public:
       return !is_equal(left, right);
     }
 
+    // A and B
+    if (binary.op.type == TokenType::And) {
+      // NOTE: https://en.wikipedia.org/wiki/Short-circuit_evaluation
+      if (!is_truthy(left)) {
+        return false;
+      }
+      return is_truthy(right);
+    }
+
+    // A or B
+    if (binary.op.type == TokenType::Or) {
+      // NOTE: https://en.wikipedia.org/wiki/Short-circuit_evaluation
+      if (is_truthy(left)) {
+        return true;
+      }
+      return is_truthy(right);
+    }
+
     // this is unreachable actually
     assert(false);
     return expression::Nil{};

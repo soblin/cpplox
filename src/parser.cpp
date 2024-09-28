@@ -159,8 +159,9 @@ auto Parser::comparison() -> std::variant<Expr, SyntaxError>
     return expr_opt;
   }
   std::vector<Expr> exprs{as_variant<Expr>(expr_opt)};
-  while (
-    match(TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual)) {
+  while (match(
+    TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual,
+    TokenType::And, TokenType::Or)) {
     const auto & op = advance();
     const auto right_opt = term();
     if (is_variant_v<SyntaxError>(right_opt)) {
