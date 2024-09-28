@@ -21,6 +21,8 @@ public:
   auto execute(const Program & program) -> std::optional<RuntimeError>;
   auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
 
+  auto get_variable(const Token & token) const -> std::optional<Value>;
+
 private:
   std::shared_ptr<Environment> env_{std::make_shared<Environment>()};
 };
