@@ -240,6 +240,82 @@ TEST(Evaluate, compare)
     EXPECT_EQ(lox::as_variant<bool>(eval), true);
   }
   {
+    const std::string source = R"((123 < 124) and "str")";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
+
+    auto interpreter = lox::Interpreter{};
+    const auto & expr = lox::as_variant<lox::Expr>(parse_result);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
+    EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
+    const auto & eval = lox::as_variant<lox::Value>(eval_opt);
+    EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
+    EXPECT_EQ(lox::as_variant<bool>(eval), true);
+  }
+  {
+    const std::string source = R"((123 < 124) and nil)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
+
+    auto interpreter = lox::Interpreter{};
+    const auto & expr = lox::as_variant<lox::Expr>(parse_result);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
+    EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
+    const auto & eval = lox::as_variant<lox::Value>(eval_opt);
+    EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
+    EXPECT_EQ(lox::as_variant<bool>(eval), false);
+  }
+  {
+    const std::string source = R"((123 > 124) and nil)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
+
+    auto interpreter = lox::Interpreter{};
+    const auto & expr = lox::as_variant<lox::Expr>(parse_result);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
+    EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
+    const auto & eval = lox::as_variant<lox::Value>(eval_opt);
+    EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
+    EXPECT_EQ(lox::as_variant<bool>(eval), false);
+  }
+  {
+    const std::string source = R"((123 > 124) or nil)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
+
+    auto interpreter = lox::Interpreter{};
+    const auto & expr = lox::as_variant<lox::Expr>(parse_result);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
+    EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
+    const auto & eval = lox::as_variant<lox::Value>(eval_opt);
+    EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
+    EXPECT_EQ(lox::as_variant<bool>(eval), false);
+  }
+  {
     // NOTE: '\n' is skipped
     const std::string source = R"(
 (-123 * ((45.67) / (89.0))) > (-124 * ((45.67) / (89.0)))
