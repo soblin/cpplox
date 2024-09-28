@@ -17,9 +17,19 @@ public:
   explicit Parser(const Tokens & tokens);
 
   /**
-   * @brief <program> := <statement>* EOF
+   * @brief <program> := <declaration>* EOF
    */
-  auto program() -> std::variant<std::vector<Stmt>, SyntaxError>;
+  auto program() -> std::variant<Program, SyntaxError>;
+
+  /**
+   * @brief <declaration> := <var_decl> | <statement>
+   */
+  auto declaration() -> std::variant<Stmt, SyntaxError>;
+
+  /**
+   * @brief <var_decl> := "var" IDENTIFIER ("=" <expression>)? ";"
+   */
+  auto var_decl() -> std::variant<Stmt, SyntaxError>;
 
   /**
    * @brief <statement> := <expr_stmt> | <print_stmt>
@@ -71,7 +81,8 @@ private:
   auto unary() -> std::variant<Expr, SyntaxError>;
 
   /**
-   * @brief <primary> ::= NUMBER | STRING | "true" | "false" | "nil" | "(" <expression> ")"
+   * @brief <primary> ::= NUMBER | STRING | "true" | "false" | "nil" | "(" <expression> ")" |
+   * IDENTIFIER
    */
   auto primary() -> std::variant<Expr, SyntaxError>;
 

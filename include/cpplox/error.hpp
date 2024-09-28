@@ -2,8 +2,6 @@
 
 #include <cpplox/token.hpp>
 
-#include <string>
-
 namespace lox
 {
 inline namespace error
@@ -20,7 +18,8 @@ enum class SyntaxErrorKind {
   // InvalidIdentifierError,
   InvalidLiteralError,
   UnmatchedParenError,
-  StmtWithoutSemicolun,  // statement does not end with ';'
+  StmtWithoutSemicolun,        // statement does not end with ';'
+  MissingValidIdentifierDecl,  // variable declaration without valid identifier
 };
 
 struct SyntaxError
@@ -36,6 +35,7 @@ struct SyntaxError
 
 enum class RuntimeErrorKind {
   TypeError,  // 1 + "2"
+  UndefinedVariable,
 };
 
 struct RuntimeError
