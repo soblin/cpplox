@@ -56,11 +56,10 @@ auto error(const int line, const std::string & message) -> void
   report(line, "", message);
 }
 
-auto run(const std::string & str)
+auto run(lox::Interpreter & interpreter, const std::string & program)
   -> std::variant<std::monostate, lox::SyntaxError, lox::RuntimeError>
 {
-  lox::Interpreter interpreter;
-  auto tokenizer = lox::Tokenizer(std::string(str));
+  auto tokenizer = lox::Tokenizer(std::string(program));
   const auto result = tokenizer.take_tokens();
   if (lox::is_variant_v<lox::SyntaxError>(result)) {
     return lox::as_variant<lox::SyntaxError>(result);
@@ -88,7 +87,8 @@ auto runFile(const char * path) -> int
   }
   std::stringstream ss;
   ss << ifs.rdbuf();
-  const auto exec_opt = run(ss.str());
+  lox::Interpreter interpreter;
+  const auto exec_opt = run(interpreter, ss.str());
   if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
     const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
     std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
@@ -105,10 +105,14 @@ auto runFile(const char * path) -> int
 
 auto runPrompt() -> int
 {
+  // NOTE: if this interpreter is instantiated in each cycle, it will "forget" the prior
+  // environment, thus we cannot reuse the variables we have defined in the previous prompt
+  lox::Interpreter interpreter;
+
   for (;;) {
     const auto reader = Readline(">>> ");
     if (const auto prompt_opt = reader.get_input(); prompt_opt) {
-      const auto exec_opt = run(prompt_opt.value());
+      const auto exec_opt = run(interpreter, prompt_opt.value());
       if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
         std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "

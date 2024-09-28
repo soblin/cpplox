@@ -114,31 +114,18 @@ var a = (1 + 2) * ( 3 + 4);
   }
   {
     const std::string source = R"(
-var foo = (1 + 2) * ( 3 + 4)
+foo = (1 + 2) * ( 3 + 4)
 )";
     auto tokenizer = lox::Tokenizer(source);
     const auto result = tokenizer.take_tokens();
     EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
     const auto & tokens = lox::as_variant<lox::Tokens>(result);
 
-    EXPECT_EQ(tokens.size(), 14);
-    EXPECT_EQ(tokens[13].type, lox::TokenType::RightParen);
     auto parser = lox::Parser(tokens);
-    const auto parse_result = parser.declaration();
-    EXPECT_EQ(lox::is_variant_v<lox::Stmt>(parse_result), true);
-    const auto & stmt = lox::as_variant<lox::Stmt>(parse_result);
-    EXPECT_EQ(lox::is_variant_v<lox::VarDeclStmt>(stmt), true);
-    const auto & var_decl_stmt = lox::as_variant<lox::VarDeclStmt>(stmt);
-    EXPECT_EQ(var_decl_stmt.name.lexeme, "foo");
-    const auto & initializer_opt = var_decl_stmt.initializer;
-    EXPECT_EQ(initializer_opt.has_value(), true);
-
-    const auto & initializer_expr = initializer_opt.value();
-    auto interpreter = lox::Interpreter();
-    const auto initializer = interpreter.evaluate_expr(initializer_expr);
-    EXPECT_EQ(lox::is_variant_v<lox::Value>(initializer), true);
-    const auto & value = lox::as_variant<lox::Value>(initializer);
-    EXPECT_EQ(lox::as_variant<int64_t>(value), (1 + 2) * (3 + 4));
+    const auto parse_result = parser.var_decl();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
   }
 }
 

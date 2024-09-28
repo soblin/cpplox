@@ -56,13 +56,13 @@ auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
     }
     const auto initializer = as_variant<Expr>(right_expr_opt);
     if (!match(TokenType::Semicolun)) {
-      SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+      return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
     }
     advance();  // consume ';'
     return VarDeclStmt{name, std::make_optional<Expr>(initializer)};
   }
   if (!match(TokenType::Semicolun)) {
-    SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
   }
   advance();  // consume ';'
   return VarDeclStmt{name, std::nullopt};

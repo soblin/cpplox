@@ -114,6 +114,7 @@ private:
 
 public:
   explicit EvaluateExprVisitor(std::shared_ptr<Environment> env_) : env(env_) {}
+
   std::variant<Value, RuntimeError> operator()(const Literal & literal)
   {
     if (literal.type == TokenType::Nil) {
