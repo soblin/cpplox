@@ -18,10 +18,12 @@ struct Unary;
 struct Binary;
 struct Group;
 struct Variable;
+struct Assign;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
-  boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>>;
+  boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
+  boost::recursive_wrapper<Assign>>;
 
 struct Literal : public Token
 {
@@ -51,10 +53,15 @@ struct Variable
   const Token name;
 };
 
-/**
- * @brief convert Binary('1', '+', '2') to list-style "(+ 1 2)"
- */
-auto to_lisp_repr(const Expr & expr) -> std::string;
+struct Assign
+{
+  const Token name;
+  /**
+     a = b = 1; is
+     a = (b = 1); where (b = 1) is also "Assign"
+  */
+  const Expr expr;
+};
 
 using Nil = std::monostate;
 using Value = std::variant<Nil, bool, int64_t, double, std::string>;

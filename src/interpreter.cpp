@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/environment.hpp>
 #include <cpplox/expression.hpp>
 #include <cpplox/interpreter.hpp>
@@ -273,6 +274,17 @@ public:
   std::variant<Value, RuntimeError> operator()(const Variable & variable)
   {
     return env->get(variable.name);
+  }
+
+  std::variant<Value, RuntimeError> operator()(const Assign & assign)
+  {
+    const auto rvalue_opt = boost::apply_visitor(*this, assign.expr);
+    if (is_variant_v<RuntimeError>(rvalue_opt)) {
+      return as_variant<RuntimeError>(rvalue_opt);
+    }
+    const auto & rvalue = as_variant<Value>(rvalue_opt);
+    env->define(assign.name, rvalue);
+    return rvalue;
   }
 };
 
