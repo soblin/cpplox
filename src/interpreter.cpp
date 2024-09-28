@@ -275,17 +275,6 @@ public:
   {
     return env->get(variable.name);
   }
-
-  std::variant<Value, RuntimeError> operator()(const Assign & assign)
-  {
-    const auto rvalue_opt = boost::apply_visitor(*this, assign.expr);
-    if (is_variant_v<RuntimeError>(rvalue_opt)) {
-      return as_variant<RuntimeError>(rvalue_opt);
-    }
-    const auto & rvalue = as_variant<Value>(rvalue_opt);
-    env->define(assign.name, rvalue);
-    return rvalue;
-  }
 };
 
 auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>

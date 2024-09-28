@@ -22,8 +22,7 @@ struct Assign;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
-  boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
-  boost::recursive_wrapper<Assign>>;
+  boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>>;
 
 struct Literal : public Token
 {
@@ -51,16 +50,6 @@ struct Group
 struct Variable
 {
   const Token name;
-};
-
-struct Assign
-{
-  const Token name;
-  /**
-     a = b = 1; is
-     a = (b = 1); where (b = 1) is also "Assign"
-  */
-  const Expr expr;
 };
 
 using Nil = std::monostate;
