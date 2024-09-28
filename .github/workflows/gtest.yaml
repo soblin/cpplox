@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt-get install -y libgtest-dev
+        run: sudo apt-get install -y libboost-dev libgtest-dev
 
       - name: Build
         shell: bash
