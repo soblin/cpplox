@@ -14,7 +14,7 @@ namespace lox
 inline namespace interpreter
 {
 
-auto Interpreter::execute(const std::vector<Stmt> & program) -> std::optional<RuntimeError>
+auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError>
 {
   auto stringify = [](const Value & value) -> std::string {
     return std::visit(

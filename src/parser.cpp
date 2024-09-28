@@ -19,9 +19,9 @@ Parser::Parser(const Tokens & tokens) : tokens_(tokens)
   assert(tokens_.size() >= 1);
 }
 
-auto Parser::program() -> std::variant<std::vector<Stmt>, SyntaxError>
+auto Parser::program() -> std::variant<Program, SyntaxError>
 {
-  std::vector<Stmt> statements;
+  Program statements;
   while (!is_at_end()) {
     const auto statement_opt = declaration();
     if (is_variant_v<SyntaxError>(statement_opt)) {

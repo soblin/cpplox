@@ -2,6 +2,7 @@
 #include <cpplox/expression.hpp>
 
 #include <optional>
+#include <vector>
 
 namespace lox
 {
@@ -26,6 +27,8 @@ struct VarDeclStmt
 };
 
 using Stmt = std::variant<ExprStmt, PrintStmt, VarDeclStmt>;
+
+using Program = std::vector<Stmt>;
 
 }  // namespace stmt
 }  // namespace lox

@@ -19,7 +19,7 @@ public:
   /**
    * @brief <program> := <declaration>* EOF
    */
-  auto program() -> std::variant<std::vector<Stmt>, SyntaxError>;
+  auto program() -> std::variant<Program, SyntaxError>;
 
   /**
    * @brief <declaration> := <var_decl> | <statement>

@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <optional>
-#include <vector>
 
 namespace lox
 {
@@ -19,7 +18,7 @@ class Interpreter
 {
 public:
   Interpreter() = default;
-  auto execute(const std::vector<Stmt> & program) -> std::optional<RuntimeError>;
+  auto execute(const Program & program) -> std::optional<RuntimeError>;
   auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
 
 private:
