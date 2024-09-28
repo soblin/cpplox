@@ -13,9 +13,9 @@ class Environment
 {
 public:
   Environment() = default;
-  auto define(const std::string & var_name, const Value & var_value) -> void
+  auto define(const Token & var, const Value & var_value) -> void
   {
-    values_[var_name] = var_value;
+    values_[var.lexeme] = var_value;
   }
   auto get(const Token & name) const -> std::variant<Value, RuntimeError>
   {

@@ -43,14 +43,24 @@ auto Interpreter::execute(const std::vector<Stmt> & program) -> std::optional<Ru
         [&](const PrintStmt & stmt) -> std::optional<RuntimeError> {
           const auto eval_opt = evaluate_expr(stmt.expression);
           if (is_variant_v<RuntimeError>(eval_opt)) {
-            std::cerr << lox::to_lisp_repr(stmt.expression) << std::endl;
             return as_variant<RuntimeError>(eval_opt);
           }
           std::cout << "print " << stringify(as_variant<Value>(eval_opt)) << std::endl;
           return std::nullopt;
         },
         [&](const VarDeclStmt & stmt) -> std::optional<RuntimeError> {
-          // TODO(soblin): 環境にvariableの値を保存しないといけない
+          if (stmt.initializer) {
+            const auto eval_opt = evaluate_expr(stmt.initializer.value());
+            if (is_variant_v<RuntimeError>(eval_opt)) {
+              return as_variant<RuntimeError>(eval_opt);
+            }
+            env_->define(stmt.name, as_variant<Value>(eval_opt));
+            std::cout << "(for debug: defined " << stmt.name.lexeme << " = "
+                      << stringify(as_variant<Value>(eval_opt)) << ")" << std::endl;
+          } else {
+            std::cout << "(for debug: defined " << stmt.name.lexeme << " = nil)" << std::endl;
+            env_->define(stmt.name, Nil{});
+          }
           return std::nullopt;
         },
       },
@@ -103,7 +113,7 @@ private:
   std::shared_ptr<Environment> env;
 
 public:
-  explicit EvaluateExprVisitor(std::shared_ptr<Environment> env) : env(env) {}
+  explicit EvaluateExprVisitor(std::shared_ptr<Environment> env_) : env(env_) {}
   std::variant<Value, RuntimeError> operator()(const Literal & literal)
   {
     if (literal.type == TokenType::Nil) {
@@ -261,8 +271,7 @@ public:
 
   std::variant<Value, RuntimeError> operator()(const Variable & variable)
   {
-    // TODO(soblin): 環境にvariable.nameに対応するValueの値を保存しておく必要がある
-    return variable.name.lexeme;
+    return env->get(variable.name);
   }
 };
 
