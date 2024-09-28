@@ -1,0 +1,15 @@
+// -*- mode: python -*-
+
+// declaration
+var a = 1 + 2;
+
+var b = a;
+print b;
+
+// substitution
+b = b * b;
+print b;
+
+// string
+var str = "Hello World";
+print str;
