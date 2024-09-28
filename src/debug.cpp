@@ -25,6 +25,11 @@ public:
     return "(group " + boost::apply_visitor(LispReprVisitor(), group.expr) + ")";
   }
   std::string operator()(const Variable & variable) { return variable.name.lexeme; }
+  std::string operator()(const Assign & assign)
+  {
+    return "(= " + assign.name.lexeme + " " + boost::apply_visitor(LispReprVisitor(), assign.expr) +
+           ")";
+  }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string

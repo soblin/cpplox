@@ -3,6 +3,8 @@
 #include <cpplox/parser.hpp>
 #include <cpplox/variant.hpp>
 
+#include <boost/variant.hpp>
+
 #include <cassert>
 
 namespace lox
@@ -103,7 +105,32 @@ auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
 {
-  return equality();
+  // return equality();
+  return assignment();
+}
+
+auto Parser::assignment() -> std::variant<Expr, SyntaxError>
+{
+  const auto left_expr_opt = equality();
+  if (is_variant_v<SyntaxError>(left_expr_opt)) {
+    return as_variant<SyntaxError>(left_expr_opt);
+  }
+  if (match(TokenType::Equal)) {
+    const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
+    // TODO(soblin): as_variant for boost.variant
+    if (lvalue_expr.which() != 4 /* Variable */) {
+      return SyntaxError{SyntaxErrorKind::InvalidAssignmentTarget, peek().line, peek().column};
+    }
+    const auto & lvalue = boost::get<Variable>(lvalue_expr);
+    advance();  // consume '='
+    const auto rvalue_expr = assignment();
+    if (is_variant_v<SyntaxError>(rvalue_expr)) {
+      return as_variant<SyntaxError>(rvalue_expr);
+    }
+    const auto & rvalue = as_variant<Expr>(rvalue_expr);
+    return Assign{lvalue.name, rvalue};
+  }
+  return left_expr_opt;
 }
 
 auto Parser::equality() -> std::variant<Expr, SyntaxError>

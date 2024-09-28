@@ -20,6 +20,8 @@ enum class SyntaxErrorKind {
   UnmatchedParenError,
   StmtWithoutSemicolun,        // statement does not end with ';'
   MissingValidIdentifierDecl,  // variable declaration without valid identifier
+  MissingAssignmentOperator,   // foo 3;
+  InvalidAssignmentTarget,     // 1 + 2 = 10;
 };
 
 struct SyntaxError
