@@ -83,12 +83,13 @@ var a = (1 + 2) * ( 3 + 4);
     EXPECT_EQ(lox::as_variant<int64_t>(eval), (1 + 2) * (3 + 4));
   }
   {
-    const std::string source = R"(
+    const std::string source1 = R"(
 var a = (1 + 2) * (3 + 45.6);
 var b = a;
 var c = a * b;
+var d = 123.456;
 )";
-    auto tokenizer = lox::Tokenizer(source);
+    auto tokenizer = lox::Tokenizer(source1);
     const auto result = tokenizer.take_tokens();
     EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
     const auto & tokens = lox::as_variant<lox::Tokens>(result);
@@ -115,7 +116,22 @@ var c = a * b;
     const auto c_opt = interpreter.get_variable(tokens[21]);
     EXPECT_EQ(c_opt.has_value(), true);
     EXPECT_EQ(lox::is_variant_v<double>(c_opt.value()), true);
-    EXPECT_FLOAT_EQ(lox::as_variant<double>(c_opt.value()), a * b);
+    const auto c = lox::as_variant<double>(c_opt.value());
+    EXPECT_FLOAT_EQ(c, a * b);
+
+    auto d_opt = interpreter.get_variable(tokens[28]);
+    EXPECT_EQ(d_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<double>(d_opt.value()), true);
+    EXPECT_FLOAT_EQ(lox::as_variant<double>(d_opt.value()), 123.456);
+
+    const std::string source2 = R"(d = c;)";
+    const auto program2 = lox::as_variant<lox::Program>(
+      lox::Parser(lox::as_variant<lox::Tokens>(lox::Tokenizer(source2).take_tokens())).program());
+    interpreter.execute(program2);
+    d_opt = interpreter.get_variable(tokens[28]);
+    EXPECT_EQ(d_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<double>(d_opt.value()), true);
+    EXPECT_FLOAT_EQ(lox::as_variant<double>(d_opt.value()), c);
   }
   {
     const std::string source = R"(
@@ -269,6 +285,22 @@ var a = (1 + 2) * (3 + "str");
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
     EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::TypeError);
+  }
+
+  {
+    const std::string source = R"(
+(b) = 3;
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::InvalidAssignmentTarget);
   }
 }
 
