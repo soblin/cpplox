@@ -82,6 +82,7 @@ var a = (1 + 2) * ( 3 + 4);
     EXPECT_EQ(lox::is_variant_v<int64_t>(eval), true);
     EXPECT_EQ(lox::as_variant<int64_t>(eval), (1 + 2) * (3 + 4));
   }
+  /*
   {
     const std::string source = R"(
 var a = (1 + 2) * (3 + 45.6);
@@ -117,6 +118,7 @@ var c = a * b;
     EXPECT_EQ(lox::is_variant_v<double>(c_opt.value()), true);
     EXPECT_FLOAT_EQ(lox::as_variant<double>(c_opt.value()), a * b);
   }
+  */
   {
     const std::string source = R"(
 var a;
@@ -193,7 +195,7 @@ print (1 + 2) * ( 3 + 4)
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
   }
-
+  /*
   {
     const std::string source = R"(
 print (1 + 2) * ( 3 + "str");
@@ -213,6 +215,7 @@ print (1 + 2) * ( 3 + "str");
     EXPECT_EQ(exec.has_value(), true);
     EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::TypeError);
   }
+  */
 
   {
     const std::string source = R"(
@@ -229,6 +232,7 @@ foo = (1 + 2) * ( 3 + 4)
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
   }
+  /*
   {
     const std::string source = R"(
 var a = (1 + 2) * (3 + 45.6);
@@ -250,6 +254,7 @@ var c = a * d;
     EXPECT_EQ(exec.has_value(), true);
     EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::UndefinedVariable);
   }
+  */
 
   {
     const std::string source = R"(

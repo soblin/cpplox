@@ -47,9 +47,14 @@ public:
   auto print_statement() -> std::variant<Stmt, SyntaxError>;
 
   /**
-    @brief <expression> ::= <equality>
+    @brief <expression> ::= <assignment>
    */
   auto expression() -> std::variant<Expr, SyntaxError>;
+
+  /**
+    @brief <assignment> ::= IDENTIFIER "=" <assignment> | <equality>
+   */
+  auto assignment() -> std::variant<Expr, SyntaxError>;
 
 private:
   Tokens tokens_;
