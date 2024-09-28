@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/environment.hpp>
 #include <cpplox/expression.hpp>
 #include <cpplox/interpreter.hpp>

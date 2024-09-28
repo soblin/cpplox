@@ -18,6 +18,7 @@ struct Unary;
 struct Binary;
 struct Group;
 struct Variable;
+struct Assign;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
@@ -50,11 +51,6 @@ struct Variable
 {
   const Token name;
 };
-
-/**
- * @brief convert Binary('1', '+', '2') to list-style "(+ 1 2)"
- */
-auto to_lisp_repr(const Expr & expr) -> std::string;
 
 using Nil = std::monostate;
 using Value = std::variant<Nil, bool, int64_t, double, std::string>;

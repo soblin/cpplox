@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/parser.hpp>
 #include <cpplox/tokenizer.hpp>
 #include <cpplox/variant.hpp>
