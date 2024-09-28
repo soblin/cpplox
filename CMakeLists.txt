@@ -6,14 +6,19 @@ option(TRACE_COVERAGE "Measure Coverage" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-std=c++17 -Wall -g -O2 -flto)
+option(USE_LTO "Use Link Time Optimization" ON)
+
+add_compile_options(-std=c++17 -Wall -g -O2)
+if(USE_LTO)
+  add_compile_options(-flto)
+  add_link_options(-flto)
+endif()
+
 if(TRACE_COVERAGE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
   set(CMAKE_EXE_LINKER_FLAGS
       "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
-
-add_link_options(-flto)
 
 # download dependency
 include(FetchContent)
