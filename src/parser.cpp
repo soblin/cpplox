@@ -16,7 +16,7 @@ inline namespace parser
 Parser::Parser(const Tokens & tokens) : tokens_(tokens)
 {
   if (tokens_.empty() or tokens_.back().type != TokenType::Eof) {
-    tokens_.emplace_back(TokenType::Eof, "<EOF>", 0, 0);
+    tokens_.emplace_back(TokenType::Eof, "<EOF>", nullptr, 0);
   }
   assert(tokens_.size() >= 1);
 }
@@ -45,8 +45,9 @@ auto Parser::declaration() -> std::variant<Stmt, SyntaxError>
 
 auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
 {
+  const auto var_decl_ctx = current_;
   if (!match(TokenType::Identifier)) {
-    return SyntaxError{SyntaxErrorKind::MissingValidIdentifierDecl, peek().line, peek().column};
+    return create_error(SyntaxErrorKind::MissingValidIdentifierDecl, var_decl_ctx);
   }
   const auto & name = peek();  // save identifier
   advance();                   // consume IDENTIFIER
@@ -58,13 +59,13 @@ auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
     }
     const auto initializer = as_variant<Expr>(right_expr_opt);
     if (!match(TokenType::Semicolun)) {
-      return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+      return create_error(SyntaxErrorKind::StmtWithoutSemicolun, var_decl_ctx);
     }
     advance();  // consume ';'
     return VarDeclStmt{name, std::make_optional<Expr>(initializer)};
   }
   if (!match(TokenType::Semicolun)) {
-    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun, var_decl_ctx);
   }
   advance();  // consume ';'
   return VarDeclStmt{name, std::nullopt};
@@ -81,17 +82,19 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
 
 auto Parser::print_statement() -> std::variant<Stmt, SyntaxError>
 {
+  const auto print_ctx = current_;
   const auto expr_opt = expression();
   if (match(TokenType::Semicolun)) {
     advance();  // just consume ';'
     return PrintStmt{as_variant<Expr>(expr_opt)};
   } else {
-    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun, print_ctx);
   }
 }
 
 auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
 {
+  const auto expr_ctx = current_;
   const auto expr_opt = expression();
   if (is_variant_v<SyntaxError>(expr_opt)) {
     return as_variant<SyntaxError>(expr_opt);
@@ -100,7 +103,7 @@ auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
     advance();  // just consime ';'
     return ExprStmt{as_variant<Expr>(expr_opt)};
   }
-  return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+  return create_error(SyntaxErrorKind::StmtWithoutSemicolun, expr_ctx);
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
@@ -111,6 +114,7 @@ auto Parser::expression() -> std::variant<Expr, SyntaxError>
 
 auto Parser::assignment() -> std::variant<Expr, SyntaxError>
 {
+  const auto error_ctx_assign_target = current_;
   const auto left_expr_opt = equality();
   if (is_variant_v<SyntaxError>(left_expr_opt)) {
     return as_variant<SyntaxError>(left_expr_opt);
@@ -119,7 +123,7 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
     const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
     // TODO(soblin): as_variant for boost.variant
     if (lvalue_expr.which() != 4 /* Variable */) {
-      return SyntaxError{SyntaxErrorKind::InvalidAssignmentTarget, peek().line, peek().column};
+      return create_error(SyntaxErrorKind::InvalidAssignmentTarget, error_ctx_assign_target);
     }
     const auto & lvalue = boost::get<Variable>(lvalue_expr);
     advance();  // consume '='
@@ -226,16 +230,18 @@ auto Parser::unary() -> std::variant<Expr, SyntaxError>
 
 auto Parser::primary() -> std::variant<Expr, SyntaxError>
 {
+  const auto error_ctx_primary = current_;
   if (match(
         TokenType::Number, TokenType::String, TokenType::True, TokenType::False, TokenType::Nil)) {
     const auto & token = advance();
-    return Literal{token.type, token.lexeme, token.line, token.column};
+    return Literal{token.type, token.lexeme, token.line, token.start_index};
   }
   if (match(TokenType::Identifier)) {
     const auto & token = advance();
     return Variable{token};
   }
   if (match(TokenType::LeftParen)) {
+    const auto error_ctx_paren = current_;
     const auto left_anchor = peek();
     advance();  // just consume '('
     const auto expr_opt = expression();
@@ -246,9 +252,9 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
       advance();  // just consume ')'
       return Group{as_variant<Expr>(expr_opt)};
     }
-    return SyntaxError{SyntaxErrorKind::UnmatchedParenError, left_anchor.line, left_anchor.column};
+    return create_error(SyntaxErrorKind::UnmatchedParenError, error_ctx_paren);
   }
-  return SyntaxError{SyntaxErrorKind::InvalidLiteralError, peek().line, peek().column};
+  return create_error(SyntaxErrorKind::InvalidLiteralError, error_ctx_primary);
 }
 
 auto Parser::is_at_end() const noexcept -> bool
@@ -275,6 +281,13 @@ auto Parser::advance() -> const Token &
     current_++;
   }
   return tokens_.at(current_ - 1);
+}
+
+auto Parser::create_error(const SyntaxErrorKind & kind, const size_t error_ctx) const -> SyntaxError
+{
+  const auto ctx_token = tokens_.at(error_ctx);
+  return SyntaxError{
+    kind, ctx_token.line, ctx_token.start_index, ctx_token.start_index + ctx_token.lexeme.size()};
 }
 
 }  // namespace parser

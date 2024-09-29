@@ -2,9 +2,11 @@
 #include <cpplox/error.hpp>
 #include <cpplox/token.hpp>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
+#include <vector>
 
 namespace lox
 {
@@ -28,6 +30,7 @@ public:
 private:
   const std::string source_;
   Tokens tokens_;
+  std::vector<std::shared_ptr<Line>> lines_;
 
   /**
    * @brief get current peek() character and then increment the cursor
@@ -92,11 +95,13 @@ private:
 
   auto get_next_newline_or_eof() const noexcept -> size_t;
 
+  auto create_error(const SyntaxErrorKind kind) -> SyntaxError;
+
   size_t current_ctx_start_cursor_{0};  //!< save the start of a token while scanning the token
                                         //!< to the end
   size_t current_cursor_{0};            //!< the current position of scanner
-  size_t line_{1};    //!< the current line number (number of '\n' so far) starting from 1
-  size_t column_{0};  //!< the current column number (offset from previous '\n')
+  size_t line_{1};  //!< the current line number (number of '\n' so far) starting from 1
+  size_t current_line_start_index_{0};  //!< the start index of current line
 };
 
 auto is_digit(const char c) -> bool

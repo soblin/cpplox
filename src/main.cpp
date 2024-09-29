@@ -93,8 +93,20 @@ auto runFile(const char * path) -> int
   const auto exec_opt = run(interpreter, ss.str());
   if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
     const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
-    std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
-              << exec.column << std::endl;
+    std::cerr << "  SyntaxError: " << magic_enum::enum_name(exec.kind) << " at line "
+              << exec.line->number << ", column " << (exec.ctx_start_index - exec.line->start_index)
+              << std::endl;
+    std::cerr << "    "
+              << "\033[2m"
+              << ss.str().substr(
+                   exec.line->start_index, exec.ctx_start_index - exec.line->start_index)
+              << "\033[m";
+    std::cerr << "\033[1m\033[31m\033[4m"
+              << ss.str().substr(
+                   exec.ctx_start_index, exec.line->end_index - exec.ctx_start_index + 1)
+              << "\033[0m" << std::endl;
+    std::cerr << std::string(4 + exec.ctx_start_index - exec.line->start_index, ' ') << "^"
+              << std::endl;
     return 1;
   }
   if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
@@ -114,11 +126,24 @@ auto runPrompt() -> int
   for (;;) {
     const auto reader = Readline(">>> ");
     if (const auto prompt_opt = reader.get_input(); prompt_opt) {
-      const auto exec_opt = run(interpreter, prompt_opt.value());
+      const auto & prompt = prompt_opt.value();
+      const auto exec_opt = run(interpreter, prompt);
       if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
-        std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
-                  << exec.column << std::endl;
+        std::cerr << "  " << magic_enum::enum_name(exec.kind) << " at line " << exec.line->number
+                  << ", column " << (exec.ctx_start_index - exec.line->start_index) << ":"
+                  << std::endl;
+        std::cerr << "    "
+                  << "\033[2m"
+                  << prompt.substr(
+                       exec.line->start_index, exec.ctx_start_index - exec.line->start_index)
+                  << "\033[m";
+        std::cerr << "\033[1m\033[31m\033[4m"
+                  << prompt.substr(
+                       exec.ctx_start_index, exec.line->end_index - exec.ctx_start_index + 1)
+                  << "\033[0m" << std::endl;
+        std::cerr << std::string(4 + exec.ctx_start_index - exec.line->start_index, ' ') << "^"
+                  << std::endl;
       }
       if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
