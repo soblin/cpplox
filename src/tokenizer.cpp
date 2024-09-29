@@ -11,6 +11,9 @@ inline namespace tokenizer
 
 Tokenizer::Tokenizer(const std::string & source) : source_(source)
 {
+  const size_t end = get_next_newline_or_eof();
+  lines_.emplace_back(std::make_shared<Line>(std::nullopt, 1, current_cursor_, end));
+  assert(!lines_.empty());
 }
 
 auto Tokenizer::is_at_end() const noexcept -> bool
@@ -50,10 +53,10 @@ auto Tokenizer::add_token(const TokenType & token_type) -> void
                      : (current_cursor_ - current_ctx_start_cursor_);
   const auto text = std::string_view(source_).substr(start, len);
   if (token_type == TokenType::Identifier and is_keyword(text)) {
-    tokens_.emplace_back(keyword_map.find(text)->second, text, line_, get_token_start_column());
+    tokens_.emplace_back(keyword_map.find(text)->second, text, lines_.back(), start);
     return;
   }
-  tokens_.emplace_back(token_type, text, line_, get_token_start_column());
+  tokens_.emplace_back(token_type, text, lines_.back(), start);
 }
 
 auto Tokenizer::scan_new_token() -> std::optional<SyntaxError>
@@ -160,7 +163,7 @@ auto Tokenizer::scan_new_token() -> std::optional<SyntaxError>
     }
     return std::nullopt;
   }
-  return SyntaxError{SyntaxErrorKind::InvalidCharacterError, line_, get_token_start_column()};
+  return create_error(SyntaxErrorKind::InvalidCharacterError);
 }
 
 auto Tokenizer::match(const char expected) noexcept -> bool
@@ -200,8 +203,7 @@ auto Tokenizer::add_string_token() -> std::optional<SyntaxError>
     advance();
   }
   if (is_at_end()) {
-    return std::make_optional<SyntaxError>(
-      SyntaxErrorKind::NonTerminatedStringError, line_, get_token_start_column());
+    return create_error(SyntaxErrorKind::NonTerminatedStringError);
   } else {
     advance();  // consume last '"'
   }
@@ -229,14 +231,12 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
       add_token(TokenType::Number);
       return std::nullopt;
     } else {
-      return std::make_optional<SyntaxError>(
-        SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
+      return create_error(SyntaxErrorKind::InvalidNumberError);
     }
   }
   if (peek() == '.') {
     if (!is_digit(peek_next())) {
-      return std::make_optional<SyntaxError>(
-        SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
+      return create_error(SyntaxErrorKind::InvalidNumberError);
     }
     advance();  // consume '.'
     while ((is_digit(peek()) or is_alpha(peek())) and !is_at_end()) {
@@ -248,8 +248,7 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
         add_token(TokenType::Number);
         return std::nullopt;
       } else {
-        return std::make_optional<SyntaxError>(
-          SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
+        return create_error(SyntaxErrorKind::InvalidNumberError);
       }
     }
   }
@@ -259,8 +258,7 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
     add_token(TokenType::Number);
     return std::nullopt;
   } else {
-    return std::make_optional<SyntaxError>(
-      SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
+    return create_error(SyntaxErrorKind::InvalidNumberError);
   }
 }
 
@@ -281,19 +279,30 @@ auto Tokenizer::add_identifier_token() -> std::optional<SyntaxError>
 auto Tokenizer::handle_newline() -> void
 {
   line_++;
-  column_ = 0;
+  current_line_start_index_ = current_cursor_;
+  lines_.emplace_back(std::make_shared<Line>(
+    std::nullopt, line_, current_line_start_index_, get_next_newline_or_eof()));
 }
 
 auto Tokenizer::advance_cursor() -> void
 {
   current_cursor_++;
-  column_++;
 }
 
-auto Tokenizer::get_token_start_column() const noexcept -> size_t
+auto Tokenizer::get_next_newline_or_eof() const noexcept -> size_t
 {
-  return column_ - (current_cursor_ - current_ctx_start_cursor_) + 1;
-};
+  for (size_t i = current_cursor_; i < source_.size(); ++i) {
+    if (i == '\n' || i == '\0') {
+      return i;
+    }
+  }
+  return source_.size() - 1;
+}
+
+auto Tokenizer::create_error(const SyntaxErrorKind kind) -> SyntaxError
+{
+  return SyntaxError{kind, lines_.back(), current_ctx_start_cursor_, current_cursor_};
+}
 
 }  // namespace tokenizer
 }  // namespace lox

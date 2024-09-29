@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cpplox/position.hpp>
+
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -91,20 +94,26 @@ class Token
 {
 public:
   Token(
-    const TokenType type, const std::string_view & lexeme, const size_t line, const size_t column)
-  : type(type), lexeme(lexeme), line(line), column(column)
+    const TokenType type, const std::string_view & lexeme, const std::shared_ptr<Line> line,
+    const size_t start_index)
+  : type(type), lexeme(lexeme), line(line), start_index(start_index)
   {
   }
 
   Token(const Token & other)
-  : type(other.type), lexeme(other.lexeme), line(other.line), column(other.column)
+  : type(other.type), lexeme(other.lexeme), line(other.line), start_index(other.start_index)
   {
   }
 
+  /**
+   * @brief get the column number on its line, starting from 1
+   */
+  auto get_lexical_column() const noexcept -> size_t { return start_index - line->start_index + 1; }
+
   const TokenType type;
-  const std::string_view lexeme;
-  const size_t line;
-  const size_t column;
+  const std::string_view lexeme;  //<! lexeme has the length information
+  const std::shared_ptr<Line> line;
+  const size_t start_index;  //!< the index of lexeme[0]
 };
 
 using Tokens = std::vector<Token>;

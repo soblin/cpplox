@@ -16,7 +16,7 @@ inline namespace parser
 Parser::Parser(const Tokens & tokens) : tokens_(tokens)
 {
   if (tokens_.empty() or tokens_.back().type != TokenType::Eof) {
-    tokens_.emplace_back(TokenType::Eof, "<EOF>", 0, 0);
+    tokens_.emplace_back(TokenType::Eof, "<EOF>", nullptr, 0);
   }
   assert(tokens_.size() >= 1);
 }
@@ -46,7 +46,7 @@ auto Parser::declaration() -> std::variant<Stmt, SyntaxError>
 auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
 {
   if (!match(TokenType::Identifier)) {
-    return SyntaxError{SyntaxErrorKind::MissingValidIdentifierDecl, peek().line, peek().column};
+    return create_error(SyntaxErrorKind::MissingValidIdentifierDecl);
   }
   const auto & name = peek();  // save identifier
   advance();                   // consume IDENTIFIER
@@ -58,13 +58,13 @@ auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
     }
     const auto initializer = as_variant<Expr>(right_expr_opt);
     if (!match(TokenType::Semicolun)) {
-      return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+      return create_error(SyntaxErrorKind::StmtWithoutSemicolun);
     }
     advance();  // consume ';'
     return VarDeclStmt{name, std::make_optional<Expr>(initializer)};
   }
   if (!match(TokenType::Semicolun)) {
-    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun);
   }
   advance();  // consume ';'
   return VarDeclStmt{name, std::nullopt};
@@ -86,7 +86,7 @@ auto Parser::print_statement() -> std::variant<Stmt, SyntaxError>
     advance();  // just consume ';'
     return PrintStmt{as_variant<Expr>(expr_opt)};
   } else {
-    return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun);
   }
 }
 
@@ -100,7 +100,7 @@ auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
     advance();  // just consime ';'
     return ExprStmt{as_variant<Expr>(expr_opt)};
   }
-  return SyntaxError{SyntaxErrorKind::StmtWithoutSemicolun, peek().line, peek().column};
+  return create_error(SyntaxErrorKind::StmtWithoutSemicolun);
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
@@ -119,7 +119,7 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
     const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
     // TODO(soblin): as_variant for boost.variant
     if (lvalue_expr.which() != 4 /* Variable */) {
-      return SyntaxError{SyntaxErrorKind::InvalidAssignmentTarget, peek().line, peek().column};
+      return create_error(SyntaxErrorKind::InvalidAssignmentTarget);
     }
     const auto & lvalue = boost::get<Variable>(lvalue_expr);
     advance();  // consume '='
@@ -229,7 +229,7 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
   if (match(
         TokenType::Number, TokenType::String, TokenType::True, TokenType::False, TokenType::Nil)) {
     const auto & token = advance();
-    return Literal{token.type, token.lexeme, token.line, token.column};
+    return Literal{token.type, token.lexeme, token.line, token.start_index};
   }
   if (match(TokenType::Identifier)) {
     const auto & token = advance();
@@ -246,9 +246,9 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
       advance();  // just consume ')'
       return Group{as_variant<Expr>(expr_opt)};
     }
-    return SyntaxError{SyntaxErrorKind::UnmatchedParenError, left_anchor.line, left_anchor.column};
+    return create_error(SyntaxErrorKind::UnmatchedParenError);
   }
-  return SyntaxError{SyntaxErrorKind::InvalidLiteralError, peek().line, peek().column};
+  return create_error(SyntaxErrorKind::InvalidLiteralError);
 }
 
 auto Parser::is_at_end() const noexcept -> bool
@@ -275,6 +275,12 @@ auto Parser::advance() -> const Token &
     current_++;
   }
   return tokens_.at(current_ - 1);
+}
+
+auto Parser::create_error(const SyntaxErrorKind & kind) const -> SyntaxError
+{
+  return SyntaxError{
+    kind, peek().line, peek().start_index, peek().start_index + peek().lexeme.size()};
 }
 
 }  // namespace parser

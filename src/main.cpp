@@ -93,8 +93,9 @@ auto runFile(const char * path) -> int
   const auto exec_opt = run(interpreter, ss.str());
   if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
     const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
-    std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
-              << exec.column << std::endl;
+    // TODO(soblin): start_column is not meaning for, emphasize the error in whole line
+    std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line->number << ", column "
+              << (exec.ctx_start_index - exec.line->start_index) << std::endl;
     return 1;
   }
   if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
@@ -117,8 +118,9 @@ auto runPrompt() -> int
       const auto exec_opt = run(interpreter, prompt_opt.value());
       if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
-        std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line << ", column "
-                  << exec.column << std::endl;
+        // TODO(soblin): start_column is not meaning for, emphasize the error in whole line
+        std::cerr << magic_enum::enum_name(exec.kind) << " at line " << exec.line->number
+                  << ", column " << (exec.ctx_start_index - exec.line->start_index) << std::endl;
       }
       if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);

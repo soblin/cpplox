@@ -49,8 +49,8 @@ TEST(Tokenizer, parse_errors)
     EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedParenError);
-    EXPECT_EQ(err.line, 1);
-    EXPECT_EQ(err.column, 8);
+    EXPECT_EQ(err.line->number, 1);
+    EXPECT_EQ(err.get_lexical_column(), 8);
   }
 
   {

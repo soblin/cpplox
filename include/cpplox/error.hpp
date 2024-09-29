@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cpplox/position.hpp>
 #include <cpplox/token.hpp>
+
+#include <memory>
 
 namespace lox
 {
@@ -21,14 +24,25 @@ enum class SyntaxErrorKind {
 
 struct SyntaxError
 {
-  SyntaxError(const SyntaxErrorKind kind, const size_t line, const size_t column)
-  : kind(kind), line(line), column(column)
+  SyntaxError(
+    const SyntaxErrorKind kind, const std::shared_ptr<Line> line, const size_t ctx_start_index,
+    const size_t ctx_end_index)
+  : kind(kind), line(line), ctx_start_index(ctx_start_index), ctx_end_index(ctx_end_index)
   {
   }
 
+  /**
+   * @brief get the column number on its line, starting from 1
+   */
+  auto get_lexical_column() const noexcept -> size_t
+  {
+    return ctx_start_index - line->start_index + 1;
+  }
+
   const SyntaxErrorKind kind;
-  const size_t line;
-  const size_t column;
+  const std::shared_ptr<Line> line;
+  const size_t ctx_start_index;  //<! start index of the rough range of the error
+  const size_t ctx_end_index;    //<! end index of the rough range of the error
 };
 
 enum class RuntimeErrorKind {
