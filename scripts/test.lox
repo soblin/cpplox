@@ -11,5 +11,5 @@ b = b * b;
 print b;
 
 // string
-var str = "Hello World";
+var str = "Hello" + " " + " World!";
 print str;
