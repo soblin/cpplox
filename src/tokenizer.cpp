@@ -51,7 +51,7 @@ auto Tokenizer::add_token(const TokenType & token_type) -> void
   const auto start = (token_type == TokenType::String) ? (start_ + 1) : start_;  // to skip '"'
   const auto len =
     (token_type == TokenType::String) ? (current_ - start_ - 2) : (current_ - start_);
-  const auto text = source_.substr(start, len);
+  const auto text = std::string_view(source_).substr(start, len);
   if (token_type == TokenType::Identifier and is_keyword(text)) {
     tokens_.emplace_back(keyword_map.find(text)->second, text, line_, get_token_start_column());
     return;
@@ -207,7 +207,7 @@ auto Tokenizer::add_string_token() -> std::optional<SyntaxError>
 
 auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
 {
-  auto is_convertible = [](const std::string & str) {
+  auto is_convertible = [](const std::string_view & str) {
     try {
       [[maybe_unused]] const double d = boost::lexical_cast<double>(str);
       return true;
@@ -220,7 +220,7 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
     advance();
   }
   if (is_at_end()) {
-    if (is_convertible(source_.substr(start_, current_ - start_))) {
+    if (is_convertible(std::string_view(source_).substr(start_, current_ - start_))) {
       add_token(TokenType::Number);
       return std::nullopt;
     } else {
@@ -238,7 +238,7 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
       advance();
     }
     if (is_at_end()) {
-      if (is_convertible(source_.substr(start_, current_ - start_))) {
+      if (is_convertible(std::string_view(source_).substr(start_, current_ - start_))) {
         add_token(TokenType::Number);
         return std::nullopt;
       } else {
@@ -248,7 +248,7 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
     }
   }
 
-  if (is_convertible(source_.substr(start_, current_ - start_))) {
+  if (is_convertible(std::string_view(source_).substr(start_, current_ - start_))) {
     add_token(TokenType::Number);
     return std::nullopt;
   } else {

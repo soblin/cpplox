@@ -61,7 +61,7 @@ enum class TokenType {
 };
 
 // clang-format off
-static const std::unordered_map<std::string, TokenType> keyword_map = {
+static const std::unordered_map<std::string_view, TokenType> keyword_map = {
   {"and", TokenType::And},
   {"class", TokenType::Class},
   {"else", TokenType::Else},
@@ -81,7 +81,7 @@ static const std::unordered_map<std::string, TokenType> keyword_map = {
 };
 // clang-format on
 
-inline auto is_keyword(const std::string & str) -> bool
+inline auto is_keyword(const std::string_view & str) -> bool
 {
   return keyword_map.find(str) != keyword_map.end();
 }
@@ -89,7 +89,8 @@ inline auto is_keyword(const std::string & str) -> bool
 class Token
 {
 public:
-  Token(const TokenType type, const std::string & lexeme, const size_t line, const size_t column)
+  Token(
+    const TokenType type, const std::string_view & lexeme, const size_t line, const size_t column)
   : type(type), lexeme(lexeme), line(line), column(column)
   {
   }
@@ -98,7 +99,7 @@ public:
   {
   }
   const TokenType type;
-  const std::string lexeme;
+  const std::string_view lexeme;
   const size_t line;
   const size_t column;
 };
