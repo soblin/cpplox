@@ -18,7 +18,15 @@ class Interpreter
 {
 public:
   Interpreter() = default;
+
+  /**
+   * @brief execute the given program
+   */
   auto execute(const Program & program) -> std::optional<RuntimeError>;
+
+  /**
+   * @brief evaluate the given expression
+   */
   auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
 
   auto get_variable(const Token & token) const -> std::optional<Value>;

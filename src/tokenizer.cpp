@@ -15,13 +15,13 @@ Tokenizer::Tokenizer(const std::string & source) : source_(source)
 
 auto Tokenizer::is_at_end() const noexcept -> bool
 {
-  return current_ >= source_.size();
+  return current_cursor_ >= source_.size();
 }
 
 auto Tokenizer::take_tokens() -> std::variant<Tokens, SyntaxError>
 {
   while (!is_at_end()) {
-    start_ = current_;
+    current_ctx_start_cursor_ = current_cursor_;
     auto err_opt = scan_new_token();
     if (err_opt) {
       return err_opt.value();
@@ -33,7 +33,7 @@ auto Tokenizer::take_tokens() -> std::variant<Tokens, SyntaxError>
 auto Tokenizer::advance() noexcept -> std::optional<char>
 {
   if (!is_at_end()) {
-    auto c = source_.at(current_);
+    auto c = source_.at(current_cursor_);
     advance_cursor();
     return c;
   } else {
@@ -41,16 +41,13 @@ auto Tokenizer::advance() noexcept -> std::optional<char>
   }
 }
 
-auto Tokenizer::get_token_start_column() const noexcept -> size_t
-{
-  return column_ - (current_ - start_) + 1;
-};
-
 auto Tokenizer::add_token(const TokenType & token_type) -> void
 {
-  const auto start = (token_type == TokenType::String) ? (start_ + 1) : start_;  // to skip '"'
-  const auto len =
-    (token_type == TokenType::String) ? (current_ - start_ - 2) : (current_ - start_);
+  const auto start = (token_type == TokenType::String) ? (current_ctx_start_cursor_ + 1)
+                                                       : current_ctx_start_cursor_;  // to skip '"'
+  const auto len = (token_type == TokenType::String)
+                     ? (current_cursor_ - current_ctx_start_cursor_ - 2)
+                     : (current_cursor_ - current_ctx_start_cursor_);
   const auto text = std::string_view(source_).substr(start, len);
   if (token_type == TokenType::Identifier and is_keyword(text)) {
     tokens_.emplace_back(keyword_map.find(text)->second, text, line_, get_token_start_column());
@@ -171,7 +168,7 @@ auto Tokenizer::match(const char expected) noexcept -> bool
   if (is_at_end()) {
     return false;
   }
-  if (source_.at(current_) != expected) {
+  if (source_.at(current_cursor_) != expected) {
     return false;
   }
   advance_cursor();
@@ -183,7 +180,15 @@ auto Tokenizer::peek() noexcept -> char
   if (is_at_end()) {
     return '\0';
   }
-  return source_.at(current_);
+  return source_.at(current_cursor_);
+}
+
+auto Tokenizer::peek_next() const noexcept -> char
+{
+  if (current_cursor_ + 1 >= source_.size()) {
+    return '\0';
+  }
+  return source_.at(current_cursor_ + 1);
 }
 
 auto Tokenizer::add_string_token() -> std::optional<SyntaxError>
@@ -198,8 +203,7 @@ auto Tokenizer::add_string_token() -> std::optional<SyntaxError>
     return std::make_optional<SyntaxError>(
       SyntaxErrorKind::NonTerminatedStringError, line_, get_token_start_column());
   } else {
-    // NOTE: we need to skip the last '"'
-    advance();
+    advance();  // consume last '"'
   }
   add_token(TokenType::String);
   return std::nullopt;
@@ -220,7 +224,8 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
     advance();
   }
   if (is_at_end()) {
-    if (is_convertible(std::string_view(source_).substr(start_, current_ - start_))) {
+    if (is_convertible(std::string_view(source_).substr(
+          current_ctx_start_cursor_, current_cursor_ - current_ctx_start_cursor_))) {
       add_token(TokenType::Number);
       return std::nullopt;
     } else {
@@ -238,7 +243,8 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
       advance();
     }
     if (is_at_end()) {
-      if (is_convertible(std::string_view(source_).substr(start_, current_ - start_))) {
+      if (is_convertible(std::string_view(source_).substr(
+            current_ctx_start_cursor_, current_cursor_ - current_ctx_start_cursor_))) {
         add_token(TokenType::Number);
         return std::nullopt;
       } else {
@@ -248,21 +254,14 @@ auto Tokenizer::add_number_token() -> std::optional<SyntaxError>
     }
   }
 
-  if (is_convertible(std::string_view(source_).substr(start_, current_ - start_))) {
+  if (is_convertible(std::string_view(source_).substr(
+        current_ctx_start_cursor_, current_cursor_ - current_ctx_start_cursor_))) {
     add_token(TokenType::Number);
     return std::nullopt;
   } else {
     return std::make_optional<SyntaxError>(
       SyntaxErrorKind::InvalidNumberError, line_, get_token_start_column());
   }
-}
-
-auto Tokenizer::peek_next() const noexcept -> char
-{
-  if (current_ + 1 >= source_.size()) {
-    return '\0';
-  }
-  return source_.at(current_ + 1);
 }
 
 auto Tokenizer::add_identifier_token() -> std::optional<SyntaxError>
@@ -287,9 +286,14 @@ auto Tokenizer::handle_newline() -> void
 
 auto Tokenizer::advance_cursor() -> void
 {
-  current_++;
+  current_cursor_++;
   column_++;
 }
+
+auto Tokenizer::get_token_start_column() const noexcept -> size_t
+{
+  return column_ - (current_cursor_ - current_ctx_start_cursor_) + 1;
+};
 
 }  // namespace tokenizer
 }  // namespace lox

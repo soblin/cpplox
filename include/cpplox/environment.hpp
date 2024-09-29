@@ -3,7 +3,7 @@
 
 #include <boost/unordered/unordered_flat_map.hpp>
 
-#include <string>
+#include <string_view>
 
 namespace lox
 {
@@ -13,10 +13,12 @@ class Environment
 {
 public:
   Environment() = default;
+
   auto define(const Token & var, const Value & var_value) -> void
   {
     values_[var.lexeme] = var_value;
   }
+
   auto get(const Token & name) const -> std::variant<Value, RuntimeError>
   {
     if (const auto it = values_.find(name.lexeme); it != values_.end()) {

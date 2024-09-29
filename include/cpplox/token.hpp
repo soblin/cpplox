@@ -79,6 +79,7 @@ static const std::unordered_map<std::string_view, TokenType> keyword_map = {
   {"var", TokenType::Var},
   {"while", TokenType::While},
 };
+
 // clang-format on
 
 inline auto is_keyword(const std::string_view & str) -> bool
@@ -94,10 +95,12 @@ public:
   : type(type), lexeme(lexeme), line(line), column(column)
   {
   }
+
   Token(const Token & other)
   : type(other.type), lexeme(other.lexeme), line(other.line), column(other.column)
   {
   }
+
   const TokenType type;
   const std::string_view lexeme;
   const size_t line;

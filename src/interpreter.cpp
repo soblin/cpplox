@@ -167,6 +167,7 @@ public:
     assert(false);
     return expression::Nil{};
   }
+
   std::variant<Value, RuntimeError> operator()(const Binary & binary)
   {
     const auto left_opt = boost::apply_visitor(*this, binary.left);

@@ -15,12 +15,14 @@ public:
   std::stringstream ss;
 
   void operator()(const Literal & literal) { ss << literal.lexeme; }
+
   void operator()(const Unary & unary)
   {
     ss << "(" << unary.op.lexeme << " ";
     boost::apply_visitor(*this, unary.expr);
     ss << ")";
   }
+
   void operator()(const Binary & binary)
   {
     ss << "(" << binary.op.lexeme << " ";
@@ -29,13 +31,16 @@ public:
     boost::apply_visitor(*this, binary.right);
     ss << ")";
   }
+
   void operator()(const Group & group)
   {
     ss << "(group ";
     boost::apply_visitor(*this, group.expr);
     ss << ")";
   }
+
   void operator()(const Variable & variable) { ss << variable.name.lexeme; }
+
   void operator()(const Assign & assign)
   {
     ss << "(= " << assign.name.lexeme << " ";
