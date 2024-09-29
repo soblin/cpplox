@@ -3,7 +3,7 @@
 
 #include <boost/unordered/unordered_flat_map.hpp>
 
-#include <string_view>
+#include <string>
 
 namespace lox
 {
@@ -16,12 +16,12 @@ public:
 
   auto define(const Token & var, const Value & var_value) -> void
   {
-    values_[var.lexeme] = var_value;
+    values_[std::string(var.lexeme)] = var_value;
   }
 
   auto get(const Token & name) const -> std::variant<Value, RuntimeError>
   {
-    if (const auto it = values_.find(name.lexeme); it != values_.end()) {
+    if (const auto it = values_.find(std::string(name.lexeme)); it != values_.end()) {
       return it->second;
     } else {
       return RuntimeError{RuntimeErrorKind::UndefinedVariable};
@@ -29,7 +29,9 @@ public:
   }
 
 private:
-  boost::unordered_flat_map<std::string_view, Value> values_;
+  // NOTE: if the key is string_view, even if the string content is same "foo", if the source of the
+  // string_view is different like in the REPL mode, "foo" will be treated as different
+  boost::unordered_flat_map<std::string, Value> values_;
 };
 
 }  // namespace environment
