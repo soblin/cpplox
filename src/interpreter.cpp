@@ -37,8 +37,6 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
             std::cerr << lox::to_lisp_repr(stmt.expression) << std::endl;
             return as_variant<RuntimeError>(eval_opt);
           }
-          std::cout << "(for debug: value is " << stringify(as_variant<Value>(eval_opt)) << ")"
-                    << std::endl;
           return std::nullopt;
         },
         [&](const PrintStmt & stmt) -> std::optional<RuntimeError> {
@@ -46,7 +44,7 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
           if (is_variant_v<RuntimeError>(eval_opt)) {
             return as_variant<RuntimeError>(eval_opt);
           }
-          std::cout << "print " << stringify(as_variant<Value>(eval_opt)) << std::endl;
+          std::cout << stringify(as_variant<Value>(eval_opt)) << std::endl;
           return std::nullopt;
         },
         [&](const VarDeclStmt & stmt) -> std::optional<RuntimeError> {
@@ -56,10 +54,7 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
               return as_variant<RuntimeError>(eval_opt);
             }
             env_->define(stmt.name, as_variant<Value>(eval_opt));
-            std::cout << "(for debug: defined " << stmt.name.lexeme << " = "
-                      << stringify(as_variant<Value>(eval_opt)) << ")" << std::endl;
           } else {
-            std::cout << "(for debug: defined " << stmt.name.lexeme << " = nil)" << std::endl;
             env_->define(stmt.name, Nil{});
           }
           return std::nullopt;
