@@ -40,7 +40,7 @@ auto is_equal(const Value & left, const Value & right) -> bool
   if (helper::is_str(left)) {
     return as_variant<std::string>(left) == as_variant<std::string>(right);
   }
-  assert(false);
+  assert(false);  // LCOV_EXCL_LINE
   return false;
 }
 
