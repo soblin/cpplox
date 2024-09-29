@@ -31,6 +31,14 @@ struct SyntaxError
   {
   }
 
+  SyntaxError(const SyntaxError & other)
+  : kind(other.kind),
+    line(other.line),
+    ctx_start_index(other.ctx_start_index),
+    ctx_end_index(other.ctx_end_index)
+  {
+  }
+
   /**
    * @brief get the column number on its line, starting from 1
    */

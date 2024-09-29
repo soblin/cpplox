@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/error.hpp>
 #include <cpplox/interpreter.hpp>
 #include <cpplox/parser.hpp>

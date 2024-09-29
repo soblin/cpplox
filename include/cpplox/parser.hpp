@@ -119,7 +119,7 @@ private:
    */
   auto advance() -> const Token &;
 
-  auto create_error(const SyntaxErrorKind & kind) const -> SyntaxError;
+  auto create_error(const SyntaxErrorKind & kind, const size_t error_ctx) const -> SyntaxError;
 };
 
 template <>

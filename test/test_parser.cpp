@@ -52,7 +52,6 @@ TEST(Tokenizer, parse_errors)
     EXPECT_EQ(err.line->number, 1);
     EXPECT_EQ(err.get_lexical_column(), 8);
   }
-
   {
     const std::string source = R"(_this@ = 123)";
     auto tokenizer = lox::Tokenizer(source);
