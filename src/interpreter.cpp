@@ -287,7 +287,10 @@ public:
       return as_variant<RuntimeError>(rvalue_opt);
     }
     const auto & rvalue = as_variant<Value>(rvalue_opt);
-    env->define(assign.name, rvalue);
+    const auto assign_err = env->assign(assign.name, rvalue);
+    if (assign_err) {
+      return assign_err.value();
+    }
     return rvalue;
   }
 };
