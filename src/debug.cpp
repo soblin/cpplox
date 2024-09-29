@@ -2,39 +2,53 @@
 
 #include <boost/variant/recursive_variant.hpp>
 
+#include <sstream>
+
 namespace lox
 {
 
 inline namespace debug
 {
-class LispReprVisitor : boost::static_visitor<std::string>
+class LispReprVisitor : boost::static_visitor<void>
 {
 public:
-  std::string operator()(const Literal & literal) { return literal.lexeme; }
-  std::string operator()(const Unary & unary)
+  std::stringstream ss;
+
+  void operator()(const Literal & literal) { ss << literal.lexeme; }
+  void operator()(const Unary & unary)
   {
-    return "(" + unary.op.lexeme + " " + boost::apply_visitor(LispReprVisitor(), unary.expr) + ")";
+    ss << "(" << unary.op.lexeme << " ";
+    boost::apply_visitor(*this, unary.expr);
+    ss << ")";
   }
-  std::string operator()(const Binary & binary)
+  void operator()(const Binary & binary)
   {
-    return "(" + binary.op.lexeme + " " + boost::apply_visitor(LispReprVisitor(), binary.left) +
-           " " + boost::apply_visitor(LispReprVisitor(), binary.right) + ")";
+    ss << "(" << binary.op.lexeme << " ";
+    boost::apply_visitor(*this, binary.left);
+    ss << " ";
+    boost::apply_visitor(*this, binary.right);
+    ss << ")";
   }
-  std::string operator()(const Group & group)
+  void operator()(const Group & group)
   {
-    return "(group " + boost::apply_visitor(LispReprVisitor(), group.expr) + ")";
+    ss << "(group ";
+    boost::apply_visitor(*this, group.expr);
+    ss << ")";
   }
-  std::string operator()(const Variable & variable) { return variable.name.lexeme; }
-  std::string operator()(const Assign & assign)
+  void operator()(const Variable & variable) { ss << variable.name.lexeme; }
+  void operator()(const Assign & assign)
   {
-    return "(= " + assign.name.lexeme + " " + boost::apply_visitor(LispReprVisitor(), assign.expr) +
-           ")";
+    ss << "(= " << assign.name.lexeme << " ";
+    boost::apply_visitor(*this, assign.expr);
+    ss << ")";
   }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string
 {
-  return boost::apply_visitor(LispReprVisitor(), expr);
+  auto visitor = LispReprVisitor();
+  boost::apply_visitor(visitor, expr);
+  return visitor.ss.str();
 }
 
 }  // namespace debug

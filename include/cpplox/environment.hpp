@@ -27,7 +27,7 @@ public:
   }
 
 private:
-  boost::unordered_flat_map<std::string, Value> values_;
+  boost::unordered_flat_map<std::string_view, Value> values_;
 };
 
 }  // namespace environment

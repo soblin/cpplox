@@ -128,7 +128,7 @@ public:
       return true;
     }
     if (literal.type == TokenType::String) {
-      return literal.lexeme;
+      return std::string(literal.lexeme);
     }
     if (literal.type == TokenType::Number) {
       const double d = boost::lexical_cast<double>(literal.lexeme);
