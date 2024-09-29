@@ -1,3 +1,4 @@
+#include <cpplox/error.hpp>
 #include <cpplox/interpreter.hpp>
 #include <cpplox/parser.hpp>
 #include <cpplox/tokenizer.hpp>
@@ -165,6 +166,25 @@ TEST(Evaluate, compare)
   }
   {
     const std::string source = R"(123 == 123)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::Expr>(parse_result), true);
+
+    auto interpreter = lox::Interpreter{};
+    const auto & expr = lox::as_variant<lox::Expr>(parse_result);
+    const auto & eval_opt = interpreter.evaluate_expr(expr);
+    EXPECT_EQ(lox::is_variant_v<lox::Value>(eval_opt), true);
+    const auto & eval = lox::as_variant<lox::Value>(eval_opt);
+    EXPECT_EQ(lox::is_variant_v<bool>(eval), true);
+    EXPECT_EQ(lox::as_variant<bool>(eval), true);
+  }
+  {
+    const std::string source = R"(123.45 == 123.45)";
     auto tokenizer = lox::Tokenizer(source);
     const auto result = tokenizer.take_tokens();
     EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
@@ -922,6 +942,48 @@ TEST(Evaluate, errors)
     const auto & expr = lox::as_variant<lox::Expr>(parse_result);
     const auto & eval_opt = interpreter.evaluate_expr(expr);
     EXPECT_EQ(lox::is_variant_v<lox::RuntimeError>(eval_opt), true);
+  }
+  {
+    const std::string source = R"(123 == (1+2)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedParenError);
+  }
+  {
+    const std::string source = R"(123 < (1+2)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedParenError);
+  }
+  {
+    const std::string source = R"(-(1+2)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.expression();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedParenError);
   }
   {
     const std::string source = R"(123 > 456 * "123")";
