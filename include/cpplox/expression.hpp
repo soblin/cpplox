@@ -88,6 +88,7 @@ inline auto is_long(const Value & value) -> bool
 {
   return value.index() == long_Index;
 }
+
 inline auto is_double(const Value & value) -> bool
 {
   return value.index() == double_Index;

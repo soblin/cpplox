@@ -41,12 +41,20 @@ static constexpr bool is_within_variant_v =
   is_within_variant<typename std::decay_t<T>, typename std::decay_t<V>>::value;
 }  // namespace detail
 
+/**
+ * @brief statically check if the specified type is the candidate of the given variant and return
+ * true if the internal hold type matches given type
+ */
 template <typename T, typename V>
 auto is_variant_v(V && v) -> typename std::enable_if_t<detail::is_within_variant_v<T, V>, bool>
 {
   return std::holds_alternative<T>(std::forward<V>(v));
 }
 
+/**
+ * @brief statically check if the specified type is the candidate of the given variant and return
+ * the reference to the internal hold data as specified type
+ */
 template <typename T, typename V>
 auto as_variant(V && v) noexcept ->
   typename std::enable_if_t<detail::is_within_variant_v<T, V>, const T &>

@@ -93,6 +93,7 @@ private:
 
   template <typename... Types>
   auto match(const Types... types) const -> bool;
+
   template <typename TokenType, typename... TypeTail>
   auto match(const TokenType & head, const TypeTail... tail) const -> bool
   {

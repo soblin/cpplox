@@ -27,6 +27,7 @@ public:
       add_history(input_);
     }
   }
+
   ~Readline()
   {
     if (input_) {
@@ -46,6 +47,7 @@ public:
 private:
   char * input_{nullptr};
 };
+
 auto report(const int line, const std::string & where, const std::string & message) -> void
 {
   std::cout << "[line " << line << "] Error" << where << ": " << message << std::endl;
