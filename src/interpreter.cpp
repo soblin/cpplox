@@ -36,7 +36,6 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
         [&](const ExprStmt & stmt) -> std::optional<RuntimeError> {
           const auto eval_opt = evaluate_expr(stmt.expression);
           if (is_variant_v<RuntimeError>(eval_opt)) {
-            std::cerr << lox::to_lisp_repr(stmt.expression) << std::endl;
             return as_variant<RuntimeError>(eval_opt);
           }
           return std::nullopt;
