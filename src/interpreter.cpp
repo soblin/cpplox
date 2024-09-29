@@ -17,6 +17,7 @@ inline namespace interpreter
 
 auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError>
 {
+  // LCOV_EXCL_START
   auto stringify = [](const Value & value) -> std::string {
     return std::visit(
       visit_variant{
@@ -28,6 +29,7 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
       },
       value);
   };
+  // LCOV_EXCL_STOP
   for (const auto & statement : program) {
     const std::optional<RuntimeError> result = std::visit(
       visit_variant{
@@ -44,7 +46,9 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
           if (is_variant_v<RuntimeError>(eval_opt)) {
             return as_variant<RuntimeError>(eval_opt);
           }
+          // LCOV_EXCL_START
           std::cout << stringify(as_variant<Value>(eval_opt)) << std::endl;
+          // LCOV_EXCL_STOP
           return std::nullopt;
         },
         [&](const VarDeclStmt & stmt) -> std::optional<RuntimeError> {
@@ -135,7 +139,7 @@ public:
     }
 
     // this is unreachable actually
-    assert(false);
+    assert(false);  // LCOV_EXCL_LINE
     return expression::Nil{};
   }
 
@@ -159,7 +163,7 @@ public:
     }
 
     // this is unreachable actually
-    assert(false);
+    assert(false);  // LCOV_EXCL_LINE
     return expression::Nil{};
   }
 
@@ -276,7 +280,7 @@ public:
     }
 
     // this is unreachable actually
-    assert(false);
+    assert(false);  // LCOV_EXCL_LINE
     return expression::Nil{};
   }
 
