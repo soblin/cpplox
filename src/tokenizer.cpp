@@ -3,6 +3,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <string>
+
 namespace lox
 {
 
@@ -110,10 +112,13 @@ auto Tokenizer::scan_new_token() -> std::optional<SyntaxError>
       ) {
         advance();
       }
+      advance();
+      handle_newline();
+      return std::nullopt;
     } else {
       add_token(TokenType::Slash);
+      return std::nullopt;
     }
-    return std::nullopt;
   }
   if (c == '*') {
     add_token(TokenType::Star);
@@ -280,8 +285,11 @@ auto Tokenizer::handle_newline() -> void
 {
   line_++;
   current_line_start_index_ = current_cursor_;
-  lines_.emplace_back(std::make_shared<Line>(
-    std::nullopt, line_, current_line_start_index_, get_next_newline_or_eof()));
+  const auto line_end = get_next_newline_or_eof();
+  if (current_line_start_index_ < line_end) {
+    lines_.emplace_back(
+      std::make_shared<Line>(std::nullopt, line_, current_line_start_index_, line_end));
+  }
 }
 
 auto Tokenizer::advance_cursor() -> void
@@ -292,7 +300,8 @@ auto Tokenizer::advance_cursor() -> void
 auto Tokenizer::get_next_newline_or_eof() const noexcept -> size_t
 {
   for (size_t i = current_cursor_; i < source_.size(); ++i) {
-    if (i == '\n' || i == '\0') {
+    const auto c = source_.at(i);
+    if (c == '\n' || c == '\0' || c == std::char_traits<char>::eof()) {
       return i;
     }
   }
