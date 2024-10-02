@@ -22,21 +22,25 @@ struct PrintStmt
   const Expr expression;
 };
 
+// struct Block;
+
+using Stmt = boost::variant<ExprStmt, PrintStmt /*, boost::recursive_wrapper<Block> */>;
+
 struct VarDecl
 {
   const Token name;
   const std::optional<Expr> initializer;
 };
 
-struct Block;
-using Stmt = boost::variant<ExprStmt, PrintStmt, boost::recursive_wrapper<Block>>;
+using Declaration =
+  boost::variant<VarDecl, Stmt>;  //<! TODO(soblin): Stmt becomes variant_wrapper<Stmt>
 
-using Declaration = boost::variant<VarDecl, boost::recursive_wrapper<Stmt>>;
-
+/*
 struct Block
 {
-  std::vector<Declaration> declarations;
+std::vector<Declaration> declarations;
 };
+*/
 
 using Program = std::vector<Declaration>;
 

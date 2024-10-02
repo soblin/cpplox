@@ -25,14 +25,19 @@ public:
   auto execute(const Program & program) -> std::optional<RuntimeError>;
 
   /**
+   * @brief execute the given declaration
+   */
+  auto execute_declaration(const Declaration & declaration) -> std::optional<RuntimeError>;
+
+  /**
+   * @brief execute the given statement
+   */
+  auto execute_stmt(const Stmt & stmt) -> std::optional<RuntimeError>;
+
+  /**
    * @brief evaluate the given expression
    */
   auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
-
-  /**
-   * @brief evalute the given statement
-   */
-  auto execute_stmt(const Stmt & stmt) -> std::optional<RuntimeError>;
 
   auto get_variable(const Token & token) const -> std::optional<Value>;
 
