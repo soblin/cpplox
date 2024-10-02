@@ -22,9 +22,9 @@ struct PrintStmt
   const Expr expression;
 };
 
-// struct Block;
+struct Block;
 
-using Stmt = boost::variant<ExprStmt, PrintStmt /*, boost::recursive_wrapper<Block> */>;
+using Stmt = boost::variant<ExprStmt, PrintStmt, boost::recursive_wrapper<Block>>;
 
 struct VarDecl
 {
@@ -32,15 +32,12 @@ struct VarDecl
   const std::optional<Expr> initializer;
 };
 
-using Declaration =
-  boost::variant<VarDecl, Stmt>;  //<! TODO(soblin): Stmt becomes variant_wrapper<Stmt>
+using Declaration = boost::variant<VarDecl, Stmt>;
 
-/*
 struct Block
 {
-std::vector<Declaration> declarations;
+  std::vector<Declaration> declarations;
 };
-*/
 
 using Program = std::vector<Declaration>;
 

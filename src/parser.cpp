@@ -48,7 +48,9 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
   if (is_variant_v<SyntaxError>(statement_opt)) {
     return as_variant<SyntaxError>(statement_opt);
   }
-  return as_variant<Stmt>(statement_opt);
+  const auto & stmt = as_variant<Stmt>(statement_opt);
+  Declaration decl = stmt;
+  return decl;
 }
 
 auto Parser::var_decl() -> std::variant<VarDecl, SyntaxError>
@@ -88,6 +90,9 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
       return as_variant<SyntaxError>(print_stmt_opt);
     }
     return as_variant<PrintStmt>(print_stmt_opt);
+  }
+  if (match(TokenType::LeftBrace)) {
+    advance();  // consume '{'
   }
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
