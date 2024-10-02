@@ -20,15 +20,17 @@ struct PrintStmt
   const Expr expression;
 };
 
-struct VarDeclStmt
+struct VarDecl
 {
   const Token name;
   const std::optional<Expr> initializer;
 };
 
-using Stmt = std::variant<ExprStmt, PrintStmt, VarDeclStmt>;
+using Stmt = std::variant<ExprStmt, PrintStmt>;
 
-using Program = std::vector<Stmt>;
+using Declaration = std::variant<VarDecl, Stmt>;
+
+using Program = std::vector<Declaration>;
 
 }  // namespace stmt
 }  // namespace lox

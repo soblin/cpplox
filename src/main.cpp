@@ -73,7 +73,7 @@ auto run(lox::Interpreter & interpreter, const std::string & program)
     return lox::as_variant<lox::SyntaxError>(program_result);
   }
   const auto exec_opt =
-    interpreter.execute(lox::as_variant<std::vector<lox::Stmt>>(program_result));
+    interpreter.execute(lox::as_variant<std::vector<lox::Declaration>>(program_result));
   if (exec_opt) {
     return exec_opt.value();
   }

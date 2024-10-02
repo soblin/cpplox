@@ -25,25 +25,33 @@ auto Parser::program() -> std::variant<Program, SyntaxError>
 {
   Program statements;
   while (!is_at_end()) {
-    const auto statement_opt = declaration();
-    if (is_variant_v<SyntaxError>(statement_opt)) {
-      return as_variant<SyntaxError>(statement_opt);
+    const auto declaration_opt = declaration();
+    if (is_variant_v<SyntaxError>(declaration_opt)) {
+      return as_variant<SyntaxError>(declaration_opt);
     }
-    statements.push_back(as_variant<Stmt>(statement_opt));
+    statements.push_back(as_variant<Declaration>(declaration_opt));
   }
   return statements;
 }
 
-auto Parser::declaration() -> std::variant<Stmt, SyntaxError>
+auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
 {
   if (match(TokenType::Var)) {
     advance();  // just consume 'var'
-    return var_decl();
+    const auto var_declaration = var_decl();
+    if (is_variant_v<SyntaxError>(var_declaration)) {
+      return as_variant<SyntaxError>(var_declaration);
+    }
+    return as_variant<VarDecl>(var_declaration);
   }
-  return statement();
+  const auto statement_opt = statement();
+  if (is_variant_v<SyntaxError>(statement_opt)) {
+    return as_variant<SyntaxError>(statement_opt);
+  }
+  return as_variant<Stmt>(statement_opt);
 }
 
-auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
+auto Parser::var_decl() -> std::variant<VarDecl, SyntaxError>
 {
   const auto var_decl_ctx = current_;
   if (!match(TokenType::Identifier)) {
@@ -62,25 +70,33 @@ auto Parser::var_decl() -> std::variant<Stmt, SyntaxError>
       return create_error(SyntaxErrorKind::StmtWithoutSemicolun, var_decl_ctx);
     }
     advance();  // consume ';'
-    return VarDeclStmt{name, std::make_optional<Expr>(initializer)};
+    return VarDecl{name, std::make_optional<Expr>(initializer)};
   }
   if (!match(TokenType::Semicolun)) {
     return create_error(SyntaxErrorKind::StmtWithoutSemicolun, var_decl_ctx);
   }
   advance();  // consume ';'
-  return VarDeclStmt{name, std::nullopt};
+  return VarDecl{name, std::nullopt};
 }
 
 auto Parser::statement() -> std::variant<Stmt, SyntaxError>
 {
   if (match(TokenType::Print)) {
     advance();  // consumme 'print'
-    return print_statement();
+    const auto print_stmt_opt = print_statement();
+    if (is_variant_v<SyntaxError>(print_stmt_opt)) {
+      return as_variant<SyntaxError>(print_stmt_opt);
+    }
+    return as_variant<PrintStmt>(print_stmt_opt);
   }
-  return expr_statement();
+  const auto expr_stmt_opt = expr_statement();
+  if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
+    return as_variant<SyntaxError>(expr_stmt_opt);
+  }
+  return as_variant<ExprStmt>(expr_stmt_opt);
 }
 
-auto Parser::print_statement() -> std::variant<Stmt, SyntaxError>
+auto Parser::print_statement() -> std::variant<PrintStmt, SyntaxError>
 {
   const auto print_ctx = current_;
   const auto expr_opt = expression();
@@ -92,7 +108,7 @@ auto Parser::print_statement() -> std::variant<Stmt, SyntaxError>
   }
 }
 
-auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
+auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>
 {
   const auto expr_ctx = current_;
   const auto expr_opt = expression();
@@ -108,7 +124,6 @@ auto Parser::expr_statement() -> std::variant<Stmt, SyntaxError>
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
 {
-  // return equality();
   return assignment();
 }
 

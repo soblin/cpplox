@@ -24,12 +24,12 @@ public:
   /**
    * @brief <declaration> := <var_decl> | <statement>
    */
-  auto declaration() -> std::variant<Stmt, SyntaxError>;
+  auto declaration() -> std::variant<Declaration, SyntaxError>;
 
   /**
    * @brief <var_decl> := "var" IDENTIFIER ("=" <expression>)? ";"
    */
-  auto var_decl() -> std::variant<Stmt, SyntaxError>;
+  auto var_decl() -> std::variant<VarDecl, SyntaxError>;
 
   /**
    * @brief <statement> := <expr_stmt> | <print_stmt>
@@ -39,12 +39,13 @@ public:
   /**
    * @brief <expr_stmt> := <expression> ";"
    */
-  auto expr_statement() -> std::variant<Stmt, SyntaxError>;
+  auto expr_statement() -> std::variant<ExprStmt, SyntaxError>;
 
   /**
    * @brief <print_stmt> := "print" <expression> ";"
+   *
    */
-  auto print_statement() -> std::variant<Stmt, SyntaxError>;
+  auto print_statement() -> std::variant<PrintStmt, SyntaxError>;
 
   /**
     @brief <expression> ::= <assignment>
