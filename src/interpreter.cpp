@@ -15,55 +15,42 @@ namespace lox
 inline namespace interpreter
 {
 
+namespace
+{
+// LCOV_EXCL_START
+auto stringify = [](const Value & value) -> std::string {
+  return std::visit(
+    visit_variant{
+      [](const Nil & nil) -> std::string { return "nil"; },
+      [](const bool & boolean) -> std::string { return boolean ? "true" : "false"; },
+      [](const int64_t & i) -> std::string { return std::to_string(i); },
+      [](const double & d) -> std::string { return std::to_string(d); },
+      [](const std::string & str) -> std::string { return str; },
+    },
+    value);
+};
+// LCOV_EXCL_STOP
+}  // namespace
+
 auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError>
 {
-  // LCOV_EXCL_START
-  auto stringify = [](const Value & value) -> std::string {
-    return std::visit(
-      visit_variant{
-        [](const Nil & nil) -> std::string { return "nil"; },
-        [](const bool & boolean) -> std::string { return boolean ? "true" : "false"; },
-        [](const int64_t & i) -> std::string { return std::to_string(i); },
-        [](const double & d) -> std::string { return std::to_string(d); },
-        [](const std::string & str) -> std::string { return str; },
-      },
-      value);
-  };
-  // LCOV_EXCL_STOP
-  for (const auto & statement : program) {
+  for (const auto & declaration : program) {
     const std::optional<RuntimeError> result = std::visit(
       visit_variant{
-        [&](const ExprStmt & stmt) -> std::optional<RuntimeError> {
-          const auto eval_opt = evaluate_expr(stmt.expression);
-          if (is_variant_v<RuntimeError>(eval_opt)) {
-            return as_variant<RuntimeError>(eval_opt);
-          }
-          return std::nullopt;
-        },
-        [&](const PrintStmt & stmt) -> std::optional<RuntimeError> {
-          const auto eval_opt = evaluate_expr(stmt.expression);
-          if (is_variant_v<RuntimeError>(eval_opt)) {
-            return as_variant<RuntimeError>(eval_opt);
-          }
-          // LCOV_EXCL_START
-          std::cout << stringify(as_variant<Value>(eval_opt)) << std::endl;
-          // LCOV_EXCL_STOP
-          return std::nullopt;
-        },
-        [&](const VarDeclStmt & stmt) -> std::optional<RuntimeError> {
-          if (stmt.initializer) {
-            const auto eval_opt = evaluate_expr(stmt.initializer.value());
+        [&](const VarDecl & decl) -> std::optional<RuntimeError> {
+          if (decl.initializer) {
+            const auto eval_opt = evaluate_expr(decl.initializer.value());
             if (is_variant_v<RuntimeError>(eval_opt)) {
               return as_variant<RuntimeError>(eval_opt);
             }
-            env_->define(stmt.name, as_variant<Value>(eval_opt));
+            env_->define(decl.name, as_variant<Value>(eval_opt));
           } else {
-            env_->define(stmt.name, Nil{});
+            env_->define(decl.name, Nil{});
           }
           return std::nullopt;
         },
-      },
-      statement);
+        [&](const Stmt & stmt) -> std::optional<RuntimeError> { return execute_stmt(stmt); }},
+      declaration);
     if (result) {
       return result.value();
     }
@@ -309,6 +296,31 @@ auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, Runtim
 {
   auto evaluator = EvaluateExprVisitor(env_);
   return boost::apply_visitor(evaluator, expr);
+}
+
+auto Interpreter::execute_stmt(const Stmt & stmt) -> std::optional<RuntimeError>
+{
+  return std::visit(
+    visit_variant{
+      [&](const ExprStmt & stmt) -> std::optional<RuntimeError> {
+        const auto eval_opt = evaluate_expr(stmt.expression);
+        if (is_variant_v<RuntimeError>(eval_opt)) {
+          return as_variant<RuntimeError>(eval_opt);
+        }
+        return std::nullopt;
+      },
+      [&](const PrintStmt & stmt) -> std::optional<RuntimeError> {
+        const auto eval_opt = evaluate_expr(stmt.expression);
+        if (is_variant_v<RuntimeError>(eval_opt)) {
+          return as_variant<RuntimeError>(eval_opt);
+        }
+        // LCOV_EXCL_START
+        std::cout << stringify(as_variant<Value>(eval_opt)) << std::endl;
+        // LCOV_EXCL_STOP
+        return std::nullopt;
+      },
+    },
+    stmt);
 }
 
 auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>

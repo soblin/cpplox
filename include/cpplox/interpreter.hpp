@@ -29,6 +29,11 @@ public:
    */
   auto evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>;
 
+  /**
+   * @brief evalute the given statement
+   */
+  auto execute_stmt(const Stmt & stmt) -> std::optional<RuntimeError>;
+
   auto get_variable(const Token & token) const -> std::optional<Value>;
 
 private:
