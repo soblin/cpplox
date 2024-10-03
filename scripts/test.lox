@@ -13,3 +13,25 @@ print b;
 // string
 var str = "Hello" + " " + " World!";
 print str;
+
+var a = "global a";
+var b = "global b";
+var c = "global c";
+
+{
+   var a = "inner1 a";
+   var b = "inner1 b";
+   {
+      var a = "inner2 a";
+      print a;
+      print b;
+      print c;
+   }
+   print a;
+   print b;
+   print c;
+}
+
+print a;
+print b;
+print c;
