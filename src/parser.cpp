@@ -92,21 +92,13 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     return as_variant<PrintStmt>(print_stmt_opt);
   }
   if (match(TokenType::LeftBrace)) {
-    const auto brace_ctx = current_;
     advance();  // consume '{'
-    std::vector<Declaration> declarations;
-    while (!is_at_end()) {
-      const auto decl_opt = declaration();
-      if (is_variant_v<Declaration>(decl_opt)) {
-        const auto & decl = as_variant<Declaration>(decl_opt);
-        declarations.push_back(decl);
-      }
-    }
-    if (is_at_end() || !match(TokenType::RightBrace)) {
-      return create_error(SyntaxErrorKind::UnmatchedBraceError, brace_ctx);
+    const auto block_opt = block();
+    if (is_variant_v<SyntaxError>(block_opt)) {
+      return as_variant<SyntaxError>(block_opt);
     }
     advance();  // consume '}'
-    return Block{declarations};
+    return as_variant<Block>(block_opt);
   }
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
@@ -125,6 +117,23 @@ auto Parser::print_statement() -> std::variant<PrintStmt, SyntaxError>
   } else {
     return create_error(SyntaxErrorKind::StmtWithoutSemicolun, print_ctx);
   }
+}
+
+auto Parser::block() -> std::variant<Block, SyntaxError>
+{
+  const auto brace_ctx = current_;
+  std::vector<Declaration> declarations;
+  while (!is_at_end()) {
+    const auto decl_opt = declaration();
+    if (is_variant_v<Declaration>(decl_opt)) {
+      const auto & decl = as_variant<Declaration>(decl_opt);
+      declarations.push_back(decl);
+    }
+  }
+  if (is_at_end() || !match(TokenType::RightBrace)) {
+    return create_error(SyntaxErrorKind::UnmatchedBraceError, brace_ctx);
+  }
+  return Block{declarations};
 }
 
 auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>

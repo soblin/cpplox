@@ -50,7 +50,7 @@ public:
   /**
    * @brief <block> := "{" <declarations>* "}";
    */
-  // auto block() -> std::variant<Block, SyntaxError>;
+  auto block() -> std::variant<Block, SyntaxError>;
 
   /**
     @brief <expression> ::= <assignment>
