@@ -6,6 +6,7 @@
 #include <boost/variant.hpp>
 
 #include <cassert>
+#include <iostream>
 
 namespace lox
 {
@@ -38,10 +39,14 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
 {
   if (match(TokenType::Var)) {
     advance();  // just consume 'var'
+    const auto lexeme = peek().lexeme;
+    const auto line = peek().line->number;
+    std::cout << "parsing var " << lexeme << " at line " << line << std::endl;
     const auto var_declaration = var_decl();
     if (is_variant_v<SyntaxError>(var_declaration)) {
       return as_variant<SyntaxError>(var_declaration);
     }
+    std::cout << "parsed " << lexeme << " at line " << line << std::endl;
     return as_variant<VarDecl>(var_declaration);
   }
   const auto statement_opt = statement();
@@ -93,11 +98,13 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
   }
   if (match(TokenType::LeftBrace)) {
     advance();  // consume '{'
+    std::cout << "parsing {" << std::endl;
     const auto block_opt = block();
     if (is_variant_v<SyntaxError>(block_opt)) {
       return as_variant<SyntaxError>(block_opt);
     }
     advance();  // consume '}'
+    std::cout << "finished parking }" << std::endl;
     return as_variant<Block>(block_opt);
   }
   const auto expr_stmt_opt = expr_statement();
@@ -128,6 +135,8 @@ auto Parser::block() -> std::variant<Block, SyntaxError>
     if (is_variant_v<Declaration>(decl_opt)) {
       const auto & decl = as_variant<Declaration>(decl_opt);
       declarations.push_back(decl);
+    } else {
+      return as_variant<SyntaxError>(decl_opt);
     }
   }
   if (is_at_end() || !match(TokenType::RightBrace)) {
