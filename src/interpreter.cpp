@@ -327,8 +327,16 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const PrintStmt & stm
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
 {
+  /**
+   * how it works:
+   * when a Block-statement is found, a inner env is created, and it is passed to
+   * ExecuteDeclarationVisitor, which may process a Stmt-declaration, and the Stmt-declaration maybe
+   * a Block-statement, thus a inner-inner env is created.
+   */
+  auto sub_scope_env = std::make_shared<Environment>(env);
   for (const auto & declaration : block.declarations) {
-    const auto eval_opt = boost::apply_visitor(ExecuteDeclarationVisitor(env), declaration);
+    const auto eval_opt =
+      boost::apply_visitor(ExecuteDeclarationVisitor(sub_scope_env), declaration);
     if (eval_opt) {
       return eval_opt;
     }
