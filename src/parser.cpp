@@ -92,7 +92,21 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     return as_variant<PrintStmt>(print_stmt_opt);
   }
   if (match(TokenType::LeftBrace)) {
+    const auto brace_ctx = current_;
     advance();  // consume '{'
+    std::vector<Declaration> declarations;
+    while (!is_at_end()) {
+      const auto decl_opt = declaration();
+      if (is_variant_v<Declaration>(decl_opt)) {
+        const auto & decl = as_variant<Declaration>(decl_opt);
+        declarations.push_back(decl);
+      }
+    }
+    if (is_at_end() || !match(TokenType::RightBrace)) {
+      return create_error(SyntaxErrorKind::UnmatchedBraceError, brace_ctx);
+    }
+    advance();  // consume '}'
+    return Block{declarations};
   }
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
