@@ -135,6 +135,9 @@ auto Parser::block() -> std::variant<Block, SyntaxError>
     if (is_variant_v<Declaration>(decl_opt)) {
       const auto & decl = as_variant<Declaration>(decl_opt);
       declarations.push_back(decl);
+      if (match(TokenType::RightBrace)) {
+        break;
+      }
     } else {
       return as_variant<SyntaxError>(decl_opt);
     }
