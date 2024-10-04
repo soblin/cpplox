@@ -13,7 +13,7 @@ coverage:
         enabled: false
 
 component_management:
-  individual_componenets:
+  individual_components:
     - component_id: header
       name: Header Files
       paths:
