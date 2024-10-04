@@ -11,3 +11,15 @@ coverage:
     patch:
       default:
         enabled: false
+
+component_management:
+  individual_componenets:
+    - component_id: header
+      name: Header Files
+      paths:
+        - include/cpplox/[^debug].hpp
+
+    - component_id: source
+      name: Source Files
+      paths:
+        - src/[^debug].cpp
