@@ -1,5 +1,4 @@
 ignore:
-  - "**/debug*"
   - "test/"
 
 coverage:
@@ -17,9 +16,9 @@ component_management:
     - component_id: header
       name: Header Files
       paths:
-        - include/cpplox/[^debug].hpp
+        - include/cpplox/'!debug.hpp'
 
     - component_id: source
       name: Source Files
       paths:
-        - src/[^debug].cpp
+        - src/'!debug.hpp'
