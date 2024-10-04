@@ -21,4 +21,4 @@ component_management:
     - component_id: source
       name: Source Files
       paths:
-        - src/'!debug.hpp'
+        - src/'!debug.cpp'
