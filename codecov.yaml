@@ -17,9 +17,9 @@ component_management:
     - component_id: header
       name: Header Files
       paths:
-        - include/cpplox/[^debug].hpp
+        - include/cpplox/**.hpp
 
     - component_id: source
       name: Source Files
       paths:
-        - src/[^debug].cpp
+        - src/**.cpp
