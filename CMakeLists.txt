@@ -43,8 +43,9 @@ FetchContent_MakeAvailable(magic-enum)
 include_directories(include/)
 
 add_library(
-  ${PROJECT_NAME}_lib SHARED src/tokenizer.cpp src/expression.cpp
-                             src/parser.cpp src/interpreter.cpp src/debug.cpp)
+  ${PROJECT_NAME}_lib SHARED
+  src/tokenizer.cpp src/expression.cpp src/parser.cpp src/interpreter.cpp
+  src/debug.cpp src/environment.cpp)
 target_link_libraries(${PROJECT_NAME}_lib readline magic_enum::magic_enum
                       Boost::unordered Boost::variant)
 
