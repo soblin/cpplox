@@ -4,6 +4,7 @@
 #include <cpplox/token.hpp>
 
 #include <memory>
+#include <string>
 
 namespace lox
 {
@@ -47,6 +48,11 @@ struct SyntaxError
   {
     return ctx_start_index - line->start_index + 1;
   }
+
+  auto get_line_string(const size_t offset = 0) const -> std::string;
+
+  auto get_visualization_string(const std::string_view & source, const size_t offset = 0) const
+    -> std::string;
 
   const SyntaxErrorKind kind;
   const std::shared_ptr<Line> line;
