@@ -37,11 +37,6 @@ auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, Runtim
   return impl::evaluate_expr_impl(expr, env_);
 }
 
-auto Interpreter::execute_stmt(const Stmt & stmt) -> std::optional<RuntimeError>
-{
-  return impl::execute_stmt_impl(stmt, env_);
-}
-
 auto Interpreter::execute_declaration(const Declaration & declaration)
   -> std::optional<RuntimeError>
 {
