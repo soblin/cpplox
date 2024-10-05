@@ -158,6 +158,31 @@ var c = "global c";
   EXPECT_EQ(lox::as_variant<std::string>(c_opt.value()), "inner2_c");
 }
 
+TEST(Block, block_error)
+{
+  const std::string source1 = R"(
+// first body
+var a = "global a";
+var b = "global b";
+var c = "global c";
+
+// first block
+{
+   var a = "inner1_a";
+   c = "inner1_c";
+)";
+  auto tokenizer = lox::Tokenizer(source1);
+  const auto result = tokenizer.take_tokens();
+  EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+  const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+  auto parser = lox::Parser(tokens);
+  const auto parse_result = parser.program();
+  EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+  const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+  EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedBraceError);
+}
+
 int main(int argc, char ** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
