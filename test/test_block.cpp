@@ -122,10 +122,12 @@ var c = "global c";
 {
    var a = "inner1_a";
    c = "inner1_c";
+   var d = "not_in_second";
    // second block
    {
       var a = "inner2_a";
       var b = "inner2_b";
+      c = d;
       c = "inner2_c";
    }
    // end second block

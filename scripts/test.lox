@@ -21,12 +21,13 @@ var c = "global c";
 {
    var a = "inner1 a";
    var b = "inner1 b";
+   var d = 123;
    {
       var a = "inner2 a";
       print a;
       print b;
       print c;
-      d = 3;
+      print d;
    }
    print a;
    print b;
