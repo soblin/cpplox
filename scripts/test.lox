@@ -26,6 +26,7 @@ var c = "global c";
       print a;
       print b;
       print c;
+      d = 3;
    }
    print a;
    print b;

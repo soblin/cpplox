@@ -22,7 +22,7 @@ public:
   /**
    * @brief execute the given program
    */
-  auto execute(const Program & program) -> std::optional<RuntimeError>;
+  [[nodiscard]] auto execute(const Program & program) -> std::optional<RuntimeError>;
 
   /**
    * @brief evaluate the given expression

@@ -106,7 +106,7 @@ var d = 123.456;
     const auto & program = lox::as_variant<lox::Program>(parse_result);
 
     lox::Interpreter interpreter{};
-    interpreter.execute(program);
+    [[maybe_unused]] const auto exec1 = interpreter.execute(program);
     const auto a_opt = interpreter.get_variable(tokens[1]);
     EXPECT_EQ(a_opt.has_value(), true);
     EXPECT_EQ(lox::is_variant_v<double>(a_opt.value()), true);
@@ -133,7 +133,7 @@ var d = 123.456;
     const std::string source2 = R"(d = c;)";
     const auto program2 = lox::as_variant<lox::Program>(
       lox::Parser(lox::as_variant<lox::Tokens>(lox::Tokenizer(source2).take_tokens())).program());
-    interpreter.execute(program2);
+    [[maybe_unused]] const auto exec2 = interpreter.execute(program2);
     d_opt = interpreter.get_variable(tokens[28]);
     EXPECT_EQ(d_opt.has_value(), true);
     EXPECT_EQ(lox::is_variant_v<double>(d_opt.value()), true);
@@ -154,7 +154,7 @@ var a;
     const auto & program = lox::as_variant<lox::Program>(parse_result);
 
     lox::Interpreter interpreter{};
-    interpreter.execute(program);
+    [[maybe_unused]] const auto exec = interpreter.execute(program);
     const auto a_opt = interpreter.get_variable(tokens[1]);
     EXPECT_EQ(a_opt.has_value(), true);
     const auto a = lox::as_variant<lox::Nil>(a_opt.value());
