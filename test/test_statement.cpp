@@ -5,6 +5,8 @@
 #include <cpplox/tokenizer.hpp>
 #include <cpplox/variant.hpp>
 
+#include <boost/variant.hpp>
+
 #include <gtest/gtest.h>
 
 TEST(Statement, expr_statement)
@@ -22,10 +24,10 @@ TEST(Statement, expr_statement)
     const auto parse_result = parser.program();
     EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
     const auto & program = lox::as_variant<lox::Program>(parse_result);
-    EXPECT_EQ(lox::is_variant_v<lox::Stmt>(program[0]), true);
-    const auto & stmt = lox::as_variant<lox::Stmt>(program[0]);
-    EXPECT_EQ(lox::is_variant_v<lox::ExprStmt>(stmt), true);
-    const auto & stmt1 = lox::as_variant<lox::ExprStmt>(stmt);
+    EXPECT_EQ(program[0].which(), 1);
+    const auto & stmt = boost::get<lox::Stmt>(program[0]);
+    EXPECT_EQ((stmt.which()), 0);
+    const auto & stmt1 = boost::get<lox::ExprStmt>(stmt);
 
     auto interpreter = lox::Interpreter{};
     const auto & eval_opt = interpreter.evaluate_expr(stmt1.expression);
@@ -48,10 +50,10 @@ print (1 + 2) * ( 3 + 4);
     const auto parse_result = parser.program();
     EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
     const auto & program = lox::as_variant<lox::Program>(parse_result);
-    EXPECT_EQ(lox::is_variant_v<lox::Stmt>(program[0]), true);
-    const auto & stmt = lox::as_variant<lox::Stmt>(program[0]);
-    EXPECT_EQ(lox::is_variant_v<lox::PrintStmt>(stmt), true);
-    const auto & stmt1 = lox::as_variant<lox::PrintStmt>(stmt);
+    EXPECT_EQ(program[0].which(), 1);
+    const auto & stmt = boost::get<lox::Stmt>(program[0]);
+    EXPECT_EQ(stmt.which(), 1);
+    const auto & stmt1 = boost::get<lox::PrintStmt>(stmt);
 
     auto interpreter = lox::Interpreter{};
     const auto & eval_opt = interpreter.evaluate_expr(stmt1.expression);
@@ -76,8 +78,8 @@ var a = (1 + 2) * ( 3 + 4);
     const auto parse_result = parser.program();
     EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
     const auto & program = lox::as_variant<lox::Program>(parse_result);
-    EXPECT_EQ(lox::is_variant_v<lox::VarDecl>(program[0]), true);
-    const auto & stmt1 = lox::as_variant<lox::VarDecl>(program[0]);
+    EXPECT_EQ(program[0].which(), 0);
+    const auto & stmt1 = boost::get<lox::VarDecl>(program[0]);
 
     auto interpreter = lox::Interpreter{};
     const auto & eval_opt = interpreter.evaluate_expr(stmt1.initializer.value());
@@ -104,7 +106,7 @@ var d = 123.456;
     const auto & program = lox::as_variant<lox::Program>(parse_result);
 
     lox::Interpreter interpreter{};
-    interpreter.execute(program);
+    [[maybe_unused]] const auto exec1 = interpreter.execute(program);
     const auto a_opt = interpreter.get_variable(tokens[1]);
     EXPECT_EQ(a_opt.has_value(), true);
     EXPECT_EQ(lox::is_variant_v<double>(a_opt.value()), true);
@@ -131,7 +133,7 @@ var d = 123.456;
     const std::string source2 = R"(d = c;)";
     const auto program2 = lox::as_variant<lox::Program>(
       lox::Parser(lox::as_variant<lox::Tokens>(lox::Tokenizer(source2).take_tokens())).program());
-    interpreter.execute(program2);
+    [[maybe_unused]] const auto exec2 = interpreter.execute(program2);
     d_opt = interpreter.get_variable(tokens[28]);
     EXPECT_EQ(d_opt.has_value(), true);
     EXPECT_EQ(lox::is_variant_v<double>(d_opt.value()), true);
@@ -152,7 +154,7 @@ var a;
     const auto & program = lox::as_variant<lox::Program>(parse_result);
 
     lox::Interpreter interpreter{};
-    interpreter.execute(program);
+    [[maybe_unused]] const auto exec = interpreter.execute(program);
     const auto a_opt = interpreter.get_variable(tokens[1]);
     EXPECT_EQ(a_opt.has_value(), true);
     const auto a = lox::as_variant<lox::Nil>(a_opt.value());
@@ -375,6 +377,22 @@ var a
     EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
+  }
+
+  {
+    const std::string source = R"(
+var 1 = 2 + 3;
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::MissingValidIdentifierDecl);
   }
 }
 

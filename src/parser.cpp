@@ -6,6 +6,7 @@
 #include <boost/variant.hpp>
 
 #include <cassert>
+#include <iostream>
 
 namespace lox
 {
@@ -48,7 +49,9 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
   if (is_variant_v<SyntaxError>(statement_opt)) {
     return as_variant<SyntaxError>(statement_opt);
   }
-  return as_variant<Stmt>(statement_opt);
+  const auto & stmt = as_variant<Stmt>(statement_opt);
+  Declaration decl = stmt;
+  return decl;
 }
 
 auto Parser::var_decl() -> std::variant<VarDecl, SyntaxError>
@@ -89,6 +92,15 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     }
     return as_variant<PrintStmt>(print_stmt_opt);
   }
+  if (match(TokenType::LeftBrace)) {
+    advance();  // consume '{'
+    const auto block_opt = block();
+    if (is_variant_v<SyntaxError>(block_opt)) {
+      return as_variant<SyntaxError>(block_opt);
+    }
+    advance();  // consume '}'
+    return as_variant<Block>(block_opt);
+  }
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
     return as_variant<SyntaxError>(expr_stmt_opt);
@@ -106,6 +118,28 @@ auto Parser::print_statement() -> std::variant<PrintStmt, SyntaxError>
   } else {
     return create_error(SyntaxErrorKind::StmtWithoutSemicolun, print_ctx);
   }
+}
+
+auto Parser::block() -> std::variant<Block, SyntaxError>
+{
+  const auto brace_ctx = current_;
+  std::vector<Declaration> declarations;
+  while (!is_at_end()) {
+    const auto decl_opt = declaration();
+    if (is_variant_v<Declaration>(decl_opt)) {
+      const auto & decl = as_variant<Declaration>(decl_opt);
+      declarations.push_back(decl);
+      if (match(TokenType::RightBrace)) {
+        break;
+      }
+    } else {
+      return as_variant<SyntaxError>(decl_opt);
+    }
+  }
+  if (is_at_end() || !match(TokenType::RightBrace)) {
+    return create_error(SyntaxErrorKind::UnmatchedBraceError, brace_ctx);
+  }
+  return Block{declarations};
 }
 
 auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>

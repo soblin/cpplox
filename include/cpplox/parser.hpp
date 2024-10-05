@@ -32,7 +32,7 @@ public:
   auto var_decl() -> std::variant<VarDecl, SyntaxError>;
 
   /**
-   * @brief <statement> := <expr_stmt> | <print_stmt>
+   * @brief <statement> := <expr_stmt> | <print_stmt> | <block>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
 
@@ -46,6 +46,11 @@ public:
    *
    */
   auto print_statement() -> std::variant<PrintStmt, SyntaxError>;
+
+  /**
+   * @brief <block> := "{" <declarations>* "}";
+   */
+  auto block() -> std::variant<Block, SyntaxError>;
 
   /**
     @brief <expression> ::= <assignment>

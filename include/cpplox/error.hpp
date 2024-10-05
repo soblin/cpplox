@@ -20,6 +20,7 @@ enum class SyntaxErrorKind {
   MissingValidIdentifierDecl,  //!< variable declaration without valid identifier
   MissingAssignmentOperator,   //!< "foo 3" is interpreted as '=' is missing in "foo = 3";
   InvalidAssignmentTarget,     //!< like "1 + 2 = 10;"
+  UnmatchedBraceError,         //!< "{a = 100;"
 };
 
 struct SyntaxError

@@ -1,6 +1,8 @@
 #pragma once
 #include <cpplox/expression.hpp>
 
+#include <boost/variant/recursive_variant.hpp>
+
 #include <optional>
 #include <vector>
 
@@ -20,15 +22,22 @@ struct PrintStmt
   const Expr expression;
 };
 
+struct Block;
+
+using Stmt = boost::variant<ExprStmt, PrintStmt, boost::recursive_wrapper<Block>>;
+
 struct VarDecl
 {
   const Token name;
   const std::optional<Expr> initializer;
 };
 
-using Stmt = std::variant<ExprStmt, PrintStmt>;
+using Declaration = boost::variant<VarDecl, Stmt>;
 
-using Declaration = std::variant<VarDecl, Stmt>;
+struct Block
+{
+  std::vector<Declaration> declarations;
+};
 
 using Program = std::vector<Declaration>;
 
