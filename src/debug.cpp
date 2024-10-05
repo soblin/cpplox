@@ -4,6 +4,8 @@
 
 #include <sstream>
 
+#include <magic_enum.hpp>
+
 namespace lox
 {
 
@@ -57,4 +59,36 @@ auto to_lisp_repr(const Expr & expr) -> std::string
 }
 
 }  // namespace debug
+
+inline namespace error
+{
+
+auto SyntaxError::get_line_string(const size_t offset) const -> std::string
+{
+  std::stringstream ss;
+  if (offset > 0) {
+    ss << std::string(offset, ' ');
+  }
+  ss << "SyntaxError: " << magic_enum::enum_name(kind) << " at line " << line->number << ", column "
+     << (ctx_start_index - line->start_index) << std::endl;
+  return ss.str();
+}
+
+auto SyntaxError::get_visualization_string(
+  const std::string_view & source, const size_t offset) const -> std::string
+{
+  std::stringstream ss;
+  if (offset > 0) {
+    ss << std::string(offset, ' ');
+  }
+  ss << debug::Thin << source.substr(line->start_index, ctx_start_index - line->start_index)
+     << debug::Reset;
+  ss << debug::Bold << debug::Red << debug::Underline
+     << source.substr(ctx_start_index, line->end_index - ctx_start_index + 1) << debug::Reset
+     << std::endl;
+  ss << std::string(offset + ctx_start_index - line->start_index, ' ') << "^" << std::endl;
+  return ss.str();
+}
+
+}  // namespace error
 }  // namespace lox
