@@ -99,7 +99,8 @@ auto runFile(const char * path) -> int
   }
   if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
     const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-    std::cerr << magic_enum::enum_name(exec.kind) << std::endl;
+    std::cout << lox::get_line_string(exec, 2) << std::endl;
+    std::cout << lox::get_visualization_string(ss.str(), exec, 4);
     return 1;
   }
   return 0;
@@ -135,7 +136,8 @@ auto runPrompt() -> int
       }
       if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-        std::cerr << magic_enum::enum_name(exec.kind) << std::endl;
+        std::cout << lox::get_line_string(exec, 2) << std::endl;
+        std::cout << lox::get_visualization_string(prompt, exec, 4);
       }
     }
   }

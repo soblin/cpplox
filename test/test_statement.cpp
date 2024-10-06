@@ -197,7 +197,7 @@ TEST(Statement, expr_statement_errors)
     lox::Interpreter interpreter{};
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
-    EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::TypeError);
+    EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
   }
 
   {
@@ -233,7 +233,7 @@ print (1 + 2) * ( 3 + "str");
     lox::Interpreter interpreter{};
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
-    EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::TypeError);
+    EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
   }
 
   {
@@ -270,7 +270,7 @@ var c = a * d;
     lox::Interpreter interpreter{};
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
-    EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::UndefinedVariable);
+    EXPECT_EQ(lox::is_variant_v<lox::UndefinedVariableError>(exec.value()), true);
   }
 
   {
@@ -290,7 +290,7 @@ var a = (1 + 2) * (3 + "str");
     lox::Interpreter interpreter{};
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
-    EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::TypeError);
+    EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
   }
 
   {
@@ -327,7 +327,7 @@ a = (1 + 2) * (3 + "str");
     lox::Interpreter interpreter{};
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
-    EXPECT_EQ(exec.value().kind, lox::RuntimeErrorKind::TypeError);
+    EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
   }
 
   {

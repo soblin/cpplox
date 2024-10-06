@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cpplox/expression.hpp>
 #include <cpplox/position.hpp>
 #include <cpplox/token.hpp>
 
@@ -49,10 +50,12 @@ struct SyntaxError
     return ctx_start_index - line->start_index + 1;
   }
 
+  // LCOV_EXCL_START
   auto get_line_string(const size_t offset = 0) const -> std::string;
 
   auto get_visualization_string(const std::string_view & source, const size_t offset = 0) const
     -> std::string;
+  // LCOV_EXCL_STOP
 
   const SyntaxErrorKind kind;
   const std::shared_ptr<Line> line;
@@ -60,15 +63,28 @@ struct SyntaxError
   const size_t ctx_end_index;    //<! end index of the rough range of the error
 };
 
-enum class RuntimeErrorKind {
-  TypeError,          //!< 1 + "2"
-  UndefinedVariable,  //!<
+struct TypeError
+{
+  // 1 + "2"
+  const Token op;
+  const Expr expr;
 };
 
-struct RuntimeError
+struct UndefinedVariableError
 {
-  const RuntimeErrorKind kind;
+  const Token variable;  //!< the variable
+  const Expr expr;       //!< the entire expression
 };
+
+using RuntimeError = std::variant<TypeError, UndefinedVariableError>;
+
+// LCOV_EXCL_START
+auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;
+
+auto get_visualization_string(
+  const std::string & source, const RuntimeError & error, const size_t offset = 0) -> std::string;
+
+// LCOV_EXCL_STOP
 
 }  // namespace error
 }  // namespace lox

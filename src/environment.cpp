@@ -16,7 +16,7 @@ auto Environment::assign(const Token & var, const Value & var_value) -> std::opt
   if (enclosing_) {
     return enclosing_->assign(var, var_value);
   }
-  return RuntimeError{RuntimeErrorKind::UndefinedVariable};
+  return UndefinedVariableError{var, Literal{var.type, var.lexeme, var.line, var.start_index}};
 }
 
 auto Environment::get(const Token & name) const -> std::variant<Value, RuntimeError>
@@ -26,7 +26,8 @@ auto Environment::get(const Token & name) const -> std::variant<Value, RuntimeEr
   } else if (enclosing_) {
     return enclosing_->get(name);
   } else {
-    return RuntimeError{RuntimeErrorKind::UndefinedVariable};
+    return UndefinedVariableError{
+      name, Literal{name.type, name.lexeme, name.line, name.start_index}};
   }
 }
 }  // namespace environment
