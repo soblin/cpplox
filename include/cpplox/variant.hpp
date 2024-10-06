@@ -68,37 +68,47 @@ auto is_variant_v(V && v) -> typename std::enable_if_t<detail::is_within_variant
 
 namespace experimental
 {
-template <template <typename...> class Variant, typename... Ts>
-struct is_within_variant
+template <typename T>
+struct checker_for_std : std::false_type
 {
-  template <typename Enable, typename... Us>
-  struct checker_for_std;
+};
 
-  template <typename... Us>
-  struct checker_for_std<
-    typename std::enable_if<std::is_same<Variant<Us...>, std::variant<Us...>>::value>::type, Us...>
+template <typename... Us>
+struct checker_for_std<std::variant<Us...>> : std::true_type
+{
+};
+
+template <typename T>
+static constexpr bool is_std_variant = checker_for_std<T>::value;
+
+template <typename V, typename Enable = void>
+struct is_variant;
+
+template <template <typename...> class Variant, typename... Ts>
+struct is_variant<
+  Variant<Ts...>, typename std::enable_if<checker_for_std<Variant<Ts...>>::value>::type>
+{
+  template <typename X, typename Y>
+  struct check;
+
+  template <typename T, typename Head, typename... Tail>
+  struct check<T, Variant<Head, Tail...>>
+  : std::conditional_t<std::is_same_v<T, Head>, std::true_type, check<T, Variant<Tail...>>>
   {
-    template <typename T, typename V>
-    struct check;
+  };
 
-    template <typename T, typename Head, typename... Tail>
-    struct check<T, std::variant<Head, Tail...>>
-    : std::conditional_t<std::is_same_v<T, Head>, std::true_type, check<T, std::variant<Tail...>>>
-    {
-    };
-
-    template <typename T>
-    struct check<T, std::variant<>> : std::false_type
-    {
-    };
-
-    template <typename T>
-    static constexpr bool check_v = check<T, Us...>::value;
+  template <typename T, typename Head>
+  struct check<T, Variant<Head>>
+  : std::conditional_t<std::is_same_v<T, Head>, std::true_type, std::false_type>
+  {
   };
 
   template <typename T>
-  static constexpr bool is_within_std_variant = checker_for_std<Ts...>::check_v;
+  static constexpr bool is_within = check<T, Variant<Ts...>>::value;
 };
+
+template <typename T, typename V>
+static constexpr bool is_within = is_variant<V>::template is_within<T>;
 
 }  // namespace experimental
 
