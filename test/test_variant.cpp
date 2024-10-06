@@ -28,6 +28,9 @@ TEST(Variant, is_variant_false)
   constexpr bool str =
     lox::detail::is_within_variant_v<std::string, std::variant<char, double, int>>;
   EXPECT_EQ(str, false);
+
+  const auto b = lox::variant::experimental::is_within_variant<
+    std::variant, int, bool, std::string>::is_within_std_variant<double>;
 }
 
 int main(int argc, char ** argv)

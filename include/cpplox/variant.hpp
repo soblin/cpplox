@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/variant.hpp>
+
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -36,6 +38,19 @@ struct is_within_variant<T, std::variant<>> : std::false_type
 {
 };
 
+template <typename T, typename Head, typename... Tail>
+struct is_within_variant<T, boost::variant<Head, Tail...>>
+: std::conditional_t<
+    std::is_same_v<T, Head>, std::true_type, is_within_variant<T, boost::variant<Tail...>>>
+{
+};
+
+template <typename T, typename Head>
+struct is_within_variant<T, boost::variant<Head>>
+: std::conditional_t<std::is_same_v<T, Head>, std::true_type, std::false_type>
+{
+};
+
 template <typename T, typename V>
 static constexpr bool is_within_variant_v =
   is_within_variant<typename std::decay_t<T>, typename std::decay_t<V>>::value;
@@ -50,6 +65,42 @@ auto is_variant_v(V && v) -> typename std::enable_if_t<detail::is_within_variant
 {
   return std::holds_alternative<T>(std::forward<V>(v));
 }
+
+namespace experimental
+{
+template <template <typename...> class Variant, typename... Ts>
+struct is_within_variant
+{
+  template <typename Enable, typename... Us>
+  struct checker_for_std;
+
+  template <typename... Us>
+  struct checker_for_std<
+    typename std::enable_if<std::is_same<Variant<Us...>, std::variant<Us...>>::value>::type, Us...>
+  {
+    template <typename T, typename V>
+    struct check;
+
+    template <typename T, typename Head, typename... Tail>
+    struct check<T, std::variant<Head, Tail...>>
+    : std::conditional_t<std::is_same_v<T, Head>, std::true_type, check<T, std::variant<Tail...>>>
+    {
+    };
+
+    template <typename T>
+    struct check<T, std::variant<>> : std::false_type
+    {
+    };
+
+    template <typename T>
+    static constexpr bool check_v = check<T, Us...>::value;
+  };
+
+  template <typename T>
+  static constexpr bool is_within_std_variant = checker_for_std<Ts...>::check_v;
+};
+
+}  // namespace experimental
 
 /**
  * @brief statically check if the specified type is the candidate of the given variant and return
