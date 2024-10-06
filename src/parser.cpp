@@ -1,12 +1,9 @@
-#include <cpplox/error.hpp>
 #include <cpplox/parser.hpp>
-#include <cpplox/statement.hpp>
 #include <cpplox/variant.hpp>
 
 #include <boost/variant.hpp>
 
 #include <cassert>
-#include <iostream>
 
 namespace lox
 {
@@ -290,6 +287,7 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
     return Variable{token};
   }
   if (match(TokenType::LeftParen)) {
+    const auto left_paren = peek();
     const auto error_ctx_paren = current_;
     const auto left_anchor = peek();
     advance();  // just consume '('
@@ -298,8 +296,9 @@ auto Parser::primary() -> std::variant<Expr, SyntaxError>
       return expr_opt;
     }
     if (match(TokenType::RightParen)) {
+      const auto right_paren = peek();
       advance();  // just consume ')'
-      return Group{as_variant<Expr>(expr_opt)};
+      return Group{left_paren, as_variant<Expr>(expr_opt), right_paren};
     }
     return create_error(SyntaxErrorKind::UnmatchedParenError, error_ctx_paren);
   }

@@ -1,4 +1,5 @@
 #pragma once
+#include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
 
 #include <boost/unordered/unordered_flat_map.hpp>

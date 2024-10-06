@@ -240,7 +240,7 @@ var c = "global c";
   lox::Interpreter interpreter{};
   const auto err_opt = interpreter.execute(program);
   EXPECT_EQ(err_opt.has_value(), true);
-  EXPECT_EQ(err_opt.value().kind, lox::RuntimeErrorKind::UndefinedVariable);
+  EXPECT_EQ(lox::is_variant_v<lox::UndefinedVariableError>(err_opt.value()), true);
 }
 
 int main(int argc, char ** argv)

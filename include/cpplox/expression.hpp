@@ -1,5 +1,4 @@
 #pragma once
-#include <cpplox/error.hpp>
 #include <cpplox/token.hpp>
 #include <cpplox/variant.hpp>
 
@@ -45,7 +44,9 @@ struct Binary
 
 struct Group
 {
+  const Token left_paren;  //!< only for saving position info
   const Expr expr;
+  const Token right_paren;  //!< only for saving position info
 };
 
 struct Variable

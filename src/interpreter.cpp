@@ -1,8 +1,5 @@
-#include <cpplox/debug.hpp>
 #include <cpplox/environment.hpp>
-#include <cpplox/expression.hpp>
 #include <cpplox/interpreter.hpp>
-#include <cpplox/statement.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -136,8 +133,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Unary & 
   const auto & right_value = as_variant<Value>(right);
   if (unary.op.type == TokenType::Minus) {
     if (!helper::is_numeric(right_value)) {
-      // TODO(soblin): like -"123"
-      return RuntimeError{RuntimeErrorKind::TypeError};
+      return TypeError{unary.op, unary.expr};
     }
     return helper::is_long(right_value) ? -as_variant<int64_t>(right_value)
                                         : -1.0 * as_variant<double>(right_value);
@@ -167,8 +163,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
   // A * B
   if (binary.op.type == TokenType::Star) {
     if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
-      // TODO(soblin): like "123" * true
-      return RuntimeError{RuntimeErrorKind::TypeError};
+      return TypeError{binary.op, binary};
     }
     return apply_binary_op_scalar<std::multiplies>(left, right);
   }
@@ -176,8 +171,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
   // A / B
   if (binary.op.type == TokenType::Slash) {
     if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
-      // TODO(soblin): like "123" * true
-      return RuntimeError{RuntimeErrorKind::TypeError};
+      return TypeError{binary.op, binary};
     }
     // TODO(soblin): ZeroDivisionError
     return apply_binary_op_scalar<std::divides>(left, right);
@@ -186,8 +180,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
   // A - B
   if (binary.op.type == TokenType::Minus) {
     if (!helper::is_numeric(left) || !helper::is_numeric(right)) {
-      // TODO(soblin): like "123" * true
-      return RuntimeError{RuntimeErrorKind::TypeError};
+      return TypeError{binary.op, binary};
     }
     return apply_binary_op_scalar<std::minus>(left, right);
   }
@@ -200,7 +193,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
     if (helper::is_str(left) && helper::is_str(right)) {
       return as_variant<std::string>(left) + as_variant<std::string>(right);
     }
-    return RuntimeError{RuntimeErrorKind::TypeError};
+    return TypeError{binary.op, binary};
   }
 
   // A > B
@@ -208,7 +201,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
     if (helper::is_numeric(left) && helper::is_numeric(right)) {
       return apply_binary_op_bool<std::greater>(left, right);
     }
-    return RuntimeError{RuntimeErrorKind::TypeError};
+    return TypeError{binary.op, binary};
   }
 
   // A >= B
@@ -216,7 +209,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
     if (helper::is_numeric(left) && helper::is_numeric(right)) {
       return apply_binary_op_bool<std::greater_equal>(left, right);
     }
-    return RuntimeError{RuntimeErrorKind::TypeError};
+    return TypeError{binary.op, binary};
   }
 
   // A < B
@@ -224,7 +217,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
     if (helper::is_numeric(left) && helper::is_numeric(right)) {
       return apply_binary_op_bool<std::less>(left, right);
     }
-    return RuntimeError{RuntimeErrorKind::TypeError};
+    return TypeError{binary.op, binary};
   }
 
   // A <= B
@@ -232,7 +225,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
     if (helper::is_numeric(left) && helper::is_numeric(right)) {
       return apply_binary_op_bool<std::less_equal>(left, right);
     }
-    return RuntimeError{RuntimeErrorKind::TypeError};
+    return TypeError{binary.op, binary};
   }
 
   // A == B
@@ -287,7 +280,8 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Assign &
   const auto & rvalue = as_variant<Value>(rvalue_opt);
   const auto assign_err = env->assign(assign.name, rvalue);
   if (assign_err) {
-    return assign_err.value();
+    // NOTE: returned value from env does not contain expr information
+    return UndefinedVariableError{assign.name, assign.expr};
   }
   return rvalue;
 }
