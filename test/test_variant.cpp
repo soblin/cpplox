@@ -35,6 +35,17 @@ TEST(Variant, is_variant_false)
   const auto b2 =
     lox::variant::experimental::is_within<double, std::variant<int, bool, std::string>>;
   EXPECT_EQ(b2, false);
+
+  const auto b3 =
+    lox::variant::experimental::is_within<int, boost::variant<int, bool, std::string>>;
+  EXPECT_EQ(b3, true);
+
+  const auto b4 =
+    lox::variant::experimental::is_within<double, boost::variant<int, bool, std::string>>;
+  EXPECT_EQ(b4, false);
+
+  // lox::variant::experimental::is_within<double, std::tuple<int, bool, std::string>>; this does
+  // not compile
 }
 
 int main(int argc, char ** argv)
