@@ -1,3 +1,4 @@
+#include <cpplox/expression.hpp>
 #include <cpplox/variant.hpp>
 
 #include <gtest/gtest.h>
@@ -43,6 +44,12 @@ TEST(Variant, is_variant_false)
   const auto b4 =
     lox::variant::experimental::is_within<double, boost::variant<int, bool, std::string>>;
   EXPECT_EQ(b4, false);
+
+  const auto b5 = lox::variant::experimental::is_within<lox::Variable, lox::Expr>;
+  EXPECT_EQ(b5, true);
+
+  const auto b6 = lox::variant::experimental::is_within<lox::Token, lox::Expr>;
+  EXPECT_EQ(b6, false);
 
   // lox::variant::experimental::is_within<double, std::tuple<int, bool, std::string>>; this does
   // not compile

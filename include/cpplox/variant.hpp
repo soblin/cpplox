@@ -123,7 +123,12 @@ struct is_variant<
 
   template <typename T, typename Head, typename... Tail>
   struct check<T, Variant<Head, Tail...>>
-  : std::conditional_t<std::is_same_v<T, Head>, std::true_type, check<T, Variant<Tail...>>>
+  : std::conditional_t<
+      std::disjunction<
+        std::is_same<T, Head>,                           //<! normal case
+        std::is_same<boost::recursive_wrapper<T>, Head>  //<! this is need for recursive variant
+        >::value,
+      std::true_type, check<T, Variant<Tail...>>>
   {
   };
 
@@ -141,23 +146,25 @@ template <typename T, typename V>
 static constexpr bool is_within = is_variant<V>::template is_within<T>;
 
 template <typename T, typename V>
-auto is_variant_v(V && v) -> typename std::enable_if_t<is_within<T, V>, bool>
+auto is_variant_v(const V & v) ->
+  typename std::enable_if_t<is_within<typename std::decay_t<T>, typename std::decay_t<V>>, bool>
 {
-  if constexpr (checker_for_std<V>::value) {
+  if constexpr (checker_for_std<typename std::decay_t<V>>::value) {
     return std::holds_alternative<T>(v);
   }
-  if constexpr (checker_for_boost<V>::value) {
+  if constexpr (checker_for_boost<typename std::decay_t<V>>::value) {
     return boost::get<T>(&v) != nullptr;
   }
 }
 
 template <typename T, typename V>
-auto as_variant(V && v) -> typename std::enable_if_t<is_within<T, V>, const T &>
+auto as_variant(V && v) -> typename std::enable_if_t<
+                          is_within<typename std::decay_t<T>, typename std::decay_t<V>>, const T &>
 {
-  if constexpr (checker_for_std<V>::value) {
+  if constexpr (checker_for_std<typename std::decay_t<V>>::value) {
     return std::get<T>(std::forward<V>(v));
   }
-  if constexpr (checker_for_boost<V>::value) {
+  if constexpr (checker_for_boost<typename std::decay_t<V>>::value) {
     return boost::get<T>(v);
   }
 }
