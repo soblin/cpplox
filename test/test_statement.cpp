@@ -24,10 +24,10 @@ TEST(Statement, expr_statement)
     const auto parse_result = parser.program();
     EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
     const auto & program = lox::as_variant<lox::Program>(parse_result);
-    EXPECT_EQ(program[0].which(), 1);
-    const auto & stmt = boost::get<lox::Stmt>(program[0]);
-    EXPECT_EQ((stmt.which()), 0);
-    const auto & stmt1 = boost::get<lox::ExprStmt>(stmt);
+    EXPECT_EQ(lox::is_variant_v<lox::Stmt>(program[0]), true);
+    const auto & stmt = lox::as_variant<lox::Stmt>(program[0]);
+    EXPECT_EQ(lox::is_variant_v<lox::ExprStmt>(stmt), true);
+    const auto & stmt1 = lox::as_variant<lox::ExprStmt>(stmt);
 
     auto interpreter = lox::Interpreter{};
     const auto & eval_opt = interpreter.evaluate_expr(stmt1.expression);
@@ -50,10 +50,10 @@ print (1 + 2) * ( 3 + 4);
     const auto parse_result = parser.program();
     EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
     const auto & program = lox::as_variant<lox::Program>(parse_result);
-    EXPECT_EQ(program[0].which(), 1);
-    const auto & stmt = boost::get<lox::Stmt>(program[0]);
-    EXPECT_EQ(stmt.which(), 1);
-    const auto & stmt1 = boost::get<lox::PrintStmt>(stmt);
+    EXPECT_EQ(lox::is_variant_v<lox::Stmt>(program[0]), true);
+    const auto & stmt = lox::as_variant<lox::Stmt>(program[0]);
+    EXPECT_EQ(lox::is_variant_v<lox::PrintStmt>(stmt), true);
+    const auto & stmt1 = lox::as_variant<lox::PrintStmt>(stmt);
 
     auto interpreter = lox::Interpreter{};
     const auto & eval_opt = interpreter.evaluate_expr(stmt1.expression);
@@ -78,8 +78,8 @@ var a = (1 + 2) * ( 3 + 4);
     const auto parse_result = parser.program();
     EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
     const auto & program = lox::as_variant<lox::Program>(parse_result);
-    EXPECT_EQ(program[0].which(), 0);
-    const auto & stmt1 = boost::get<lox::VarDecl>(program[0]);
+    EXPECT_EQ(lox::is_variant_v<lox::VarDecl>(program[0]), true);
+    const auto & stmt1 = lox::as_variant<lox::VarDecl>(program[0]);
 
     auto interpreter = lox::Interpreter{};
     const auto & eval_opt = interpreter.evaluate_expr(stmt1.initializer.value());

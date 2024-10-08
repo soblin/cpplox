@@ -168,10 +168,10 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
   if (match(TokenType::Equal)) {
     const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
     // TODO(soblin): as_variant for boost.variant
-    if (lvalue_expr.which() != 4 /* Variable */) {
+    if (!is_variant_v<Variable>(lvalue_expr)) {
       return create_error(SyntaxErrorKind::InvalidAssignmentTarget, error_ctx_assign_target);
     }
-    const auto & lvalue = boost::get<Variable>(lvalue_expr);
+    const auto & lvalue = as_variant<Variable>(lvalue_expr);
     advance();  // consume '='
     const auto rvalue_expr = assignment();
     if (is_variant_v<SyntaxError>(rvalue_expr)) {
