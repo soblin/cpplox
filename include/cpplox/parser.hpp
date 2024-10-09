@@ -43,12 +43,13 @@ public:
 
   /**
    * @brief <print_stmt> := "print" <expression> ";"
-   *
+   * @post after success, current_ is next to the last ';'
    */
   auto print_statement() -> std::variant<PrintStmt, SyntaxError>;
 
   /**
    * @brief <block> := "{" <declarations>* "}";
+   * @post after success, current_ is next to the last '}'
    */
   auto block() -> std::variant<Block, SyntaxError>;
 
@@ -59,6 +60,10 @@ public:
    */
   auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
 
+  /**
+   * @brief parse (...) {...}
+   * @post after success, current_ is next to the last '}'
+   */
   auto branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>;
 
   /**
