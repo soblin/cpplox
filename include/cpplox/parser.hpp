@@ -32,7 +32,7 @@ public:
   auto var_decl() -> std::variant<VarDecl, SyntaxError>;
 
   /**
-   * @brief <statement> := <expr_stmt> | <print_stmt> | <block>
+   * @brief <statement> := <expr_stmt> | <print_stmt> | <block> | <if_block>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
 
@@ -51,6 +51,15 @@ public:
    * @brief <block> := "{" <declarations>* "}";
    */
   auto block() -> std::variant<Block, SyntaxError>;
+
+  /**
+   * @brief <if_block> := "if" "(" <expression> ")" "{" <declaration>* "}"
+   *                      ("else if" "("<expression> ")" "{" <declaration>* "}")*
+   *                      ("else" "{" <declaration>* "}")?
+   */
+  auto if_block() -> std::variant<IfBlock, SyntaxError>;
+
+  auto branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>;
 
   /**
     @brief <expression> ::= <assignment>

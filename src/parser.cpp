@@ -81,6 +81,7 @@ auto Parser::var_decl() -> std::variant<VarDecl, SyntaxError>
 
 auto Parser::statement() -> std::variant<Stmt, SyntaxError>
 {
+  // <print_stmt>
   if (match(TokenType::Print)) {
     advance();  // consumme 'print'
     const auto print_stmt_opt = print_statement();
@@ -89,6 +90,8 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     }
     return as_variant<PrintStmt>(print_stmt_opt);
   }
+
+  // <block>
   if (match(TokenType::LeftBrace)) {
     advance();  // consume '{'
     const auto block_opt = block();
@@ -98,11 +101,47 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     advance();  // consume '}'
     return as_variant<Block>(block_opt);
   }
+
+  // <if_block>
+  const auto if_start_ctx = current_;
+  if (match(TokenType::If)) {
+    advance();  // consume "if"
+    const auto branch_clause_opt = branch_clause(if_start_ctx);
+    if (is_variant_v<SyntaxError>(branch_clause_opt)) {
+      return as_variant<SyntaxError>(branch_clause_opt);
+    }
+    const auto & if_clause = as_variant<BranchClause>(branch_clause_opt);
+    // TODO(soblin): "else if" can be arbitrary number, so do while to parser all of them
+    if (!match(TokenType::Else)) {
+      return IfBlock{if_clause, {}, {}};
+    }
+    advance();  // consume "else"
+    // "else..."
+    if (match(TokenType::If)) {
+      advance();  // consume "if"
+    }
+  }
+
+  // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
     return as_variant<SyntaxError>(expr_stmt_opt);
   }
   return as_variant<ExprStmt>(expr_stmt_opt);
+}
+
+auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>
+{
+  const auto expr_ctx = current_;
+  const auto expr_opt = expression();
+  if (is_variant_v<SyntaxError>(expr_opt)) {
+    return as_variant<SyntaxError>(expr_opt);
+  }
+  if (match(TokenType::Semicolun)) {
+    advance();  // just consime ';'
+    return ExprStmt{as_variant<Expr>(expr_opt)};
+  }
+  return create_error(SyntaxErrorKind::StmtWithoutSemicolun, expr_ctx);
 }
 
 auto Parser::print_statement() -> std::variant<PrintStmt, SyntaxError>
@@ -139,18 +178,40 @@ auto Parser::block() -> std::variant<Block, SyntaxError>
   return Block{declarations};
 }
 
-auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>
+auto Parser::if_block() -> std::variant<IfBlock, SyntaxError>
 {
-  const auto expr_ctx = current_;
-  const auto expr_opt = expression();
-  if (is_variant_v<SyntaxError>(expr_opt)) {
-    return as_variant<SyntaxError>(expr_opt);
+}
+
+auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>
+{
+  if (!match(TokenType::LeftParen)) {
+    return create_error(SyntaxErrorKind::MissingIfConditon, current_);
   }
-  if (match(TokenType::Semicolun)) {
-    advance();  // just consime ';'
-    return ExprStmt{as_variant<Expr>(expr_opt)};
+  advance();  // consume '('
+  const auto cond_opt = expression();
+  if (is_variant_v<SyntaxError>(cond_opt)) {
+    return as_variant<SyntaxError>(cond_opt);
   }
-  return create_error(SyntaxErrorKind::StmtWithoutSemicolun, expr_ctx);
+  const auto & cond = as_variant<Expr>(cond_opt);
+  if (!match(TokenType::RightParen)) {
+    return create_error(SyntaxErrorKind::UnmatchedParenError, if_start_ctx);
+  }
+  advance();  // consume ')'
+  if (!match(TokenType::LeftBrace)) {
+    return create_error(SyntaxErrorKind::MissingIfBody, if_start_ctx);
+  }
+  const auto brace_ctx = current_;
+  advance();  // consume '{'
+  const auto block_opt = block();
+  if (is_variant_v<SyntaxError>(block_opt)) {
+    return as_variant<SyntaxError>(block_opt);
+  }
+  if (!match(TokenType::RightBrace)) {
+    return create_error(SyntaxErrorKind::UnmatchedBraceError, brace_ctx);
+  }
+  advance();  // consume '}'
+  const auto & declarations = as_variant<Block>(block_opt).declarations;
+  return BranchClause{cond, declarations};
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>

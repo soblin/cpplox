@@ -23,6 +23,8 @@ enum class SyntaxErrorKind {
   MissingAssignmentOperator,   //!< "foo 3" is interpreted as '=' is missing in "foo = 3";
   InvalidAssignmentTarget,     //!< like "1 + 2 = 10;"
   UnmatchedBraceError,         //!< "{a = 100;"
+  MissingIfConditon,           //!< (cond) if missing like "if { <body> }}"
+  MissingIfBody,               //!< "{ <body> }" is not found after if
 };
 
 struct SyntaxError
