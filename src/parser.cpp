@@ -93,12 +93,10 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
 
   // <block>
   if (match(TokenType::LeftBrace)) {
-    advance();  // consume '{'
     const auto block_opt = block();
     if (is_variant_v<SyntaxError>(block_opt)) {
       return as_variant<SyntaxError>(block_opt);
     }
-    advance();  // consume '}'
     return as_variant<Block>(block_opt);
   }
 
