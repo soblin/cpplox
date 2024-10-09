@@ -106,25 +106,11 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
   const auto if_start_ctx = current_;
   if (match(TokenType::If)) {
     advance();  // consume "if"
-    const auto branch_clause_opt = branch_clause(if_start_ctx);
-    if (is_variant_v<SyntaxError>(branch_clause_opt)) {
-      return as_variant<SyntaxError>(branch_clause_opt);
+    const auto if_block_opt = if_block(if_start_ctx);
+    if (is_variant_v<SyntaxError>(if_block_opt)) {
+      return as_variant<SyntaxError>(if_block_opt);
     }
-    const auto & if_clause = as_variant<BranchClause>(branch_clause_opt);
-    std::vector<BranchClause> else_if_clauses;
-    while (!is_at_end()) {
-      if (!match(TokenType::Else)) {
-        break;
-      }
-      advance();  // consume "else"
-      // "else..."
-      if (match(TokenType::If)) {
-        advance();  // consume "if"
-      }
-      if (!match(TokenType::LeftBrace)) {
-        // これもif_blockで行う
-      }
-    }
+    return as_variant<IfBlock>(if_block_opt);
   }
   // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
@@ -182,8 +168,40 @@ auto Parser::block() -> std::variant<Block, SyntaxError>
   return Block{declarations};
 }
 
-auto Parser::if_block() -> std::variant<IfBlock, SyntaxError>
+auto Parser::if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>
 {
+  const auto branch_clause_opt = branch_clause(if_start_ctx);
+  if (is_variant_v<SyntaxError>(branch_clause_opt)) {
+    return as_variant<SyntaxError>(branch_clause_opt);
+  }
+  const auto & if_clause = as_variant<BranchClause>(branch_clause_opt);
+  std::vector<BranchClause> else_if_clauses;
+  while (!is_at_end()) {
+    const auto else_start_ctx = current_;
+    if (!match(TokenType::Else)) {
+      // end
+      break;
+    }
+    advance();  // consume "else"
+
+    // "else if () {}"
+    if (match(TokenType::If)) {
+      advance();  // consume "if"
+      const auto elseif_branch_clause_opt = branch_clause(else_start_ctx);
+      continue;
+    }
+
+    // "else {}"
+    if (!match(TokenType::LeftBrace)) {
+      return create_error(SyntaxErrorKind::UnmatchedBraceError, else_start_ctx);
+    }
+    advance();  // consume '{'
+    const auto else_body_opt = block();
+    if (is_variant_v<SyntaxError>(else_body_opt)) {
+      return as_variant<SyntaxError>(else_body_opt);
+    }
+    const auto & else_body = as_variant<Block>(else_body_opt);
+  }
 }
 
 auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>
@@ -232,7 +250,6 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
   }
   if (match(TokenType::Equal)) {
     const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
-    // TODO(soblin): as_variant for boost.variant
     if (!is_variant_v<Variable>(lvalue_expr)) {
       return create_error(SyntaxErrorKind::InvalidAssignmentTarget, error_ctx_assign_target);
     }

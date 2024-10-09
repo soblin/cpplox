@@ -57,7 +57,7 @@ public:
    *                      ("else if" "("<expression> ")" "{" <declaration>* "}")*
    *                      ("else" "{" <declaration>* "}")?
    */
-  auto if_block() -> std::variant<IfBlock, SyntaxError>;
+  auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
 
   auto branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>;
 
