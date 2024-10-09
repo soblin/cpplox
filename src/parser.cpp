@@ -111,17 +111,21 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
       return as_variant<SyntaxError>(branch_clause_opt);
     }
     const auto & if_clause = as_variant<BranchClause>(branch_clause_opt);
-    // TODO(soblin): "else if" can be arbitrary number, so do while to parser all of them
-    if (!match(TokenType::Else)) {
-      return IfBlock{if_clause, {}, {}};
-    }
-    advance();  // consume "else"
-    // "else..."
-    if (match(TokenType::If)) {
-      advance();  // consume "if"
+    std::vector<BranchClause> else_if_clauses;
+    while (!is_at_end()) {
+      if (!match(TokenType::Else)) {
+        break;
+      }
+      advance();  // consume "else"
+      // "else..."
+      if (match(TokenType::If)) {
+        advance();  // consume "if"
+      }
+      if (!match(TokenType::LeftBrace)) {
+        // これもif_blockで行う
+      }
     }
   }
-
   // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
