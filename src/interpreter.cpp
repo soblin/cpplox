@@ -333,6 +333,11 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
   return std::nullopt;
 }
 
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_block)
+{
+  return std::nullopt;
+}
+
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)
   -> std::optional<RuntimeError>
 {

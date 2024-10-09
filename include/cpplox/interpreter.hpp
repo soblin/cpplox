@@ -81,6 +81,8 @@ public:
   std::optional<RuntimeError> operator()(const PrintStmt & stmt);
 
   std::optional<RuntimeError> operator()(const Block & block);
+
+  std::optional<RuntimeError> operator()(const IfBlock & if_block);
 };
 
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)

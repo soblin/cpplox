@@ -207,7 +207,7 @@ auto Parser::if_block(const size_t if_start_ctx) -> std::variant<IfBlock, Syntax
     if (is_variant_v<SyntaxError>(else_body_opt)) {
       return as_variant<SyntaxError>(else_body_opt);
     }
-    else_body = as_variant<Block>(else_body_opt).declarations;
+    else_body.emplace(as_variant<Block>(else_body_opt).declarations);
     break;
   }
   return IfBlock{if_clause, elseif_clauses, else_body};
