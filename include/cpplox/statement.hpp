@@ -51,7 +51,7 @@ struct BranchClause
 struct IfBlock
 {
   const BranchClause if_clause;
-  const std::vector<BranchClause> else_if_clauses;
+  const std::vector<BranchClause> elseif_clauses;
   const std::optional<std::vector<Declaration>> else_body;
 };
 
