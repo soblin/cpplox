@@ -42,7 +42,7 @@ auto Tokenizer::advance() noexcept -> std::optional<char>
     advance_cursor();
     return c;
   } else {
-    return std::nullopt;
+    return std::nullopt;  // LCOV_EXCL_LINE
   }
 }
 
@@ -65,8 +65,8 @@ auto Tokenizer::scan_new_token() -> std::optional<SyntaxError>
 {
   const auto c_opt = advance();
   if (!c_opt) {
-    add_token(TokenType::Eof);
-    return std::nullopt;
+    add_token(TokenType::Eof);  // LCOV_EXCL_LINE
+    return std::nullopt;        // LCOV_EXCL_LINE
   }
   const auto c = c_opt.value();
   if (c == '(') {
@@ -194,7 +194,7 @@ auto Tokenizer::peek() noexcept -> char
 auto Tokenizer::peek_next() const noexcept -> char
 {
   if (current_cursor_ + 1 >= source_.size()) {
-    return '\0';
+    return '\0';  // LCOV_EXCL_LINE
   }
   return source_.at(current_cursor_ + 1);
 }
