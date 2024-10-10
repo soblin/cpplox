@@ -76,6 +76,9 @@ private:
 public:
   explicit ExecuteStmtVisitor(std::shared_ptr<Environment> env) : env(env) {}
 
+  std::variant<bool, RuntimeError> execute_branch_clause(
+    const BranchClause & clause, std::shared_ptr<Environment> env);
+
   std::optional<RuntimeError> operator()(const ExprStmt & stmt);
 
   std::optional<RuntimeError> operator()(const PrintStmt & stmt);
