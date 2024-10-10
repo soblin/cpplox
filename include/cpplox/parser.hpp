@@ -32,7 +32,7 @@ public:
   auto var_decl() -> std::variant<VarDecl, SyntaxError>;
 
   /**
-   * @brief <statement> := <expr_stmt> | <print_stmt> | <block>
+   * @brief <statement> := <expr_stmt> | <print_stmt> | <block> | <if_block>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
 
@@ -43,14 +43,31 @@ public:
 
   /**
    * @brief <print_stmt> := "print" <expression> ";"
-   *
+   * @post after success, current_ is next to the last ';'
    */
   auto print_statement() -> std::variant<PrintStmt, SyntaxError>;
 
   /**
    * @brief <block> := "{" <declarations>* "}";
+   * @detail responsible for consuming "{ <body> }"
+   * @post after success, current_ is next to the last '}'
    */
   auto block() -> std::variant<Block, SyntaxError>;
+
+  /**
+   * @brief <if_block> := "if" "(" <expression> ")" "{" <declaration>* "}"
+   *                      ("else if" "("<expression> ")" "{" <declaration>* "}")*
+   *                      ("else" "{" <declaration>* "}")?
+   * @detail responsible for consuming "if () {} else if (){}... else {}"
+   */
+  auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
+
+  /**
+   * @brief parse (...) {...}
+   * @post after success, current_ is next to the last '}'
+   * @detail responsible for consuming "( <cond> ){ <body> }"
+   */
+  auto branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>;
 
   /**
     @brief <expression> ::= <assignment>

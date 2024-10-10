@@ -333,6 +333,69 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
   return std::nullopt;
 }
 
+std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
+  const BranchClause & clause, std::shared_ptr<Environment> sub_if_scope_env)
+{
+  const auto cond_opt = impl::evaluate_expr_impl(clause.cond, sub_if_scope_env);
+  if (is_variant_v<RuntimeError>(cond_opt)) {
+    return as_variant<RuntimeError>(cond_opt);
+  }
+  const auto & cond = as_variant<Value>(cond_opt);
+  if (is_truthy(cond)) {
+    for (const auto & declaration : clause.body) {
+      const auto exec_opt =
+        boost::apply_visitor(ExecuteDeclarationVisitor(sub_if_scope_env), declaration);
+      if (exec_opt) {
+        return exec_opt.value();
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_block)
+{
+  // for supporting initializer in IfBlock parenthesis
+  auto sub_if_scope_env = std::make_shared<Environment>(env);
+
+  const auto execute_if_opt = execute_branch_clause(if_block.if_clause, sub_if_scope_env);
+  if (is_variant_v<RuntimeError>(execute_if_opt)) {
+    return as_variant<RuntimeError>(execute_if_opt);
+  }
+  const auto execute_if = as_variant<bool>(execute_if_opt);
+  if (execute_if) {
+    return std::nullopt;
+  }
+  // execute either of the elseif
+  for (const auto & elseif_clause : if_block.elseif_clauses) {
+    auto elseif_scope_env = std::make_shared<Environment>(sub_if_scope_env);
+    const auto execute_elseif_opt = execute_branch_clause(elseif_clause, elseif_scope_env);
+    if (is_variant_v<RuntimeError>(execute_elseif_opt)) {
+      return as_variant<RuntimeError>(execute_elseif_opt);
+    }
+    const auto execute_elseif = as_variant<bool>(execute_elseif_opt);
+    if (execute_elseif) {
+      // hit
+      return std::nullopt;
+    }
+  }
+  if (if_block.else_body) {
+    auto else_scope_env = std::make_shared<Environment>(sub_if_scope_env);
+    // execute the last else
+    for (const auto & declaration : if_block.else_body.value()) {
+      const auto exec_else_opt =
+        boost::apply_visitor(ExecuteDeclarationVisitor(else_scope_env), declaration);
+      if (exec_else_opt) {
+        return exec_else_opt;
+      }
+    }
+    return std::nullopt;
+  }
+  return std::nullopt;
+}
+
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)
   -> std::optional<RuntimeError>
 {

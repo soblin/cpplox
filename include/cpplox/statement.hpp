@@ -24,7 +24,10 @@ struct PrintStmt
 
 struct Block;
 
-using Stmt = boost::variant<ExprStmt, PrintStmt, boost::recursive_wrapper<Block>>;
+struct IfBlock;
+
+using Stmt = boost::variant<
+  ExprStmt, PrintStmt, boost::recursive_wrapper<Block>, boost::recursive_wrapper<IfBlock>>;
 
 struct VarDecl
 {
@@ -37,6 +40,19 @@ using Declaration = boost::variant<VarDecl, Stmt>;
 struct Block
 {
   std::vector<Declaration> declarations;
+};
+
+struct BranchClause
+{
+  const Expr cond;
+  const std::vector<Declaration> body;
+};
+
+struct IfBlock
+{
+  const BranchClause if_clause;
+  const std::vector<BranchClause> elseif_clauses;
+  const std::optional<std::vector<Declaration>> else_body;
 };
 
 using Program = std::vector<Declaration>;
