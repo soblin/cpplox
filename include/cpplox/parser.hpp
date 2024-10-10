@@ -49,6 +49,7 @@ public:
 
   /**
    * @brief <block> := "{" <declarations>* "}";
+   * @detail responsible for consuming "{ <body> }"
    * @post after success, current_ is next to the last '}'
    */
   auto block() -> std::variant<Block, SyntaxError>;
@@ -57,12 +58,14 @@ public:
    * @brief <if_block> := "if" "(" <expression> ")" "{" <declaration>* "}"
    *                      ("else if" "("<expression> ")" "{" <declaration>* "}")*
    *                      ("else" "{" <declaration>* "}")?
+   * @detail responsible for consuming "if () {} else if (){}... else {}"
    */
   auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
 
   /**
    * @brief parse (...) {...}
    * @post after success, current_ is next to the last '}'
+   * @detail responsible for consuming "( <cond> ){ <body> }"
    */
   auto branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>;
 

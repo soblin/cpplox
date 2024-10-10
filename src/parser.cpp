@@ -229,16 +229,10 @@ auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClau
   if (!match(TokenType::LeftBrace)) {
     return create_error(SyntaxErrorKind::MissingIfBody, if_start_ctx);
   }
-  const auto brace_ctx = current_;
-  advance();  // consume '{'
   const auto block_opt = block();
   if (is_variant_v<SyntaxError>(block_opt)) {
     return as_variant<SyntaxError>(block_opt);
   }
-  if (!match(TokenType::RightBrace)) {
-    return create_error(SyntaxErrorKind::UnmatchedBraceError, brace_ctx);
-  }
-  advance();  // consume '}'
   const auto & declarations = as_variant<Block>(block_opt).declarations;
   return BranchClause{cond, declarations};
 }
