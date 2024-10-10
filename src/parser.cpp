@@ -150,6 +150,13 @@ auto Parser::block() -> std::variant<Block, SyntaxError>
   const auto brace_ctx = current_;
   advance();  // consume '{'
   std::vector<Declaration> declarations;
+
+  // TODO(soblin): nice way to handle empty Block
+  if (match(TokenType::RightBrace)) {
+    advance();  // consume '}'
+    return Block{declarations};
+  }
+
   while (!is_at_end()) {
     const auto decl_opt = declaration();
     if (is_variant_v<Declaration>(decl_opt)) {
