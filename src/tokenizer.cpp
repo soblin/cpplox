@@ -311,7 +311,7 @@ auto Tokenizer::get_next_newline_or_eof() const noexcept -> size_t
 auto Tokenizer::create_error(const SyntaxErrorKind kind) -> SyntaxError
 {
   return SyntaxError{kind, lines_.back(), current_ctx_start_cursor_, current_cursor_};
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace tokenizer
 }  // namespace lox

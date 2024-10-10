@@ -32,7 +32,7 @@ auto stringify = [](const Value & value) -> std::string {
 auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {
   return impl::evaluate_expr_impl(expr, env_);
-}
+}  // LCOV_EXCL_LINE
 
 auto Interpreter::execute_declaration(const Declaration & declaration)
   -> std::optional<RuntimeError>
@@ -420,7 +420,7 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const VarDecl 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const Stmt & stmt)
 {
   return execute_stmt_impl(stmt, env);
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace impl
 
