@@ -35,7 +35,6 @@ auto Parser::program() -> std::variant<Program, SyntaxError>
 auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
 {
   if (match(TokenType::Var)) {
-    advance();  // just consume 'var'
     const auto var_declaration = var_decl();
     if (is_variant_v<SyntaxError>(var_declaration)) {
       return as_variant<SyntaxError>(var_declaration);
@@ -53,6 +52,7 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
 
 auto Parser::var_decl() -> std::variant<VarDecl, SyntaxError>
 {
+  advance();  // just consume 'var'
   const auto var_decl_ctx = current_;
   if (!match(TokenType::Identifier)) {
     return create_error(SyntaxErrorKind::MissingValidIdentifierDecl, var_decl_ctx);
@@ -224,6 +224,14 @@ auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClau
     return create_error(SyntaxErrorKind::MissingIfConditon, current_);
   }
   advance();  // consume '('
+  std::optional<VarDecl> decl = std::nullopt;
+  if (match(TokenType::Var)) {
+    const auto & var_decl_opt = var_decl();
+    if (is_variant_v<SyntaxError>(var_decl_opt)) {
+      return as_variant<SyntaxError>(var_decl_opt);
+    }
+    decl.emplace(as_variant<VarDecl>(var_decl_opt));
+  }
   const auto cond_opt = expression();
   if (is_variant_v<SyntaxError>(cond_opt)) {
     return as_variant<SyntaxError>(cond_opt);
@@ -241,7 +249,7 @@ auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClau
     return as_variant<SyntaxError>(block_opt);
   }
   const auto & declarations = as_variant<Block>(block_opt).declarations;
-  return BranchClause{cond, declarations};
+  return BranchClause{decl, cond, declarations};
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>

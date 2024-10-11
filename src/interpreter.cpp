@@ -334,9 +334,16 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
 }
 
 std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
-  const BranchClause & clause, std::shared_ptr<Environment> sub_if_scope_env)
+  const BranchClause & clause, std::shared_ptr<Environment> if_scope_env)
 {
-  const auto cond_opt = impl::evaluate_expr_impl(clause.cond, sub_if_scope_env);
+  if (clause.declaration) {
+    const auto var_decl_opt = boost::apply_visitor(
+      ExecuteDeclarationVisitor(if_scope_env), Declaration{clause.declaration.value()});
+    if (var_decl_opt) {
+      return var_decl_opt.value();
+    }
+  }
+  const auto cond_opt = impl::evaluate_expr_impl(clause.cond, if_scope_env);
   if (is_variant_v<RuntimeError>(cond_opt)) {
     return as_variant<RuntimeError>(cond_opt);
   }
@@ -344,7 +351,7 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   if (is_truthy(cond)) {
     for (const auto & declaration : clause.body) {
       const auto exec_opt =
-        boost::apply_visitor(ExecuteDeclarationVisitor(sub_if_scope_env), declaration);
+        boost::apply_visitor(ExecuteDeclarationVisitor(if_scope_env), declaration);
       if (exec_opt) {
         return exec_opt.value();
       }
@@ -357,32 +364,35 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_block)
 {
-  // for supporting initializer in IfBlock parenthesis
-  auto sub_if_scope_env = std::make_shared<Environment>(env);
+  /* first, top-level if scope environment is created
+     this scope is local variable in this function and will be "forgotten"
+   */
+  auto top_if_scope_env = std::make_shared<Environment>(env);
 
-  const auto execute_if_opt = execute_branch_clause(if_block.if_clause, sub_if_scope_env);
+  const auto execute_if_opt = execute_branch_clause(if_block.if_clause, top_if_scope_env);
   if (is_variant_v<RuntimeError>(execute_if_opt)) {
     return as_variant<RuntimeError>(execute_if_opt);
   }
-  const auto execute_if = as_variant<bool>(execute_if_opt);
-  if (execute_if) {
+  const auto if_was_true = as_variant<bool>(execute_if_opt);
+  if (if_was_true) {
     return std::nullopt;
   }
   // execute either of the elseif
+  std::vector<std::shared_ptr<Environment>> envs{top_if_scope_env};
   for (const auto & elseif_clause : if_block.elseif_clauses) {
-    auto elseif_scope_env = std::make_shared<Environment>(sub_if_scope_env);
-    const auto execute_elseif_opt = execute_branch_clause(elseif_clause, elseif_scope_env);
+    envs.push_back(std::make_shared<Environment>(envs.back()));
+    const auto execute_elseif_opt = execute_branch_clause(elseif_clause, envs.back());
     if (is_variant_v<RuntimeError>(execute_elseif_opt)) {
       return as_variant<RuntimeError>(execute_elseif_opt);
     }
-    const auto execute_elseif = as_variant<bool>(execute_elseif_opt);
-    if (execute_elseif) {
+    const auto elseif_was_true = as_variant<bool>(execute_elseif_opt);
+    if (elseif_was_true) {
       // hit
       return std::nullopt;
     }
   }
   if (if_block.else_body) {
-    auto else_scope_env = std::make_shared<Environment>(sub_if_scope_env);
+    auto else_scope_env = std::make_shared<Environment>(envs.back());
     // execute the last else
     for (const auto & declaration : if_block.else_body.value()) {
       const auto exec_else_opt =
