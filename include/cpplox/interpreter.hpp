@@ -63,6 +63,8 @@ public:
   std::variant<Value, RuntimeError> operator()(const Variable & variable);
 
   std::variant<Value, RuntimeError> operator()(const Assign & assign);
+
+  std::variant<Value, RuntimeError> operator()(const Logical & logical);
 };
 
 auto evaluate_expr_impl(const Expr & expr, std::shared_ptr<Environment> env)

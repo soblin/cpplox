@@ -76,9 +76,19 @@ public:
   auto expression() -> std::variant<Expr, SyntaxError>;
 
   /**
-    @brief <assignment> ::= IDENTIFIER "=" <assignment> | <equality>
+    @brief <assignment> ::= IDENTIFIER "=" <assignment> | <logic_or>
    */
   auto assignment() -> std::variant<Expr, SyntaxError>;
+
+  /**
+   * @brief <logic_or> ::= <logic_and> ( "or" <logic_and> )*;
+   */
+  auto logic_or() -> std::variant<Expr, SyntaxError>;
+
+  /**
+   * @brief <logic_and> ::= <equality> ( "and" <equality> )*;
+   */
+  auto logic_and() -> std::variant<Expr, SyntaxError>;
 
 private:
   Tokens tokens_;
