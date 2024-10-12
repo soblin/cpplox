@@ -260,7 +260,7 @@ auto Parser::expression() -> std::variant<Expr, SyntaxError>
 auto Parser::assignment() -> std::variant<Expr, SyntaxError>
 {
   const auto error_ctx_assign_target = current_;
-  const auto left_expr_opt = equality();
+  const auto left_expr_opt = logic_or();
   if (is_variant_v<SyntaxError>(left_expr_opt)) {
     return as_variant<SyntaxError>(left_expr_opt);
   }
@@ -279,6 +279,46 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
     return Assign{lvalue.name, rvalue};
   }
   return left_expr_opt;
+}
+
+auto Parser::logic_or() -> std::variant<Expr, SyntaxError>
+{
+  const auto logic_and_opt = logic_and();
+  if (is_variant_v<SyntaxError>(logic_and_opt)) {
+    return as_variant<SyntaxError>(logic_and_opt);
+  }
+  const auto & left = as_variant<Expr>(logic_and_opt);
+  std::vector<Expr> exprs{left};
+  while (match(TokenType::Or)) {
+    const auto & op = advance();
+    const auto next_logic_and_opt = logic_and();
+    if (is_variant_v<SyntaxError>(next_logic_and_opt)) {
+      return as_variant<SyntaxError>(next_logic_and_opt);
+    }
+    const auto logical = Logical{exprs.back(), op, as_variant<Expr>(next_logic_and_opt)};
+    exprs.push_back(logical);
+  }
+  return exprs.back();
+}
+
+auto Parser::logic_and() -> std::variant<Expr, SyntaxError>
+{
+  const auto eq_opt = equality();
+  if (is_variant_v<SyntaxError>(eq_opt)) {
+    return as_variant<SyntaxError>(eq_opt);
+  }
+  const auto & eq = as_variant<Expr>(eq_opt);
+  std::vector<Expr> exprs{eq};
+  while (match(TokenType::And)) {
+    const auto & op = advance();
+    const auto next_eq_opt = equality();
+    if (is_variant_v<SyntaxError>(next_eq_opt)) {
+      return as_variant<SyntaxError>(next_eq_opt);
+    }
+    const auto logical = Logical{exprs.back(), op, as_variant<Expr>(next_eq_opt)};
+    exprs.push_back(logical);
+  }
+  return exprs.back();
 }
 
 auto Parser::equality() -> std::variant<Expr, SyntaxError>
@@ -307,9 +347,8 @@ auto Parser::comparison() -> std::variant<Expr, SyntaxError>
     return expr_opt;
   }
   std::vector<Expr> exprs{as_variant<Expr>(expr_opt)};
-  while (match(
-    TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual,
-    TokenType::And, TokenType::Or)) {
+  while (
+    match(TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual)) {
     const auto & op = advance();
     const auto right_opt = term();
     if (is_variant_v<SyntaxError>(right_opt)) {

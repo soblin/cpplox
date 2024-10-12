@@ -238,24 +238,6 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Binary &
     return !is_equal(left, right);
   }
 
-  // A and B
-  if (binary.op.type == TokenType::And) {
-    // NOTE: https://en.wikipedia.org/wiki/Short-circuit_evaluation
-    if (!is_truthy(left)) {
-      return false;
-    }
-    return is_truthy(right);
-  }
-
-  // A or B
-  if (binary.op.type == TokenType::Or) {
-    // NOTE: https://en.wikipedia.org/wiki/Short-circuit_evaluation
-    if (is_truthy(left)) {
-      return true;
-    }
-    return is_truthy(right);
-  }
-
   // this is unreachable actually
   assert(false);  // LCOV_EXCL_LINE
   return expression::Nil{};
@@ -284,6 +266,41 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Assign &
     return UndefinedVariableError{assign.name, assign.expr};
   }
   return rvalue;
+}
+
+std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Logical & logical)
+{
+  const auto left_value_opt = boost::apply_visitor(*this, logical.left);
+  if (is_variant_v<RuntimeError>(left_value_opt)) {
+    return as_variant<RuntimeError>(left_value_opt);
+  }
+  const auto & left_value = as_variant<Value>(left_value_opt);
+  const auto is_left_true = is_truthy(left_value);
+
+  if (!is_left_true && logical.op.type == TokenType::And) {
+    return false;
+  }
+  if (is_left_true && logical.op.type == TokenType::Or) {
+    return true;
+  }
+
+  const auto right_value_opt = boost::apply_visitor(*this, logical.right);
+  if (is_variant_v<RuntimeError>(right_value_opt)) {
+    return as_variant<RuntimeError>(right_value_opt);
+  }
+  const auto & right_value = as_variant<Value>(right_value_opt);
+  const auto is_right_true = is_truthy(right_value);
+
+  if (logical.op.type == TokenType::And) {
+    return is_left_true and is_right_true;
+  }
+  if (logical.op.type == TokenType::Or) {
+    return is_left_true or is_right_true;
+  }
+
+  // this is unreachable
+  assert(false);  // LCOV_EXCL_LINE
+  return true;
 }
 
 auto evaluate_expr_impl(const Expr & expr, std::shared_ptr<Environment> env)

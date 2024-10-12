@@ -18,11 +18,12 @@ struct Binary;
 struct Group;
 struct Variable;
 struct Assign;
+struct Logical;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
   boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
-  boost::recursive_wrapper<Assign>>;
+  boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>>;
 
 struct Literal : public Token
 {
@@ -62,6 +63,13 @@ struct Assign
      a = (b = 1); where (b = 1) is also "Assign"
   */
   const Expr expr;
+};
+
+struct Logical
+{
+  const Expr left;
+  const Token op;
+  const Expr right;
 };
 
 using Nil = std::monostate;

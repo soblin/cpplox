@@ -49,6 +49,18 @@ public:
     boost::apply_visitor(*this, assign.expr);
     ss << ")";
   }
+
+  void operator()(const Logical & logical)
+  {
+    if (logical.op.type == TokenType::And) {
+      ss << "(and ";
+    } else if (logical.op.type == TokenType::Or) {
+      ss << "(or ";
+    }
+    boost::apply_visitor(*this, logical.left);
+    boost::apply_visitor(*this, logical.right);
+    ss << ")";
+  }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string
@@ -124,6 +136,13 @@ public:
   {
     const auto [ignore, right_end] = boost::apply_visitor(*this, assign.expr);
     return {assign.name, right_end};
+  }
+
+  std::pair<Token, Token> operator()(const Logical & logical)
+  {
+    const auto [left_end, ignore1] = boost::apply_visitor(*this, logical.left);
+    const auto [ignore2, right_end] = boost::apply_visitor(*this, logical.right);
+    return {left_end, right_end};
   }
 };
 
