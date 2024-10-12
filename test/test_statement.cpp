@@ -601,6 +601,38 @@ b = (a == 100 + 23) and (c == "be" + "fore");
     EXPECT_EQ(lox::is_variant_v<bool>(b_opt.value()), true);
     EXPECT_EQ(lox::as_variant<bool>(b_opt.value()), true);
   }
+  {
+    const std::string source = R"(
+var a = 0;
+var b = 0;
+var c = 0;
+while (a < 10) {
+   c = c + 100;
+   while(b < 10) {
+      c = c + 10;
+      b = b + 1;
+   }
+   a = a + 1;
+}
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    [[maybe_unused]] const auto exec = interpreter.execute(program);
+    const auto c_opt = interpreter.get_variable(tokens[11]);
+
+    EXPECT_EQ(c_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<int64_t>(c_opt.value()), true);
+    EXPECT_EQ(lox::as_variant<int64_t>(c_opt.value()), 1100);
+  }
 }
 
 TEST(Statement, expr_statement_errors)
@@ -979,6 +1011,56 @@ if (b == 10) {
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
   }
+  {
+    const std::string source = R"(
+var a = 0;
+var b = 0;
+var c = 0;
+while (a < 10 {
+   c = c + 100;
+   while(b < 10) {
+      c = c + 10;
+      b = b + 1;
+   }
+   a = a + 1;
+}
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedParenError);
+  }
+  {
+    const std::string source = R"(
+var a = 0;
+var b = 0;
+var c = 0;
+while (a < 10) {
+   c = c + 100;
+   while(b < 10) {
+      c = c + 10;
+      b = b + 1;
+   // missing }
+   a = a + 1;
+}
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedBraceError);
+  }
 }
 
 TEST(Statement, if_statement_runtime_errors)
@@ -1229,6 +1311,35 @@ b = (a == 100 + 23) and (a == 100 + "23");
     const auto exec = interpreter.execute(program);
     EXPECT_EQ(exec.has_value(), true);
     EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
+  }
+  {
+    const std::string source = R"(
+var a = 0;
+var b = 0;
+var c = 0;
+while (a < 10) {
+   c = c + 100;
+   while(d < 10) {
+      c = c + 10;
+      b = b + 1;
+   }
+   a = a + 1;
+}
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    const auto exec = interpreter.execute(program);
+    EXPECT_EQ(exec.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<lox::UndefinedVariableError>(exec.value()), true);
   }
 }
 
