@@ -111,6 +111,17 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     return as_variant<IfBlock>(if_block_opt);
   }
 
+  // <while_stmt>
+  if (match(TokenType::While)) {
+    const auto while_start_ctx = current_;
+    advance();  // consume "while"
+    const auto while_block_opt = while_stmt(while_start_ctx);
+    if (is_variant_v<SyntaxError>(while_block_opt)) {
+      return as_variant<SyntaxError>(while_block_opt);
+    }
+    return as_variant<WhileStmt>(while_block_opt);
+  }
+
   // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
@@ -216,6 +227,32 @@ auto Parser::if_block(const size_t if_start_ctx) -> std::variant<IfBlock, Syntax
     break;
   }
   return IfBlock{if_clause, elseif_clauses, else_body};
+}
+
+auto Parser::while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt, SyntaxError>
+{
+  if (!match(TokenType::LeftParen)) {
+    return create_error(SyntaxErrorKind::MissingIfConditon, current_);
+  }
+  advance();  // consume '('
+  const auto cond_opt = expression();
+  if (is_variant_v<SyntaxError>(cond_opt)) {
+    return as_variant<SyntaxError>(cond_opt);
+  }
+  const auto & cond = as_variant<Expr>(cond_opt);
+  if (!match(TokenType::RightParen)) {
+    return create_error(SyntaxErrorKind::UnmatchedParenError, while_start_ctx);
+  }
+  advance();  // consume ')'
+  if (!match(TokenType::LeftBrace)) {
+    return create_error(SyntaxErrorKind::MissingIfBody, while_start_ctx);
+  }
+  const auto block_opt = block();
+  if (is_variant_v<SyntaxError>(block_opt)) {
+    return as_variant<SyntaxError>(block_opt);
+  }
+  const auto & declarations = as_variant<Block>(block_opt).declarations;
+  return WhileStmt{cond, declarations};
 }
 
 auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>
