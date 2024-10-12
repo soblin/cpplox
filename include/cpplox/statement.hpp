@@ -44,6 +44,7 @@ struct Block
 
 struct BranchClause
 {
+  const std::optional<VarDecl> declaration;
   const Expr cond;
   const std::vector<Declaration> body;
 };

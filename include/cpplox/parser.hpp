@@ -28,6 +28,7 @@ public:
 
   /**
    * @brief <var_decl> := "var" IDENTIFIER ("=" <expression>)? ";"
+   * @detail responsible for consuming from "var" to ';'
    */
   auto var_decl() -> std::variant<VarDecl, SyntaxError>;
 
@@ -55,8 +56,8 @@ public:
   auto block() -> std::variant<Block, SyntaxError>;
 
   /**
-   * @brief <if_block> := "if" "(" <expression> ")" "{" <declaration>* "}"
-   *                      ("else if" "("<expression> ")" "{" <declaration>* "}")*
+   * @brief <if_block> := "if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}"
+   *                      ("else if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}")*
    *                      ("else" "{" <declaration>* "}")?
    * @detail responsible for consuming "if () {} else if (){}... else {}"
    */
