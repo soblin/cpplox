@@ -532,7 +532,7 @@ print (1 + 2) * ( 3 + "str");
 
   {
     const std::string source = R"(
-var foo = (1 + 2) * ( 3 + 4)
+foo = (1 + 2) * ( 3 + 4)
 )";
     auto tokenizer = lox::Tokenizer(source);
     const auto result = tokenizer.take_tokens();
@@ -540,7 +540,7 @@ var foo = (1 + 2) * ( 3 + 4)
     const auto & tokens = lox::as_variant<lox::Tokens>(result);
 
     auto parser = lox::Parser(tokens);
-    const auto parse_result = parser.var_decl();
+    const auto parse_result = parser.declaration();
     EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
