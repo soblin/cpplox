@@ -1061,6 +1061,50 @@ while (a < 10) {
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::UnmatchedBraceError);
   }
+  {
+    const std::string source = R"(
+var a = 0;
+var b = 0;
+var c = 0;
+while a < 10 {
+   c = c + 100;
+   while(b < 10) {
+      c = c + 10;
+      b = b + 1;
+   }
+   a = a + 1;
+}
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::MissingIfConditon);
+  }
+  {
+    const std::string source = R"(
+var a = 0;
+var b = 0;
+var c = 0;
+while (a < 10)
+  print a;
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
+    const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
+    EXPECT_EQ(err.kind, lox::SyntaxErrorKind::MissingIfBody);
+  }
 }
 
 TEST(Statement, if_statement_runtime_errors)
