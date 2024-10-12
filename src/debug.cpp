@@ -85,6 +85,9 @@ auto SyntaxError::get_visualization_string(
      << debug::Reset;
   ss << debug::Bold << debug::Red << debug::Underline
      << source.substr(ctx_start_index, line->end_index - ctx_start_index + 1) << debug::Reset;
+  if (source.at(line->end_index) != '\n') {
+    ss << std::endl;
+  }
   ss << std::string(offset + ctx_start_index - line->start_index, ' ') << "^" << std::endl;
   return ss.str();
 }
@@ -134,14 +137,15 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
   if (is_variant_v<TypeError>(error)) {
     const auto & err = as_variant<TypeError>(error);
     ss << "TypeError at line " << err.op.line->number << ", column "
-       << (err.op.start_index + err.op.lexeme.size() - err.op.line->start_index + 1);
+       << (err.op.start_index + err.op.lexeme.size() - err.op.line->start_index + 1) << std::endl;
     return ss.str();
   }
   if (is_variant_v<UndefinedVariableError>(error)) {
     const auto & err = as_variant<UndefinedVariableError>(error);
     ss << "undefined variable '" << err.variable.lexeme << "' at line " << err.variable.line->number
        << ", column "
-       << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1);
+       << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1)
+       << std::endl;
     return ss.str();
   }
   assert(false);
@@ -181,7 +185,9 @@ static auto get_visualization_string_expr(
           expr_end.start_index + expr_end.lexeme.size() + 1,
           expr_end.line->end_index - (expr_end.start_index + expr_end.lexeme.size()))
      << debug::Reset;
-  // TODO(soblin): endl is ignore in REPL mode
+  if (source.at(expr_end.line->end_index) != '\n') {
+    ss << std::endl;
+  }
   ss << std::string(offset + (op.start_index - op.line->start_index), ' ') << "^" << std::endl;
   return ss.str();
 }

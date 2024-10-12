@@ -99,7 +99,7 @@ auto runFile(const char * path) -> int
   }
   if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
     const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-    std::cout << lox::get_line_string(exec, 2) << std::endl;
+    std::cout << lox::get_line_string(exec, 2);
     std::cout << lox::get_visualization_string(ss.str(), exec, 4);
     return 1;
   }
@@ -119,24 +119,12 @@ auto runPrompt() -> int
       const auto exec_opt = run(interpreter, prompt);
       if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
-        std::cerr << "  " << magic_enum::enum_name(exec.kind) << " at line " << exec.line->number
-                  << ", column " << (exec.ctx_start_index - exec.line->start_index) << ":"
-                  << std::endl;
-        std::cerr << "    "
-                  << "\033[2m"
-                  << prompt.substr(
-                       exec.line->start_index, exec.ctx_start_index - exec.line->start_index)
-                  << "\033[m";
-        std::cerr << "\033[1m\033[31m\033[4m"
-                  << prompt.substr(
-                       exec.ctx_start_index, exec.line->end_index - exec.ctx_start_index + 1)
-                  << "\033[0m" << std::endl;
-        std::cerr << std::string(4 + exec.ctx_start_index - exec.line->start_index, ' ') << "^"
-                  << std::endl;
+        std::cout << exec.get_line_string(2);
+        std::cout << exec.get_visualization_string(prompt, 4);
       }
       if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-        std::cout << lox::get_line_string(exec, 2) << std::endl;
+        std::cout << lox::get_line_string(exec, 2);
         std::cout << lox::get_visualization_string(prompt, exec, 4);
       }
     }
