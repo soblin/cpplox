@@ -2,7 +2,6 @@
 
 #include <boost/variant/recursive_variant.hpp>
 
-#include <iostream>
 #include <sstream>
 
 #include <magic_enum.hpp>
