@@ -350,6 +350,26 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
   return std::nullopt;
 }
 
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & while_stmt)
+{
+  while (true) {
+    const auto eval_cond_opt = impl::evaluate_expr_impl(while_stmt.cond, env);
+    if (is_variant_v<RuntimeError>(eval_cond_opt)) {
+      return as_variant<RuntimeError>(eval_cond_opt);
+    }
+    const auto & cond = as_variant<Value>(eval_cond_opt);
+    if (!is_truthy(cond)) {
+      return std::nullopt;
+    }
+    for (const auto & declaration : while_stmt.body) {
+      const auto exec_opt = boost::apply_visitor(ExecuteDeclarationVisitor(env), declaration);
+      if (exec_opt) {
+        return exec_opt;
+      }
+    }
+  }
+}
+
 std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   const BranchClause & clause, std::shared_ptr<Environment> if_scope_env)
 {

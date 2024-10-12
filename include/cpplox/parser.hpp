@@ -64,6 +64,11 @@ public:
   auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
 
   /**
+   * @brief <while_stmt> := "while" "(" <expression> ")" "{" <declarations>* "}"
+   */
+  auto while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt, SyntaxError>;
+
+  /**
    * @brief parse (...) {...}
    * @post after success, current_ is next to the last '}'
    * @detail responsible for consuming "( <cond> ){ <body> }"
