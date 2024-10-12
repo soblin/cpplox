@@ -514,6 +514,93 @@ b = (c == "before") or (c = "after") == "after";
     EXPECT_EQ(lox::is_variant_v<std::string>(c_opt.value()), true);
     EXPECT_EQ(lox::as_variant<std::string>(c_opt.value()), "before");
   }
+  //
+  {
+    const std::string source = R"(
+var a = "123";
+var b = 10;
+var c = "before";
+b = (c == "before2") and (c = "after") == "after";
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    [[maybe_unused]] const auto exec = interpreter.execute(program);
+    const auto b_opt = interpreter.get_variable(tokens[6]);
+    const auto c_opt = interpreter.get_variable(tokens[11]);
+
+    EXPECT_EQ(b_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<bool>(b_opt.value()), true);
+    EXPECT_EQ(lox::as_variant<bool>(b_opt.value()), false);
+
+    EXPECT_EQ(c_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<std::string>(c_opt.value()), true);
+    EXPECT_EQ(lox::as_variant<std::string>(c_opt.value()), "before");
+  }
+  {
+    const std::string source = R"(
+var a = "123";
+var b = 10;
+var c = "before";
+b = (c == "before2") or (c = "after") == "after";
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    [[maybe_unused]] const auto exec = interpreter.execute(program);
+    const auto b_opt = interpreter.get_variable(tokens[6]);
+    const auto c_opt = interpreter.get_variable(tokens[11]);
+
+    EXPECT_EQ(b_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<bool>(b_opt.value()), true);
+    EXPECT_EQ(lox::as_variant<bool>(b_opt.value()), true);
+
+    EXPECT_EQ(c_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<std::string>(c_opt.value()), true);
+    EXPECT_EQ(lox::as_variant<std::string>(c_opt.value()), "after");
+  }
+  {
+    const std::string source = R"(
+var a = 123;
+var b = 10;
+var c = "before";
+b = (a == 100 + 23) and (c == "be" + "fore");
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    [[maybe_unused]] const auto exec = interpreter.execute(program);
+    const auto b_opt = interpreter.get_variable(tokens[6]);
+    const auto c_opt = interpreter.get_variable(tokens[11]);
+
+    EXPECT_EQ(b_opt.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<bool>(b_opt.value()), true);
+    EXPECT_EQ(lox::as_variant<bool>(b_opt.value()), true);
+  }
 }
 
 TEST(Statement, expr_statement_errors)
@@ -1076,6 +1163,72 @@ if (var c == "12345"; c != "12345"){
     EXPECT_EQ(lox::is_variant_v<lox::SyntaxError>(parse_result), true);
     const auto & err = lox::as_variant<lox::SyntaxError>(parse_result);
     EXPECT_EQ(err.kind, lox::SyntaxErrorKind::StmtWithoutSemicolun);
+  }
+  {
+    const std::string source = R"(
+var a = 123;
+var b = 10;
+var c = "before";
+b = (a == 100 + "23") and (c == "be" + "fore");
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    const auto exec = interpreter.execute(program);
+    EXPECT_EQ(exec.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
+  }
+  {
+    const std::string source = R"(
+var a = 123;
+var b = 10;
+var c = "before";
+b = (a == 100 + 23) and (c == be + "fore");
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    const auto exec = interpreter.execute(program);
+    EXPECT_EQ(exec.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<lox::UndefinedVariableError>(exec.value()), true);
+  }
+  {
+    const std::string source = R"(
+var a = 123;
+var b = 10;
+var c = "before";
+b = (a == 100 + 23) and (a == 100 + "23");
+)";
+    auto tokenizer = lox::Tokenizer(source);
+    const auto result = tokenizer.take_tokens();
+    EXPECT_EQ(lox::is_variant_v<lox::Tokens>(result), true);
+    const auto & tokens = lox::as_variant<lox::Tokens>(result);
+
+    auto parser = lox::Parser(tokens);
+    const auto parse_result = parser.program();
+    EXPECT_EQ(lox::is_variant_v<lox::Program>(parse_result), true);
+    const auto & program = lox::as_variant<lox::Program>(parse_result);
+
+    auto interpreter = lox::Interpreter{};
+    const auto exec = interpreter.execute(program);
+    EXPECT_EQ(exec.has_value(), true);
+    EXPECT_EQ(lox::is_variant_v<lox::TypeError>(exec.value()), true);
   }
 }
 
