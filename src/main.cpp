@@ -99,7 +99,7 @@ auto runFile(const char * path) -> int
   }
   if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
     const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-    std::cout << lox::get_line_string(exec, 2) << std::endl;
+    std::cout << lox::get_line_string(exec, 2);
     std::cout << lox::get_visualization_string(ss.str(), exec, 4);
     return 1;
   }
@@ -118,13 +118,13 @@ auto runPrompt() -> int
       const auto & prompt = prompt_opt.value();
       const auto exec_opt = run(interpreter, prompt);
       if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
-        const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-        std::cout << lox::get_line_string(exec, 2) << std::endl;
-        std::cout << lox::get_visualization_string(prompt, exec, 4);
+        const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
+        std::cout << exec.get_line_string(2);
+        std::cout << exec.get_visualization_string(prompt, 4);
       }
       if (lox::is_variant_v<lox::RuntimeError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::RuntimeError>(exec_opt);
-        std::cout << lox::get_line_string(exec, 2) << std::endl;
+        std::cout << lox::get_line_string(exec, 2);
         std::cout << lox::get_visualization_string(prompt, exec, 4);
       }
     }

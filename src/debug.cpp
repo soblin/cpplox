@@ -2,6 +2,7 @@
 
 #include <boost/variant/recursive_variant.hpp>
 
+#include <iostream>
 #include <sstream>
 
 #include <magic_enum.hpp>
@@ -134,14 +135,15 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
   if (is_variant_v<TypeError>(error)) {
     const auto & err = as_variant<TypeError>(error);
     ss << "TypeError at line " << err.op.line->number << ", column "
-       << (err.op.start_index + err.op.lexeme.size() - err.op.line->start_index + 1);
+       << (err.op.start_index + err.op.lexeme.size() - err.op.line->start_index + 1) << std::endl;
     return ss.str();
   }
   if (is_variant_v<UndefinedVariableError>(error)) {
     const auto & err = as_variant<UndefinedVariableError>(error);
     ss << "undefined variable '" << err.variable.lexeme << "' at line " << err.variable.line->number
        << ", column "
-       << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1);
+       << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1)
+       << std::endl;
     return ss.str();
   }
   assert(false);
