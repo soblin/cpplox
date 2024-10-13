@@ -122,6 +122,17 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     return as_variant<WhileStmt>(while_block_opt);
   }
 
+  // <for_stmt>
+  if (match(TokenType::For)) {
+    const auto for_start_ctx = current_;
+    advance();  // consume "for"
+    const auto for_stmt_opt = for_stmt(for_start_ctx);
+    if (is_variant_v<SyntaxError>(for_stmt_opt)) {
+      return as_variant<SyntaxError>(for_stmt_opt);
+    }
+    return as_variant<ForStmt>(for_stmt_opt);
+  }
+
   // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
@@ -232,7 +243,7 @@ auto Parser::if_block(const size_t if_start_ctx) -> std::variant<IfBlock, Syntax
 auto Parser::while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt, SyntaxError>
 {
   if (!match(TokenType::LeftParen)) {
-    return create_error(SyntaxErrorKind::MissingIfConditon, current_);
+    return create_error(SyntaxErrorKind::MissingWhileConditon, current_);
   }
   advance();  // consume '('
   const auto cond_opt = expression();
@@ -245,7 +256,7 @@ auto Parser::while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt,
   }
   advance();  // consume ')'
   if (!match(TokenType::LeftBrace)) {
-    return create_error(SyntaxErrorKind::MissingIfBody, while_start_ctx);
+    return create_error(SyntaxErrorKind::MissingWhileBody, while_start_ctx);
   }
   const auto block_opt = block();
   if (is_variant_v<SyntaxError>(block_opt)) {
@@ -253,6 +264,73 @@ auto Parser::while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt,
   }
   const auto & declarations = as_variant<Block>(block_opt).declarations;
   return WhileStmt{cond, declarations};
+}
+
+auto Parser::for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, SyntaxError>
+{
+  if (!match(TokenType::LeftParen)) {
+    return create_error(SyntaxErrorKind::MissingForCondition, current_);
+  }
+  advance();  // consume '('
+
+  std::optional<std::variant<VarDecl, ExprStmt>> init_stmt{std::nullopt};
+  if (match(TokenType::Semicolun)) {
+    advance();  // consume ';'
+    // do nothing
+  } else if (match(TokenType::Var)) {
+    const auto var_decl_opt = var_decl();
+    if (is_variant_v<SyntaxError>(var_decl_opt)) {
+      return as_variant<SyntaxError>(var_decl_opt);
+    }
+    init_stmt.emplace(as_variant<VarDecl>(var_decl_opt));
+  } else {
+    const auto expr_stmt_opt = expr_statement();
+    if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
+      return as_variant<SyntaxError>(expr_stmt_opt);
+    }
+    init_stmt.emplace(as_variant<ExprStmt>(expr_stmt_opt));
+  }
+
+  std::optional<Expr> cond{std::nullopt};
+  if (match(TokenType::Semicolun)) {
+    advance();  // consume ';'
+  } else {
+    const auto expr_ctx = current_;
+    const auto expr_opt = expression();
+    if (is_variant_v<SyntaxError>(expr_opt)) {
+      return as_variant<SyntaxError>(expr_opt);
+    }
+    if (!match(TokenType::Semicolun)) {
+      return create_error(SyntaxErrorKind::StmtWithoutSemicolun, expr_ctx);
+    }
+    advance();  // consume ';'
+    cond.emplace(as_variant<Expr>(expr_opt));
+  }
+
+  std::optional<Expr> next{std::nullopt};
+  if (match(TokenType::RightParen)) {
+    advance();  // consume ')'
+  } else {
+    const auto expr_ctx = current_;
+    const auto expr_opt = expression();
+    if (is_variant_v<SyntaxError>(expr_opt)) {
+      return as_variant<SyntaxError>(expr_opt);
+    }
+    if (!match(TokenType::RightParen)) {
+      return create_error(SyntaxErrorKind::UnmatchedParenError, expr_ctx);
+    }
+    advance();  // consume ')'
+    next.emplace(as_variant<Expr>(expr_opt));
+  }
+
+  if (!match(TokenType::LeftBrace)) {
+    return create_error(SyntaxErrorKind::MissingForBody, current_);
+  }
+  const auto block_opt = block();
+  if (is_variant_v<SyntaxError>(block_opt)) {
+    return as_variant<SyntaxError>(block_opt);
+  }
+  return ForStmt{init_stmt, cond, next, as_variant<Block>(block_opt).declarations};
 }
 
 auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>

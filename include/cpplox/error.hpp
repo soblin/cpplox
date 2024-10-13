@@ -24,7 +24,11 @@ enum class SyntaxErrorKind {
   InvalidAssignmentTarget,     //!< like "1 + 2 = 10;"
   UnmatchedBraceError,         //!< "{a = 100;"
   MissingIfConditon,           //!< (cond) if missing like "if { <body> }}"
-  MissingIfBody,               //!< "{ <body> }" is not found after if
+  MissingIfBody,               //!< "{ <body> }" is not found after "if"
+  MissingWhileConditon,        //!< (cond) if missing like "while { <body> }}"
+  MissingWhileBody,            //!< "{ <body> }" is not found after "while"
+  MissingForCondition,         //!< (cond) if missing like "for { <body> }}"
+  MissingForBody,              //!< "{ <body> }" is not found after "for"
 };
 
 struct SyntaxError
