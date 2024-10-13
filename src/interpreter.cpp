@@ -1,3 +1,4 @@
+#include "cpplox/error.hpp"
 #include <cpplox/environment.hpp>
 #include <cpplox/interpreter.hpp>
 
@@ -497,14 +498,31 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
       break;
     }
     // do the body
+    bool is_break = false;
     for (const auto & declaration : for_stmt.declarations) {
+      bool is_continue = false;
       const auto exec_opt =
         boost::apply_visitor(ExecuteDeclarationVisitor(sub_for_env), declaration);
       if (exec_opt) {
-        return exec_opt;
+        if (is_variant_v<PseudoSignal>(exec_opt.value())) {
+          // if "continue/break pseudo exception" is thrown in for/while context, we catch and hide
+          // it. otherwise, it is reported as "RuntimeError"
+          const auto & kind = as_variant<PseudoSignal>(exec_opt.value()).kind;
+          is_break = kind == PseudoSignalKind::Break;
+          is_continue = kind == PseudoSignalKind::Continue;
+        } else {
+          return exec_opt;
+        }
+      }
+      if (is_break || is_continue) {
+        break;
       }
     }
+    if (is_break) {
+      break;
+    }
 
+    //
     const auto iterate_opt = iterate();
     if (iterate_opt) {
       return iterate_opt;
@@ -512,6 +530,18 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
   }
 
   return std::nullopt;
+}
+
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(
+  [[maybe_unused]] const BreakStmt & break_stmt)
+{
+  return PseudoSignal{PseudoSignalKind::Break};
+}
+
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(
+  [[maybe_unused]] const ContinueStmt & continue_stmt)
+{
+  return PseudoSignal{PseudoSignalKind::Continue};
 }
 
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)

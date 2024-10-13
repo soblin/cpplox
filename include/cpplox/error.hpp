@@ -82,7 +82,17 @@ struct UndefinedVariableError
   const Expr expr;       //!< the entire expression
 };
 
-using RuntimeError = std::variant<TypeError, UndefinedVariableError>;
+enum class PseudoSignalKind {
+  Break,
+  Continue,
+};
+
+struct PseudoSignal
+{
+  const PseudoSignalKind kind;
+};
+
+using RuntimeError = std::variant<TypeError, UndefinedVariableError, PseudoSignal>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

@@ -133,6 +133,24 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     return as_variant<ForStmt>(for_stmt_opt);
   }
 
+  // <break_stmt>
+  if (match(TokenType::Break)) {
+    const auto stmt_opt = break_stmt();
+    if (is_variant_v<SyntaxError>(stmt_opt)) {
+      return as_variant<SyntaxError>(stmt_opt);
+    }
+    return as_variant<BreakStmt>(stmt_opt);
+  }
+
+  // <continue_stmt>
+  if (match(TokenType::Continue)) {
+    const auto stmt_opt = continue_stmt();
+    if (is_variant_v<SyntaxError>(stmt_opt)) {
+      return as_variant<SyntaxError>(stmt_opt);
+    }
+    return as_variant<ContinueStmt>(stmt_opt);
+  }
+
   // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
@@ -331,6 +349,28 @@ auto Parser::for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, Synta
     return as_variant<SyntaxError>(block_opt);
   }
   return ForStmt{init_stmt, cond, next, as_variant<Block>(block_opt).declarations};
+}
+
+auto Parser::break_stmt() -> std::variant<BreakStmt, SyntaxError>
+{
+  const size_t ctx = current_;
+  advance();  // consume "break"
+  if (!match(TokenType::Semicolun)) {
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun, ctx);
+  }
+  advance();  // consume ';'
+  return BreakStmt{};
+}
+
+auto Parser::continue_stmt() -> std::variant<ContinueStmt, SyntaxError>
+{
+  const size_t ctx = current_;
+  advance();  // consume "continue"
+  if (!match(TokenType::Semicolun)) {
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun, ctx);
+  }
+  advance();  // consume ';'
+  return ContinueStmt{};
 }
 
 auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>
