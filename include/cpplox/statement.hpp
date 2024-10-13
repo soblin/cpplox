@@ -24,13 +24,15 @@ struct PrintStmt
 
 struct Block;
 
+struct IfBlock;
+
 struct WhileStmt;
 
-struct IfBlock;
+struct ForStmt;
 
 using Stmt = boost::variant<
   ExprStmt, PrintStmt, boost::recursive_wrapper<Block>, boost::recursive_wrapper<IfBlock>,
-  boost::recursive_wrapper<WhileStmt>>;
+  boost::recursive_wrapper<WhileStmt>, boost::recursive_wrapper<ForStmt>>;
 
 struct VarDecl
 {
@@ -63,6 +65,14 @@ struct WhileStmt
 {
   const Expr cond;
   const std::vector<Declaration> body;
+};
+
+struct ForStmt
+{
+  const std::optional<std::variant<VarDecl, ExprStmt>> init_stmt;
+  const std::optional<Expr> cond;
+  const std::optional<Expr> next;
+  const std::vector<Declaration> declarations;
 };
 
 using Program = std::vector<Declaration>;

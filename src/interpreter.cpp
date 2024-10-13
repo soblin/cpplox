@@ -443,6 +443,77 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
   return std::nullopt;
 }
 
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_stmt)
+{
+  // initialization
+  auto sub_for_env = std::make_shared<Environment>(env);
+  if (for_stmt.init_stmt) {
+    const auto & init_stmt = for_stmt.init_stmt.value();
+    if (is_variant_v<VarDecl>(init_stmt)) {
+      const auto & init_var_stmt = as_variant<VarDecl>(init_stmt);
+      impl::ExecuteDeclarationVisitor executor(sub_for_env);
+      const auto exec = boost::apply_visitor(executor, Declaration{init_var_stmt});
+      if (exec) {
+        return exec;
+      }
+    } else {
+      const auto & init_var_stmt = as_variant<ExprStmt>(init_stmt);
+      const auto exec = impl::execute_stmt_impl(init_var_stmt, sub_for_env);
+      if (exec) {
+        return exec;
+      }
+    }
+  }
+
+  auto is_continue_true = [&]() -> std::variant<bool, RuntimeError> {
+    if (!for_stmt.cond) {
+      return true;
+    }
+    const auto cond_opt = impl::evaluate_expr_impl(for_stmt.cond.value(), sub_for_env);
+    if (is_variant_v<RuntimeError>(cond_opt)) {
+      return as_variant<RuntimeError>(cond_opt);
+    }
+    const auto is_true = is_truthy(as_variant<Value>(cond_opt));
+    return is_true;
+  };
+
+  auto iterate = [&]() -> std::optional<RuntimeError> {
+    if (!for_stmt.next) {
+      return std::nullopt;
+    }
+    const auto exec = impl::evaluate_expr_impl(for_stmt.next.value(), sub_for_env);
+    if (is_variant_v<RuntimeError>(exec)) {
+      return as_variant<RuntimeError>(exec);
+    }
+    return std::nullopt;
+  };
+
+  while (true) {
+    const auto continue_opt = is_continue_true();
+    if (is_variant_v<RuntimeError>(continue_opt)) {
+      return as_variant<RuntimeError>(continue_opt);
+    }
+    if (!as_variant<bool>(continue_opt)) {
+      break;
+    }
+    // do the body
+    for (const auto & declaration : for_stmt.declarations) {
+      const auto exec_opt =
+        boost::apply_visitor(ExecuteDeclarationVisitor(sub_for_env), declaration);
+      if (exec_opt) {
+        return exec_opt;
+      }
+    }
+
+    const auto iterate_opt = iterate();
+    if (iterate_opt) {
+      return iterate_opt;
+    }
+  }
+
+  return std::nullopt;
+}
+
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)
   -> std::optional<RuntimeError>
 {

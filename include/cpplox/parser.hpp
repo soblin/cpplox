@@ -17,46 +17,47 @@ public:
   explicit Parser(const Tokens & tokens);
 
   /**
-   * @brief <program> := <declaration>* EOF
+   * @brief <program> ::= <declaration>* EOF
    */
   auto program() -> std::variant<Program, SyntaxError>;
 
   /**
-   * @brief <declaration> := <var_decl> | <statement>
+   * @brief <declaration> ::= <var_decl> | <statement>
    */
   auto declaration() -> std::variant<Declaration, SyntaxError>;
 
   /**
-   * @brief <var_decl> := "var" IDENTIFIER ("=" <expression>)? ";"
+   * @brief <var_decl> ::= "var" IDENTIFIER ("=" <expression>)? ";"
    * @detail responsible for consuming from "var" to ';'
    */
   auto var_decl() -> std::variant<VarDecl, SyntaxError>;
 
   /**
-   * @brief <statement> := <expr_stmt> | <print_stmt> | <block> | <if_block>
+   * @brief <statement> ::= <expr_stmt> | <print_stmt> | <block> | <if_block> | <while_stmt> |
+   *                       <for_stmt>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
 
   /**
-   * @brief <expr_stmt> := <expression> ";"
+   * @brief <expr_stmt> ::= <expression> ";"
    */
   auto expr_statement() -> std::variant<ExprStmt, SyntaxError>;
 
   /**
-   * @brief <print_stmt> := "print" <expression> ";"
+   * @brief <print_stmt> ::= "print" <expression> ";"
    * @post after success, current_ is next to the last ';'
    */
   auto print_statement() -> std::variant<PrintStmt, SyntaxError>;
 
   /**
-   * @brief <block> := "{" <declarations>* "}";
+   * @brief <block> ::= "{" <declarations>* "}";
    * @detail responsible for consuming "{ <body> }"
    * @post after success, current_ is next to the last '}'
    */
   auto block() -> std::variant<Block, SyntaxError>;
 
   /**
-   * @brief <if_block> := "if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}"
+   * @brief <if_block> ::= "if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}"
    *                      ("else if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}")*
    *                      ("else" "{" <declaration>* "}")?
    * @detail responsible for consuming "if () {} else if (){}... else {}"
@@ -64,9 +65,15 @@ public:
   auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
 
   /**
-   * @brief <while_stmt> := "while" "(" <expression> ")" "{" <declarations>* "}"
+   * @brief <while_stmt> ::= "while" "(" <expression> ")" "{" <declarations>* "}"
    */
   auto while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt, SyntaxError>;
+
+  /**
+   * @brief <for_stmt> ::= "for" "(" ( <var_decl> | <expr_stmt> | ";" ) <expression>? ";"
+   *                       <expression>? ")" "{" <declaration>* "}"
+   */
+  auto for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, SyntaxError>;
 
   /**
    * @brief parse (...) {...}

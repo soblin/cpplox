@@ -90,6 +90,8 @@ public:
   std::optional<RuntimeError> operator()(const IfBlock & if_block);
 
   std::optional<RuntimeError> operator()(const WhileStmt & while_stmt);
+
+  std::optional<RuntimeError> operator()(const ForStmt & for_stmt);
 };
 
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)
