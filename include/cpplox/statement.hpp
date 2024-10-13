@@ -30,9 +30,13 @@ struct WhileStmt;
 
 struct ForStmt;
 
+struct BreakStmt;
+
+struct ContinueStmt;
+
 using Stmt = boost::variant<
   ExprStmt, PrintStmt, boost::recursive_wrapper<Block>, boost::recursive_wrapper<IfBlock>,
-  boost::recursive_wrapper<WhileStmt>, boost::recursive_wrapper<ForStmt>>;
+  boost::recursive_wrapper<WhileStmt>, boost::recursive_wrapper<ForStmt>, BreakStmt, ContinueStmt>;
 
 struct VarDecl
 {
@@ -73,6 +77,14 @@ struct ForStmt
   const std::optional<Expr> cond;
   const std::optional<Expr> next;
   const std::vector<Declaration> declarations;
+};
+
+struct BreakStmt
+{
+};
+
+struct ContinueStmt
+{
 };
 
 using Program = std::vector<Declaration>;

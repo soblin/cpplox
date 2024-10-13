@@ -92,6 +92,10 @@ public:
   std::optional<RuntimeError> operator()(const WhileStmt & while_stmt);
 
   std::optional<RuntimeError> operator()(const ForStmt & for_stmt);
+
+  std::optional<RuntimeError> operator()(const BreakStmt & break_stmt);
+
+  std::optional<RuntimeError> operator()(const ContinueStmt & continue_stmt);
 };
 
 auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)

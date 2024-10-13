@@ -44,7 +44,9 @@ enum class TokenType {
 
   // keyword
   And,
+  Break,
   Class,
+  Continue,
   Else,
   False,
   Fun,
@@ -66,7 +68,9 @@ enum class TokenType {
 // clang-format off
 static const std::unordered_map<std::string_view, TokenType> keyword_map = {
   {"and", TokenType::And},
+  {"break", TokenType::Break},
   {"class", TokenType::Class},
+  {"continue", TokenType::Continue},
   {"else", TokenType::Else},
   {"false", TokenType::False},
   {"fun", TokenType::Fun},

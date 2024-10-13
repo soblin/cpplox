@@ -34,7 +34,7 @@ public:
 
   /**
    * @brief <statement> ::= <expr_stmt> | <print_stmt> | <block> | <if_block> | <while_stmt> |
-   *                       <for_stmt>
+   *                        <for_stmt> | <break_stmt> | <continue_stmt>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
 
@@ -58,8 +58,8 @@ public:
 
   /**
    * @brief <if_block> ::= "if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}"
-   *                      ("else if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}")*
-   *                      ("else" "{" <declaration>* "}")?
+   *                       ("else if" "(" (<var_decl>;)? <expression> ")" "{" <declaration>* "}")*
+   *                       ("else" "{" <declaration>* "}")?
    * @detail responsible for consuming "if () {} else if (){}... else {}"
    */
   auto if_block(const size_t if_start_ctx) -> std::variant<IfBlock, SyntaxError>;
@@ -74,6 +74,16 @@ public:
    *                       <expression>? ")" "{" <declaration>* "}"
    */
   auto for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, SyntaxError>;
+
+  /**
+   * @brief <break_stmt> ::= "break" ";"
+   */
+  auto break_stmt() -> std::variant<BreakStmt, SyntaxError>;
+
+  /**
+   * @brief <continue_stmt> ::= "continue" ";"
+   */
+  auto continue_stmt() -> std::variant<ContinueStmt, SyntaxError>;
 
   /**
    * @brief parse (...) {...}
