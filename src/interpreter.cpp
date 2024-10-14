@@ -38,7 +38,8 @@ auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, Runtim
 auto Interpreter::execute_declaration(const Declaration & declaration)
   -> std::optional<RuntimeError>
 {
-  impl::ExecuteDeclarationVisitor executor(env_);
+  std::optional<PseudoSignalKind> signal{std::nullopt};
+  impl::ExecuteDeclarationVisitor executor(env_, signal);
   return boost::apply_visitor(executor, declaration);
 }
 
@@ -343,9 +344,12 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
   auto sub_scope_env = std::make_shared<Environment>(env);
   for (const auto & declaration : block.declarations) {
     const auto eval_opt =
-      boost::apply_visitor(ExecuteDeclarationVisitor(sub_scope_env), declaration);
+      boost::apply_visitor(ExecuteDeclarationVisitor(sub_scope_env, signal), declaration);
     if (eval_opt) {
       return eval_opt;
+    }
+    if (signal) {
+      return std::nullopt;
     }
   }
   return std::nullopt;
@@ -353,7 +357,12 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & while_stmt)
 {
+  size_t cnt = 0;
   while (true) {
+    cnt++;
+    if (cnt > MaxLoopError::Limit) {
+      return MaxLoopError{while_stmt.while_token, while_stmt.cond};
+    }
     const auto eval_cond_opt = impl::evaluate_expr_impl(while_stmt.cond, env);
     if (is_variant_v<RuntimeError>(eval_cond_opt)) {
       return as_variant<RuntimeError>(eval_cond_opt);
@@ -363,9 +372,25 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
       return std::nullopt;
     }
     for (const auto & declaration : while_stmt.body) {
-      const auto exec_opt = boost::apply_visitor(ExecuteDeclarationVisitor(env), declaration);
+      const auto exec_opt =
+        boost::apply_visitor(ExecuteDeclarationVisitor(env, signal), declaration);
       if (exec_opt) {
         return exec_opt;
+      }
+      if (signal) {
+        auto sig = signal;
+        signal = std::nullopt;
+        if (sig.value() == PseudoSignalKind::Break) {
+          // if "direct break" occurred inside this for-block, it is only handled by this for-block
+          // and never notitfied to outer scope, so `signal` is reset to null. and this for-block is
+          // terminated
+          return std::nullopt;
+        } else {
+          // if "direct continue" occurred inside this for-block, it is only handled by this
+          // for-block and never notitfied to outer scope, so `signal` is reset to null. and later
+          // declarations are not executed
+          break;
+        }
       }
     }
   }
@@ -376,7 +401,7 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
 {
   if (clause.declaration) {
     const auto var_decl_opt = boost::apply_visitor(
-      ExecuteDeclarationVisitor(if_scope_env), Declaration{clause.declaration.value()});
+      ExecuteDeclarationVisitor(if_scope_env, signal), Declaration{clause.declaration.value()});
     if (var_decl_opt) {
       return var_decl_opt.value();
     }
@@ -389,9 +414,13 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   if (is_truthy(cond)) {
     for (const auto & declaration : clause.body) {
       const auto exec_opt =
-        boost::apply_visitor(ExecuteDeclarationVisitor(if_scope_env), declaration);
+        boost::apply_visitor(ExecuteDeclarationVisitor(if_scope_env, signal), declaration);
       if (exec_opt) {
         return exec_opt.value();
+      }
+      // in case the block contained break/continue, the process needs to be terminated
+      if (signal) {
+        return true;
       }
     }
     return true;
@@ -402,8 +431,14 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_block)
 {
-  /* first, top-level if scope environment is created
-     this scope is local variable in this function and will be "forgotten"
+  /**
+   * in case this if-block is within a for/while, and this if-block contained break/continue,
+   * `signal` needs to be passed to execute_branch_clause to nofity it to outer for/while.
+   */
+
+  /**
+   * first, top-level if scope environment is created
+   * this scope is local variable in this function and will be "forgotten"
    */
   auto top_if_scope_env = std::make_shared<Environment>(env);
 
@@ -434,9 +469,12 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
     // execute the last else
     for (const auto & declaration : if_block.else_body.value()) {
       const auto exec_else_opt =
-        boost::apply_visitor(ExecuteDeclarationVisitor(else_scope_env), declaration);
+        boost::apply_visitor(ExecuteDeclarationVisitor(else_scope_env, signal), declaration);
       if (exec_else_opt) {
         return exec_else_opt;
+      }
+      if (signal) {
+        return std::nullopt;
       }
     }
     return std::nullopt;
@@ -452,14 +490,16 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     const auto & init_stmt = for_stmt.init_stmt.value();
     if (is_variant_v<VarDecl>(init_stmt)) {
       const auto & init_var_stmt = as_variant<VarDecl>(init_stmt);
-      impl::ExecuteDeclarationVisitor executor(sub_for_env);
+      impl::ExecuteDeclarationVisitor executor(sub_for_env, signal);
       const auto exec = boost::apply_visitor(executor, Declaration{init_var_stmt});
+      assert(!signal);  //!< only var_decl/expr_statement is called, so there is no chance of
+                        //!< break/continue
       if (exec) {
         return exec;
       }
     } else {
       const auto & init_var_stmt = as_variant<ExprStmt>(init_stmt);
-      const auto exec = impl::execute_stmt_impl(init_var_stmt, sub_for_env);
+      const auto exec = impl::execute_stmt_impl(init_var_stmt, sub_for_env, signal);
       if (exec) {
         return exec;
       }
@@ -489,7 +529,12 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     return std::nullopt;
   };
 
+  size_t cnt = 0;
   while (true) {
+    cnt++;
+    if (cnt > MaxLoopError::Limit) {
+      return MaxLoopError{for_stmt.for_token, for_stmt.cond};
+    }
     const auto continue_opt = is_continue_true();
     if (is_variant_v<RuntimeError>(continue_opt)) {
       return as_variant<RuntimeError>(continue_opt);
@@ -498,31 +543,29 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
       break;
     }
     // do the body
-    bool is_break = false;
     for (const auto & declaration : for_stmt.declarations) {
-      bool is_continue = false;
       const auto exec_opt =
-        boost::apply_visitor(ExecuteDeclarationVisitor(sub_for_env), declaration);
+        boost::apply_visitor(ExecuteDeclarationVisitor(sub_for_env, signal), declaration);
       if (exec_opt) {
-        if (is_variant_v<PseudoSignal>(exec_opt.value())) {
-          // if "continue/break pseudo exception" is thrown in for/while context, we catch and hide
-          // it. otherwise, it is reported as "RuntimeError"
-          const auto & kind = as_variant<PseudoSignal>(exec_opt.value()).kind;
-          is_break = kind == PseudoSignalKind::Break;
-          is_continue = kind == PseudoSignalKind::Continue;
+        return exec_opt;
+      }
+      if (signal) {
+        auto sig = signal;
+        signal = std::nullopt;
+        if (sig.value() == PseudoSignalKind::Break) {
+          // if "direct break" occurred inside this for-block, it is only handled by this for-block
+          // and never notitfied to outer scope, so `signal` is reset to null. and this for-block is
+          // terminated
+          return std::nullopt;
         } else {
-          return exec_opt;
+          // if "direct continue" occurred inside this for-block, it is only handled by this
+          // for-block and never notitfied to outer scope, so `signal` is reset to null. and later
+          // declarations are not executed
+          break;
         }
       }
-      if (is_break || is_continue) {
-        break;
-      }
-    }
-    if (is_break) {
-      break;
     }
 
-    //
     const auto iterate_opt = iterate();
     if (iterate_opt) {
       return iterate_opt;
@@ -535,19 +578,22 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(
   [[maybe_unused]] const BreakStmt & break_stmt)
 {
-  return PseudoSignal{PseudoSignalKind::Break};
+  signal = PseudoSignalKind::Break;
+  return std::nullopt;
 }
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(
   [[maybe_unused]] const ContinueStmt & continue_stmt)
 {
-  return PseudoSignal{PseudoSignalKind::Continue};
+  signal = PseudoSignalKind::Continue;
+  return std::nullopt;
 }
 
-auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)
-  -> std::optional<RuntimeError>
+auto execute_stmt_impl(
+  const Stmt & stmt, std::shared_ptr<Environment> env,
+  std::optional<PseudoSignalKind> & signal) -> std::optional<RuntimeError>
 {
-  impl::ExecuteStmtVisitor executor(env);
+  impl::ExecuteStmtVisitor executor(env, signal);
   return boost::apply_visitor(executor, stmt);
 }
 
@@ -567,7 +613,7 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const VarDecl 
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const Stmt & stmt)
 {
-  return execute_stmt_impl(stmt, env);
+  return execute_stmt_impl(stmt, env, signal);
 }  // LCOV_EXCL_LINE
 
 }  // namespace impl

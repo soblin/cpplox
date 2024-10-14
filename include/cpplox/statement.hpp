@@ -67,12 +67,14 @@ struct IfBlock
 
 struct WhileStmt
 {
+  const Token while_token;
   const Expr cond;
   const std::vector<Declaration> body;
 };
 
 struct ForStmt
 {
+  const Token for_token;
   const std::optional<std::variant<VarDecl, ExprStmt>> init_stmt;
   const std::optional<Expr> cond;
   const std::optional<Expr> next;

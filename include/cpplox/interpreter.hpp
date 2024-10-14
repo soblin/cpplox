@@ -74,40 +74,84 @@ class ExecuteStmtVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
   std::shared_ptr<Environment> env;
+  std::optional<PseudoSignalKind> & signal;
 
 public:
-  explicit ExecuteStmtVisitor(std::shared_ptr<Environment> env) : env(env) {}
+  explicit ExecuteStmtVisitor(
+    std::shared_ptr<Environment> env, std::optional<PseudoSignalKind> & sig)
+  : env(env), signal(sig)
+  {
+    assert(!signal);
+  }
 
   std::variant<bool, RuntimeError> execute_branch_clause(
     const BranchClause & clause, std::shared_ptr<Environment> env);
 
+  /**
+   * @brief execute <expr_statement>, so environment is updated
+   * @post signal remains null
+   */
   std::optional<RuntimeError> operator()(const ExprStmt & stmt);
 
+  /**
+   * @brief execute <print_statement>
+   * @post signal remains null
+   */
   std::optional<RuntimeError> operator()(const PrintStmt & stmt);
 
+  /**
+   * @brief execute <expr_statement>, so environment is updated
+   * @post signal is activated if break/continue is called directly
+   */
   std::optional<RuntimeError> operator()(const Block & block);
 
+  /**
+   * @brief execute <if_block>, so environment is updated
+   * @post signal is activated if break/continue is called directly
+   */
   std::optional<RuntimeError> operator()(const IfBlock & if_block);
 
+  /**
+   * @brief execute <while_statement>
+   * @post signal remains null
+   */
   std::optional<RuntimeError> operator()(const WhileStmt & while_stmt);
 
+  /**
+   * @brief execute <for_statement>
+   * @post signal remains null
+   */
   std::optional<RuntimeError> operator()(const ForStmt & for_stmt);
 
+  /**
+   * @brief almost do nothing
+   * @post signal gets PseudoErrorKind::Break
+   */
   std::optional<RuntimeError> operator()(const BreakStmt & break_stmt);
 
+  /**
+   * @brief almost do nothing
+   * @post signal gets PseudoErrorKind::Continue
+   */
   std::optional<RuntimeError> operator()(const ContinueStmt & continue_stmt);
 };
 
-auto execute_stmt_impl(const Stmt & stmt, std::shared_ptr<Environment> env)
-  -> std::optional<RuntimeError>;
+auto execute_stmt_impl(
+  const Stmt & stmt, std::shared_ptr<Environment> env,
+  std::optional<PseudoSignalKind> & signal) -> std::optional<RuntimeError>;
 
 class ExecuteDeclarationVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
   std::shared_ptr<Environment> env;
+  std::optional<PseudoSignalKind> & signal;
 
 public:
-  explicit ExecuteDeclarationVisitor(std::shared_ptr<Environment> env) : env(env) {}
+  explicit ExecuteDeclarationVisitor(
+    std::shared_ptr<Environment> env, std::optional<PseudoSignalKind> & sig)
+  : env(env), signal(sig)
+  {
+  }
 
   std::optional<RuntimeError> operator()(const VarDecl & decl);
 

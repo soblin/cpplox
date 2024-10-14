@@ -281,7 +281,7 @@ auto Parser::while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt,
     return as_variant<SyntaxError>(block_opt);
   }
   const auto & declarations = as_variant<Block>(block_opt).declarations;
-  return WhileStmt{cond, declarations};
+  return WhileStmt{tokens_.at(while_start_ctx), cond, declarations};
 }
 
 auto Parser::for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, SyntaxError>
@@ -348,7 +348,8 @@ auto Parser::for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, Synta
   if (is_variant_v<SyntaxError>(block_opt)) {
     return as_variant<SyntaxError>(block_opt);
   }
-  return ForStmt{init_stmt, cond, next, as_variant<Block>(block_opt).declarations};
+  return ForStmt{
+    tokens_.at(for_start_ctx), init_stmt, cond, next, as_variant<Block>(block_opt).declarations};
 }
 
 auto Parser::break_stmt() -> std::variant<BreakStmt, SyntaxError>
