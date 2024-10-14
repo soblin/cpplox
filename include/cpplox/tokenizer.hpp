@@ -28,7 +28,7 @@ public:
   auto take_tokens() -> std::variant<Tokens, SyntaxError>;
 
 private:
-  const std::string source_;
+  const std::string & source_;
   Tokens tokens_;
   std::vector<std::shared_ptr<Line>> lines_;
 
