@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   # this should be the name used in "Require status checks to pass"
   check-gtest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
