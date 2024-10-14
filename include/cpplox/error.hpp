@@ -4,7 +4,6 @@
 #include <cpplox/position.hpp>
 #include <cpplox/token.hpp>
 
-#include <cstdint>
 #include <limits>
 #include <memory>
 #include <string>
@@ -86,7 +85,7 @@ struct UndefinedVariableError
 
 struct MaxLoopError
 {
-  static constexpr size_t Limit = std::numeric_limits<uint16_t>::max();
+  static constexpr size_t Limit = std::numeric_limits<uint16_t>::max() - 1;
   const Token token;               //!< the cause statement of this loop
   const std::optional<Expr> cond;  //!< the cause of max loop
 };

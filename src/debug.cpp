@@ -1,4 +1,3 @@
-#include "cpplox/error.hpp"
 #include <cpplox/debug.hpp>
 
 #include <boost/variant/recursive_variant.hpp>
@@ -261,6 +260,7 @@ auto get_visualization_string(
     if (err.cond) {
       const auto [expr_start, expr_end] =
         boost::apply_visitor(ExprRangeVisitor(), err.cond.value());
+      // TODO(soblin): customize for for/while
       return get_visualization_string_expr(source, err.token, err.cond.value(), offset);
     }
     return get_visualization_string(source, err.token, offset);

@@ -549,7 +549,6 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
       if (exec_opt) {
         return exec_opt;
       }
-      bool is_continue = false;
       if (signal) {
         auto sig = signal;
         signal = std::nullopt;
@@ -562,12 +561,8 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
           // if "direct continue" occurred inside this for-block, it is only handled by this
           // for-block and never notitfied to outer scope, so `signal` is reset to null. and later
           // declarations are not executed
-          is_continue = true;
           break;
         }
-      }
-      if (is_continue) {
-        break;
       }
     }
 
