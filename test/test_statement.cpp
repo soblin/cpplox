@@ -836,7 +836,6 @@ for (; a < 10;) {
 var a = 0;
 var b = 0;
 for (;;) {
-  print a;
   a = a + 1;
   if (a > 10) {
     break;
@@ -857,7 +856,8 @@ for (;;) {
     const auto & program = lox::as_variant<lox::Program>(parse_result);
 
     auto interpreter = lox::Interpreter{};
-    [[maybe_unused]] const auto exec = interpreter.execute(program);
+    const auto exec = interpreter.execute(program);
+    EXPECT_EQ(exec.has_value(), false);
     const auto a_opt = interpreter.get_variable(tokens[1]);
     const auto b_opt = interpreter.get_variable(tokens[6]);
 
@@ -894,7 +894,8 @@ for (;;) {
     const auto & program = lox::as_variant<lox::Program>(parse_result);
 
     auto interpreter = lox::Interpreter{};
-    [[maybe_unused]] const auto exec = interpreter.execute(program);
+    const auto exec = interpreter.execute(program);
+    EXPECT_EQ(exec.has_value(), false);
     const auto a_opt = interpreter.get_variable(tokens[1]);
     const auto b_opt = interpreter.get_variable(tokens[6]);
 

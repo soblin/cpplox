@@ -1,3 +1,4 @@
+#include "cpplox/error.hpp"
 #include <cpplox/debug.hpp>
 
 #include <boost/variant/recursive_variant.hpp>
@@ -165,6 +166,13 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << ", column "
        << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1)
        << std::endl;
+  }
+  if (is_variant_v<MaxLoopError>(error)) {
+    const auto & err = as_variant<MaxLoopError>(error);
+    ss << "exceeded maximum loop limit from '" << err.token.lexeme << "' statement at "
+       << err.token.line->number << ", column "
+       << (err.token.start_index + err.token.lexeme.size() - err.token.line->number + 1)
+       << std::endl;
     return ss.str();
   }
   assert(false);
@@ -212,6 +220,26 @@ static auto get_visualization_string_expr(
 }
 
 auto get_visualization_string(
+  const std::string_view & source, const Token & token, const size_t offset) -> std::string
+{
+  std::stringstream ss;
+  if (offset > 0) {
+    ss << std::string(offset, ' ');
+  }
+  ss << debug::Thin
+     << source.substr(token.line->start_index, token.start_index - token.line->start_index)
+     << debug::Reset;
+  ss << debug::Bold << debug::Red << debug::Underline
+     << source.substr(token.start_index, token.line->end_index - token.start_index + 1)
+     << debug::Reset;
+  if (source.at(token.line->end_index) != '\n') {
+    ss << std::endl;
+  }
+  ss << std::string(offset + token.start_index - token.line->start_index, ' ') << "^" << std::endl;
+  return ss.str();
+}
+
+auto get_visualization_string(
   const std::string & source, const RuntimeError & error, const size_t offset) -> std::string
 {
   std::stringstream ss;
@@ -227,6 +255,15 @@ auto get_visualization_string(
     const auto & err = as_variant<UndefinedVariableError>(error);
     const auto [expr_start, expr_end] = boost::apply_visitor(ExprRangeVisitor(), err.expr);
     return get_visualization_string_expr(source, err.variable, err.expr, offset);
+  }
+  if (is_variant_v<MaxLoopError>(error)) {
+    const auto & err = as_variant<MaxLoopError>(error);
+    if (err.cond) {
+      const auto [expr_start, expr_end] =
+        boost::apply_visitor(ExprRangeVisitor(), err.cond.value());
+      return get_visualization_string_expr(source, err.token, err.cond.value(), offset);
+    }
+    return get_visualization_string(source, err.token, offset);
   }
   assert(false);
 }

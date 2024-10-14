@@ -4,6 +4,8 @@
 #include <cpplox/position.hpp>
 #include <cpplox/token.hpp>
 
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -82,17 +84,19 @@ struct UndefinedVariableError
   const Expr expr;       //!< the entire expression
 };
 
+struct MaxLoopError
+{
+  static constexpr size_t Limit = std::numeric_limits<uint16_t>::max();
+  const Token token;               //!< the cause statement of this loop
+  const std::optional<Expr> cond;  //!< the cause of max loop
+};
+
 enum class PseudoSignalKind {
   Break,
   Continue,
 };
 
-struct PseudoSignal
-{
-  const PseudoSignalKind kind;
-};
-
-using RuntimeError = std::variant<TypeError, UndefinedVariableError, PseudoSignal>;
+using RuntimeError = std::variant<TypeError, UndefinedVariableError, MaxLoopError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;
