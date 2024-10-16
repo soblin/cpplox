@@ -22,7 +22,7 @@ public:
   auto program() -> std::variant<Program, SyntaxError>;
 
   /**
-   * @brief <declaration> ::= <var_decl> | <statement>
+   * @brief <declaration> ::= <var_decl> | <statement> | <func_decl>
    */
   auto declaration() -> std::variant<Declaration, SyntaxError>;
 
@@ -37,6 +37,16 @@ public:
    *                        <for_stmt> | <break_stmt> | <continue_stmt>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
+
+  /**
+   * @brief <func_decl> ::= "fun" IDENTIFIER "(" <parameters>? ")" block
+   */
+  auto func_decl() -> std::variant<FuncDecl, SyntaxError>;
+
+  /**
+   * @brief <parameters> ::= IDENTIFIER ( "," IDENTIFIER )*
+   */
+  auto parameters() -> std::variant<Tokens, SyntaxError>;
 
   /**
    * @brief <expr_stmt> ::= <expression> ";"

@@ -31,6 +31,9 @@ enum class SyntaxErrorKind {
   MissingForCondition,         //!< (cond) if missing like "for { <body> }}"
   MissingForBody,              //!< "{ <body> }" is not found after "for"
   TooManyArguments,            //<! the number of arguments is too large
+  MissingFuncParameterDecl,    //<! function declaration without parenthesis "()"
+  InvalidParameterDecl,        //<! parameter is not identifier
+  MissingFuncBodyDecl,         //<! function declaration lacks body
 };
 
 struct SyntaxError

@@ -377,7 +377,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
     if (!is_truthy(cond)) {
       return std::nullopt;
     }
-    for (const auto & declaration : while_stmt.body) {
+    for (const auto & declaration : while_stmt.body.declarations) {
       const auto exec_opt =
         boost::apply_visitor(ExecuteDeclarationVisitor(env, signal), declaration);
       if (exec_opt) {
@@ -418,7 +418,7 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   }
   const auto & cond = as_variant<Value>(cond_opt);
   if (is_truthy(cond)) {
-    for (const auto & declaration : clause.body) {
+    for (const auto & declaration : clause.body.declarations) {
       const auto exec_opt =
         boost::apply_visitor(ExecuteDeclarationVisitor(if_scope_env, signal), declaration);
       if (exec_opt) {
@@ -473,7 +473,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
   if (if_block.else_body) {
     auto else_scope_env = std::make_shared<Environment>(envs.back());
     // execute the last else
-    for (const auto & declaration : if_block.else_body.value()) {
+    for (const auto & declaration : if_block.else_body.value().declarations) {
       const auto exec_else_opt =
         boost::apply_visitor(ExecuteDeclarationVisitor(else_scope_env, signal), declaration);
       if (exec_else_opt) {
@@ -549,7 +549,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
       break;
     }
     // do the body
-    for (const auto & declaration : for_stmt.declarations) {
+    for (const auto & declaration : for_stmt.body.declarations) {
       const auto exec_opt =
         boost::apply_visitor(ExecuteDeclarationVisitor(sub_for_env, signal), declaration);
       if (exec_opt) {

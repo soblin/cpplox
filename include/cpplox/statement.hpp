@@ -44,32 +44,41 @@ struct VarDecl
   const std::optional<Expr> initializer;
 };
 
-using Declaration = boost::variant<VarDecl, Stmt>;
+struct FuncDecl;
+
+using Declaration = boost::variant<VarDecl, Stmt /*, boost::recursive_wrapper<FuncDecl>*/>;
 
 struct Block
 {
   std::vector<Declaration> declarations;
 };
 
+struct FuncDecl
+{
+  const Token name;
+  const Tokens parameters;
+  const Block body;
+};
+
 struct BranchClause
 {
   const std::optional<VarDecl> declaration;
   const Expr cond;
-  const std::vector<Declaration> body;
+  const Block body;
 };
 
 struct IfBlock
 {
   const BranchClause if_clause;
   const std::vector<BranchClause> elseif_clauses;
-  const std::optional<std::vector<Declaration>> else_body;
+  const std::optional<Block> else_body;
 };
 
 struct WhileStmt
 {
   const Token while_token;
   const Expr cond;
-  const std::vector<Declaration> body;
+  const Block body;
 };
 
 struct ForStmt
@@ -78,7 +87,7 @@ struct ForStmt
   const std::optional<std::variant<VarDecl, ExprStmt>> init_stmt;
   const std::optional<Expr> cond;
   const std::optional<Expr> next;
-  const std::vector<Declaration> declarations;
+  const Block body;
 };
 
 struct BreakStmt
