@@ -4,11 +4,17 @@
 
 #include <boost/variant/recursive_variant.hpp>
 
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace lox
 {
+
+inline namespace stmt
+{
+struct FuncDecl;
+}
 
 inline namespace expression
 {
@@ -82,7 +88,13 @@ struct Call
 };
 
 using Nil = std::monostate;
-using Value = std::variant<Nil, bool, int64_t, double, std::string>;
+
+struct Callable
+{
+  std::shared_ptr<const FuncDecl> definition;
+};
+
+using Value = std::variant<Nil, bool, int64_t, double, std::string, Callable>;
 
 namespace helper
 {

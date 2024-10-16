@@ -61,7 +61,7 @@ auto error(const int line, const std::string & message) -> void
 auto run(lox::Interpreter & interpreter, const std::string & program)
   -> std::variant<std::monostate, lox::SyntaxError, lox::RuntimeError>
 {
-  auto tokenizer = lox::Tokenizer(std::string(program));
+  auto tokenizer = lox::Tokenizer(program);
   const auto result = tokenizer.take_tokens();
   if (lox::is_variant_v<lox::SyntaxError>(result)) {
     return lox::as_variant<lox::SyntaxError>(result);

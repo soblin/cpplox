@@ -1,0 +1,16 @@
+var a = "123";
+var b = 10;
+if (a == "123"){
+  b = 100;
+}
+
+var a = "foo1";
+var b = "foo2";
+
+fun foo(a, b) {
+  print "In foo";
+  print "a = " + a;
+  print "b = " + b;
+}
+
+foo(a, b);

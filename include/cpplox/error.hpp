@@ -94,12 +94,19 @@ struct MaxLoopError
   const std::optional<Expr> cond;  //!< the cause of max loop
 };
 
+struct NotInvocableError
+{
+  const Expr callee;
+  const std::string desc;
+};
+
 enum class PseudoSignalKind {
   Break,
   Continue,
 };
 
-using RuntimeError = std::variant<TypeError, UndefinedVariableError, MaxLoopError>;
+using RuntimeError =
+  std::variant<TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

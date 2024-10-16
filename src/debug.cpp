@@ -186,6 +186,7 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << ", column "
        << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1)
        << std::endl;
+    return ss.str();
   }
   if (is_variant_v<MaxLoopError>(error)) {
     const auto & err = as_variant<MaxLoopError>(error);
@@ -193,6 +194,14 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << err.token.line->number << ", column "
        << (err.token.start_index + err.token.lexeme.size() - err.token.line->number + 1)
        << std::endl;
+    return ss.str();
+  }
+  if (is_variant_v<NotInvocableError>(error)) {
+    const auto & err = as_variant<NotInvocableError>(error);
+    const auto [start, end] = boost::apply_visitor(ExprRangeVisitor(), err.callee);
+    ss << "could not call " << start.lexeme << " statement at " << start.line->number << ", column "
+       << (start.start_index + start.lexeme.size() - start.line->number + 1) << " because "
+       << err.desc << std::endl;
     return ss.str();
   }
   assert(false);

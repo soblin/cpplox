@@ -46,7 +46,7 @@ struct VarDecl
 
 struct FuncDecl;
 
-using Declaration = boost::variant<VarDecl, Stmt /*, boost::recursive_wrapper<FuncDecl>*/>;
+using Declaration = boost::variant<VarDecl, Stmt, boost::recursive_wrapper<FuncDecl>>;
 
 struct Block
 {

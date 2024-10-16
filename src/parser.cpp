@@ -34,6 +34,7 @@ auto Parser::program() -> std::variant<Program, SyntaxError>
 
 auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
 {
+  // <var_decl>
   if (match(TokenType::Var)) {
     const auto var_declaration = var_decl();
     if (is_variant_v<SyntaxError>(var_declaration)) {
@@ -41,6 +42,16 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
     }
     return as_variant<VarDecl>(var_declaration);
   }
+
+  // <func_decl>
+  if (match(TokenType::Fun)) {
+    const auto func_decl_opt = func_decl();
+    if (is_variant_v<SyntaxError>(func_decl_opt)) {
+      return as_variant<SyntaxError>(func_decl_opt);
+    }
+    return as_variant<FuncDecl>(func_decl_opt);
+  }
+
   const auto statement_opt = statement();
   if (is_variant_v<SyntaxError>(statement_opt)) {
     return as_variant<SyntaxError>(statement_opt);
@@ -161,7 +172,9 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
 
 auto Parser::func_decl() -> std::variant<FuncDecl, SyntaxError>
 {
-  const auto name = advance();  // function name after "fun"
+  advance();                 // consume "fun"
+  const auto name = peek();  // function name after "fun"
+  advance();                 // consume function name
   const auto fun_ctx = current_;
   if (!match(TokenType::LeftParen)) {
     return create_error(SyntaxErrorKind::MissingFuncParameterDecl, fun_ctx);
@@ -620,6 +633,7 @@ auto Parser::call() -> std::variant<Expr, SyntaxError>
     if (!match(TokenType::RightParen)) {
       create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
     }
+    exprs.push_back(caller);
     advance();  // consume ')'
   }
   return exprs.back();
