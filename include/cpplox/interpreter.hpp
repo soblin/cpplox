@@ -17,7 +17,7 @@ inline namespace interpreter
 class Interpreter
 {
 public:
-  Interpreter() = default;
+  Interpreter() { global_env_ = std::make_shared<Environment>(); }
 
   /**
    * @brief execute the given program
@@ -32,7 +32,7 @@ public:
   auto get_variable(const Token & token) const -> std::optional<Value>;
 
 private:
-  std::shared_ptr<Environment> env_{std::make_shared<Environment>()};
+  std::shared_ptr<Environment> global_env_;
 
   /**
    * @brief execute the given declaration
@@ -48,9 +48,17 @@ class EvaluateExprVisitor : boost::static_visitor<std::variant<Value, RuntimeErr
 private:
   // NOTE: passing env as mutable reference does not meet the const requirement of operator()
   std::shared_ptr<Environment> env;
+  // if the expression contained function call, the function must not use `env`, because function
+  // must not refer to the parameters defined out of its scope. it is only allowed to access to the
+  // scope enclosing global scope + its parameters.
+  std::shared_ptr<Environment> global_env;
 
 public:
-  explicit EvaluateExprVisitor(std::shared_ptr<Environment> env_) : env(env_) {}
+  explicit EvaluateExprVisitor(
+    std::shared_ptr<Environment> env_, std::shared_ptr<Environment> global_env_)
+  : env(env_), global_env(global_env_)
+  {
+  }
 
   std::variant<Value, RuntimeError> operator()(const Literal & literal);
 
@@ -65,21 +73,26 @@ public:
   std::variant<Value, RuntimeError> operator()(const Assign & assign);
 
   std::variant<Value, RuntimeError> operator()(const Logical & logical);
+
+  std::variant<Value, RuntimeError> operator()(const Call & call);
 };
 
-auto evaluate_expr_impl(const Expr & expr, std::shared_ptr<Environment> env)
-  -> std::variant<Value, RuntimeError>;
+auto evaluate_expr_impl(
+  const Expr & expr, std::shared_ptr<Environment> env,
+  std::shared_ptr<Environment> global_env) -> std::variant<Value, RuntimeError>;
 
 class ExecuteStmtVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
   std::shared_ptr<Environment> env;
+  std::shared_ptr<Environment> global_env;
   std::optional<PseudoSignalKind> & signal;
 
 public:
   explicit ExecuteStmtVisitor(
-    std::shared_ptr<Environment> env, std::optional<PseudoSignalKind> & sig)
-  : env(env), signal(sig)
+    std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
+    std::optional<PseudoSignalKind> & sig)
+  : env(env), global_env(global_env), signal(sig)
   {
     assert(!signal);
   }
@@ -137,25 +150,29 @@ public:
 };
 
 auto execute_stmt_impl(
-  const Stmt & stmt, std::shared_ptr<Environment> env,
+  const Stmt & stmt, std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
   std::optional<PseudoSignalKind> & signal) -> std::optional<RuntimeError>;
 
 class ExecuteDeclarationVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
   std::shared_ptr<Environment> env;
+  std::shared_ptr<Environment> global_env;
   std::optional<PseudoSignalKind> & signal;
 
 public:
   explicit ExecuteDeclarationVisitor(
-    std::shared_ptr<Environment> env, std::optional<PseudoSignalKind> & sig)
-  : env(env), signal(sig)
+    std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
+    std::optional<PseudoSignalKind> & sig)
+  : env(env), global_env(global_env), signal(sig)
   {
   }
 
   std::optional<RuntimeError> operator()(const VarDecl & decl);
 
   std::optional<RuntimeError> operator()(const Stmt & stmt);
+
+  std::optional<RuntimeError> operator()(const FuncDecl & func_decl);
 };
 
 }  // namespace impl

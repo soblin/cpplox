@@ -4,10 +4,17 @@
 
 #include <boost/variant/recursive_variant.hpp>
 
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace lox
 {
+
+inline namespace stmt
+{
+struct FuncDecl;
+}
 
 inline namespace expression
 {
@@ -19,11 +26,13 @@ struct Group;
 struct Variable;
 struct Assign;
 struct Logical;
+struct Call;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
   boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
-  boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>>;
+  boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>,
+  boost::recursive_wrapper<Call>>;
 
 struct Literal : public Token
 {
@@ -72,8 +81,20 @@ struct Logical
   const Expr right;
 };
 
+struct Call
+{
+  const Expr callee;
+  const std::vector<Expr> arguments;
+};
+
 using Nil = std::monostate;
-using Value = std::variant<Nil, bool, int64_t, double, std::string>;
+
+struct Callable
+{
+  std::shared_ptr<const FuncDecl> definition;
+};
+
+using Value = std::variant<Nil, bool, int64_t, double, std::string, Callable>;
 
 namespace helper
 {

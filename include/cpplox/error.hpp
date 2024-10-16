@@ -2,9 +2,9 @@
 
 #include <cpplox/expression.hpp>
 #include <cpplox/position.hpp>
+#include <cpplox/system.hpp>
 #include <cpplox/token.hpp>
 
-#include <limits>
 #include <memory>
 #include <string>
 
@@ -30,6 +30,10 @@ enum class SyntaxErrorKind {
   MissingWhileBody,            //!< "{ <body> }" is not found after "while"
   MissingForCondition,         //!< (cond) if missing like "for { <body> }}"
   MissingForBody,              //!< "{ <body> }" is not found after "for"
+  TooManyArguments,            //<! the number of arguments is too large
+  MissingFuncParameterDecl,    //<! function declaration without parenthesis "()"
+  InvalidParameterDecl,        //<! parameter is not identifier
+  MissingFuncBodyDecl,         //<! function declaration lacks body
 };
 
 struct SyntaxError
@@ -85,9 +89,15 @@ struct UndefinedVariableError
 
 struct MaxLoopError
 {
-  static constexpr size_t Limit = std::numeric_limits<uint16_t>::max() - 1;
+  static constexpr size_t Limit = max_recursion_limit;
   const Token token;               //!< the cause statement of this loop
   const std::optional<Expr> cond;  //!< the cause of max loop
+};
+
+struct NotInvocableError
+{
+  const Expr callee;
+  const std::string desc;
 };
 
 enum class PseudoSignalKind {
@@ -95,7 +105,8 @@ enum class PseudoSignalKind {
   Continue,
 };
 
-using RuntimeError = std::variant<TypeError, UndefinedVariableError, MaxLoopError>;
+using RuntimeError =
+  std::variant<TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

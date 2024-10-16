@@ -61,6 +61,17 @@ public:
     boost::apply_visitor(*this, logical.right);
     ss << ")";
   }
+
+  void operator()(const Call & call)
+  {
+    boost::apply_visitor(*this, call.callee);
+    ss << "(";
+    for (const auto & argument : call.arguments) {
+      boost::apply_visitor(*this, argument);
+      ss << ", ";
+    }
+    ss << ")";
+  }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string
@@ -120,9 +131,9 @@ public:
 
   std::pair<Token, Token> operator()(const Binary & binary)
   {
-    const auto [left_end, ignore1] = boost::apply_visitor(*this, binary.left);
+    const auto [left_start, ignore1] = boost::apply_visitor(*this, binary.left);
     const auto [ignore2, right_end] = boost::apply_visitor(*this, binary.right);
-    return {left_end, right_end};
+    return {left_start, right_end};
   }
 
   std::pair<Token, Token> operator()(const Group & group)
@@ -140,9 +151,19 @@ public:
 
   std::pair<Token, Token> operator()(const Logical & logical)
   {
-    const auto [left_end, ignore1] = boost::apply_visitor(*this, logical.left);
+    const auto [left_start, ignore1] = boost::apply_visitor(*this, logical.left);
     const auto [ignore2, right_end] = boost::apply_visitor(*this, logical.right);
-    return {left_end, right_end};
+    return {left_start, right_end};
+  }
+
+  std::pair<Token, Token> operator()(const Call & call)
+  {
+    const auto [left_start, left_end] = boost::apply_visitor(*this, call.callee);
+    if (call.arguments.empty()) {
+      return {left_start, left_end};
+    }
+    const auto [right_start, right_end] = boost::apply_visitor(*this, call.arguments.back());
+    return {left_start, right_end};
   }
 };
 
@@ -165,6 +186,7 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << ", column "
        << (err.variable.start_index + err.variable.lexeme.size() - err.variable.line->number + 1)
        << std::endl;
+    return ss.str();
   }
   if (is_variant_v<MaxLoopError>(error)) {
     const auto & err = as_variant<MaxLoopError>(error);
@@ -172,6 +194,14 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << err.token.line->number << ", column "
        << (err.token.start_index + err.token.lexeme.size() - err.token.line->number + 1)
        << std::endl;
+    return ss.str();
+  }
+  if (is_variant_v<NotInvocableError>(error)) {
+    const auto & err = as_variant<NotInvocableError>(error);
+    const auto [start, end] = boost::apply_visitor(ExprRangeVisitor(), err.callee);
+    ss << "could not call " << start.lexeme << " statement at " << start.line->number << ", column "
+       << (start.start_index + start.lexeme.size() - start.line->number + 1) << " because "
+       << err.desc << std::endl;
     return ss.str();
   }
   assert(false);

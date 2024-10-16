@@ -34,6 +34,7 @@ auto Parser::program() -> std::variant<Program, SyntaxError>
 
 auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
 {
+  // <var_decl>
   if (match(TokenType::Var)) {
     const auto var_declaration = var_decl();
     if (is_variant_v<SyntaxError>(var_declaration)) {
@@ -41,6 +42,16 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
     }
     return as_variant<VarDecl>(var_declaration);
   }
+
+  // <func_decl>
+  if (match(TokenType::Fun)) {
+    const auto func_decl_opt = func_decl();
+    if (is_variant_v<SyntaxError>(func_decl_opt)) {
+      return as_variant<SyntaxError>(func_decl_opt);
+    }
+    return as_variant<FuncDecl>(func_decl_opt);
+  }
+
   const auto statement_opt = statement();
   if (is_variant_v<SyntaxError>(statement_opt)) {
     return as_variant<SyntaxError>(statement_opt);
@@ -159,6 +170,42 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
   return as_variant<ExprStmt>(expr_stmt_opt);
 }
 
+auto Parser::func_decl() -> std::variant<FuncDecl, SyntaxError>
+{
+  advance();                 // consume "fun"
+  const auto name = peek();  // function name after "fun"
+  advance();                 // consume function name
+  const auto fun_ctx = current_;
+  if (!match(TokenType::LeftParen)) {
+    return create_error(SyntaxErrorKind::MissingFuncParameterDecl, fun_ctx);
+  }
+  advance();  // consume '('
+  Tokens parameters{};
+  while (true) {
+    if (!match(TokenType::Identifier)) {
+      return create_error(SyntaxErrorKind::InvalidParameterDecl, current_);
+    }
+    parameters.push_back(advance());
+    if (match(TokenType::Comma)) {
+      advance();  // consume ','
+    } else if (match(TokenType::RightParen)) {
+      break;
+    }
+    if (parameters.size() >= max_argument_size) {
+      return create_error(SyntaxErrorKind::TooManyArguments, fun_ctx);
+    }
+  }
+  advance();  // consume ')'
+  if (!match(TokenType::LeftBrace)) {
+    return create_error(SyntaxErrorKind::MissingFuncBodyDecl, current_);
+  }
+  const auto block_opt = block();
+  if (is_variant_v<SyntaxError>(block_opt)) {
+    return as_variant<SyntaxError>(block_opt);
+  }
+  return FuncDecl{name, parameters, as_variant<Block>(block_opt)};
+}
+
 auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>
 {
   const auto expr_ctx = current_;
@@ -224,7 +271,7 @@ auto Parser::if_block(const size_t if_start_ctx) -> std::variant<IfBlock, Syntax
   }
   const auto & if_clause = as_variant<BranchClause>(branch_clause_opt);
   std::vector<BranchClause> elseif_clauses;
-  std::optional<std::vector<Declaration>> else_body;
+  std::optional<Block> else_body;
   while (!is_at_end()) {
     const auto else_start_ctx = current_;
     if (!match(TokenType::Else)) {
@@ -252,7 +299,7 @@ auto Parser::if_block(const size_t if_start_ctx) -> std::variant<IfBlock, Syntax
     if (is_variant_v<SyntaxError>(else_body_opt)) {
       return as_variant<SyntaxError>(else_body_opt);
     }
-    else_body.emplace(as_variant<Block>(else_body_opt).declarations);
+    else_body.emplace(as_variant<Block>(else_body_opt));
     break;
   }
   return IfBlock{if_clause, elseif_clauses, else_body};
@@ -280,8 +327,7 @@ auto Parser::while_stmt(const size_t while_start_ctx) -> std::variant<WhileStmt,
   if (is_variant_v<SyntaxError>(block_opt)) {
     return as_variant<SyntaxError>(block_opt);
   }
-  const auto & declarations = as_variant<Block>(block_opt).declarations;
-  return WhileStmt{tokens_.at(while_start_ctx), cond, declarations};
+  return WhileStmt{tokens_.at(while_start_ctx), cond, as_variant<Block>(block_opt)};
 }
 
 auto Parser::for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, SyntaxError>
@@ -348,8 +394,7 @@ auto Parser::for_stmt(const size_t for_start_ctx) -> std::variant<ForStmt, Synta
   if (is_variant_v<SyntaxError>(block_opt)) {
     return as_variant<SyntaxError>(block_opt);
   }
-  return ForStmt{
-    tokens_.at(for_start_ctx), init_stmt, cond, next, as_variant<Block>(block_opt).declarations};
+  return ForStmt{tokens_.at(for_start_ctx), init_stmt, cond, next, as_variant<Block>(block_opt)};
 }
 
 auto Parser::break_stmt() -> std::variant<BreakStmt, SyntaxError>
@@ -404,8 +449,7 @@ auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClau
   if (is_variant_v<SyntaxError>(block_opt)) {
     return as_variant<SyntaxError>(block_opt);
   }
-  const auto & declarations = as_variant<Block>(block_opt).declarations;
-  return BranchClause{decl, cond, declarations};
+  return BranchClause{decl, cond, as_variant<Block>(block_opt)};
 }
 
 auto Parser::expression() -> std::variant<Expr, SyntaxError>
@@ -564,7 +608,59 @@ auto Parser::unary() -> std::variant<Expr, SyntaxError>
     }
     return Unary{op, as_variant<Expr>(unary_next_opt)};
   }
-  return primary();
+  return call();
+}
+
+auto Parser::call() -> std::variant<Expr, SyntaxError>
+{
+  const auto primary_opt = primary();
+  if (is_variant_v<SyntaxError>(primary_opt)) {
+    return as_variant<SyntaxError>(primary_opt);
+  }
+  const auto & prim = as_variant<Expr>(primary_opt);
+  if (!match(TokenType::LeftParen)) {
+    return prim;
+  }
+  std::vector<Expr> exprs{prim};
+  while (match(TokenType::LeftParen)) {
+    const auto paren_ctx = current_;
+    advance();  // consume '('
+    const auto arguments_opt = arguments();
+    if (is_variant_v<SyntaxError>(arguments_opt)) {
+      return as_variant<SyntaxError>(arguments_opt);
+    }
+    const auto caller = Call{exprs.back(), as_variant<std::vector<Expr>>(arguments_opt)};
+    if (!match(TokenType::RightParen)) {
+      create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
+    }
+    exprs.push_back(caller);
+    advance();  // consume ')'
+  }
+  return exprs.back();
+}
+
+auto Parser::arguments() -> std::variant<std::vector<Expr>, SyntaxError>
+{
+  std::vector<Expr> args;
+  const auto args_ctx = current_;
+  if (!match(TokenType::RightParen)) {
+    while (true) {
+      const auto arg_opt = expression();
+      if (is_variant_v<SyntaxError>(arg_opt)) {
+        return as_variant<SyntaxError>(arg_opt);
+      }
+      args.push_back(as_variant<Expr>(arg_opt));
+      if (!match(TokenType::Comma)) {
+        break;
+      } else {
+        advance();  // consume ','
+      }
+      if (args.size() >= max_argument_size) {
+        return create_error(SyntaxErrorKind::TooManyArguments, args_ctx);
+      }
+    }
+  }
+  return args;
 }
 
 auto Parser::primary() -> std::variant<Expr, SyntaxError>

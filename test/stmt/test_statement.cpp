@@ -731,6 +731,37 @@ while (true) {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
          10                        //<! test
+       }}},
+    /**
+     * function
+     */
+    TestStmtVariableSideEffectParam{
+      R"(
+var glob_a = 0;
+var glob_b = 0;
+var glob_c = 0;
+fun foo(a, b, c) {
+   glob_a = a;
+   glob_b = b;
+   glob_c = c;
+}
+
+foo(10, 20, 30);
+)",
+      {{
+         1,                        //<! "a"
+         lox::helper::long_Index,  //<! long
+         10                        //<! test
+       },
+       {
+         6,                        //<! "b"
+         lox::helper::long_Index,  //<! long
+         20                        //<! test
+       },
+       {
+         11,                       //<! "c"
+         lox::helper::long_Index,  //<! long
+         30                        //<! test
        }}}));
 
 TEST(Statement, if_statement)
