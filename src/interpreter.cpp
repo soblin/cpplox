@@ -33,14 +33,14 @@ auto stringify = [](const Value & value) -> std::string {
 
 auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {
-  return impl::evaluate_expr_impl(expr, env_, env_);
+  return impl::evaluate_expr_impl(expr, env_, global_env_);
 }  // LCOV_EXCL_LINE
 
 auto Interpreter::execute_declaration(const Declaration & declaration)
   -> std::optional<RuntimeError>
 {
   std::optional<PseudoSignalKind> signal{std::nullopt};
-  impl::ExecuteDeclarationVisitor executor(env_, env_, signal);
+  impl::ExecuteDeclarationVisitor executor(env_, global_env_, signal);
   return boost::apply_visitor(executor, declaration);
 }
 
@@ -253,11 +253,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Group & 
 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Variable & variable)
 {
-  const auto local_opt = env->get(variable.name);
-  if (is_variant_v<Value>(local_opt)) {
-    return local_opt;
-  }
-  return global_env->get(variable.name);
+  return env->get(variable.name);
 }
 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Assign & assign)
