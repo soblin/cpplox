@@ -5,6 +5,7 @@
 #include <boost/variant/recursive_variant.hpp>
 
 #include <string>
+#include <vector>
 
 namespace lox
 {
@@ -19,11 +20,13 @@ struct Group;
 struct Variable;
 struct Assign;
 struct Logical;
+struct Call;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
   boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
-  boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>>;
+  boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>,
+  boost::recursive_wrapper<Call>>;
 
 struct Literal : public Token
 {
@@ -70,6 +73,12 @@ struct Logical
   const Expr left;
   const Token op;
   const Expr right;
+};
+
+struct Call
+{
+  const Expr callee;
+  const std::vector<Expr> arguments;
 };
 
 using Nil = std::monostate;

@@ -137,9 +137,20 @@ private:
   auto factor() -> std::variant<Expr, SyntaxError>;
 
   /**
-   * @brief <unary> ::= ("!" | "-") <unary> | <primary>
+   * @brief <unary> ::= ("!" | "-") <unary> | <call>
    */
   auto unary() -> std::variant<Expr, SyntaxError>;
+
+  /**
+   * @brief <call> ::= <primary> ( "(" <arguments>?")" )*
+   * matches like foo(), foo()(), foo(1)(1,2)(1,2,3)
+   */
+  auto call() -> std::variant<Expr, SyntaxError>;
+
+  /**
+   * @brief <arguments> ::= <expression> ( "," <expression> )*
+   */
+  auto arguments() -> std::variant<std::vector<Expr>, SyntaxError>;
 
   /**
    * @brief <primary> ::= NUMBER | STRING | "true" | "false" | "nil" | "(" <expression> ")" |

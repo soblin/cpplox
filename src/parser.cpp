@@ -564,7 +564,58 @@ auto Parser::unary() -> std::variant<Expr, SyntaxError>
     }
     return Unary{op, as_variant<Expr>(unary_next_opt)};
   }
-  return primary();
+  return call();
+}
+
+auto Parser::call() -> std::variant<Expr, SyntaxError>
+{
+  const auto primary_opt = primary();
+  if (is_variant_v<SyntaxError>(primary_opt)) {
+    return as_variant<SyntaxError>(primary_opt);
+  }
+  const auto & prim = as_variant<Expr>(primary_opt);
+  if (!match(TokenType::LeftParen)) {
+    return prim;
+  }
+  std::vector<Expr> exprs{prim};
+  while (match(TokenType::LeftParen)) {
+    const auto paren_ctx = current_;
+    advance();  // consume '('
+    const auto arguments_opt = arguments();
+    if (is_variant_v<SyntaxError>(arguments_opt)) {
+      return as_variant<SyntaxError>(arguments_opt);
+    }
+    const auto caller = Call{exprs.back(), as_variant<std::vector<Expr>>(arguments_opt)};
+    if (!match(TokenType::RightParen)) {
+      create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
+    }
+    advance();  // consume ')'
+  }
+  return exprs.back();
+}
+
+auto Parser::arguments() -> std::variant<std::vector<Expr>, SyntaxError>
+{
+  std::vector<Expr> args;
+  const auto args_ctx = current_;
+  if (!match(TokenType::RightParen)) {
+    while (true) {
+      const auto arg_opt = expression();
+      if (is_variant_v<SyntaxError>(arg_opt)) {
+        return as_variant<SyntaxError>(arg_opt);
+      }
+      args.push_back(as_variant<Expr>(arg_opt));
+      if (!match(TokenType::Comma)) {
+        break;
+      } else {
+        advance();  // consume ','
+      }
+      if (args.size() >= max_argument_size) {
+        return create_error(SyntaxErrorKind::TooManyArguments, args_ctx);
+      }
+    }
+  }
+  return args;
 }
 
 auto Parser::primary() -> std::variant<Expr, SyntaxError>

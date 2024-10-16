@@ -305,6 +305,12 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Logical 
   return true;
 }
 
+std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & call)
+{
+  // TODO(soblin): behave as function
+  return boost::apply_visitor(*this, call.callee);
+}
+
 auto evaluate_expr_impl(const Expr & expr, std::shared_ptr<Environment> env)
   -> std::variant<Value, RuntimeError>
 {

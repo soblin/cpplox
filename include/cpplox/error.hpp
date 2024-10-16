@@ -2,9 +2,9 @@
 
 #include <cpplox/expression.hpp>
 #include <cpplox/position.hpp>
+#include <cpplox/system.hpp>
 #include <cpplox/token.hpp>
 
-#include <limits>
 #include <memory>
 #include <string>
 
@@ -30,6 +30,7 @@ enum class SyntaxErrorKind {
   MissingWhileBody,            //!< "{ <body> }" is not found after "while"
   MissingForCondition,         //!< (cond) if missing like "for { <body> }}"
   MissingForBody,              //!< "{ <body> }" is not found after "for"
+  TooManyArguments,            //<! the number of arguments is too large
 };
 
 struct SyntaxError
@@ -85,7 +86,7 @@ struct UndefinedVariableError
 
 struct MaxLoopError
 {
-  static constexpr size_t Limit = std::numeric_limits<uint16_t>::max() - 1;
+  static constexpr size_t Limit = max_recursion_limit;
   const Token token;               //!< the cause statement of this loop
   const std::optional<Expr> cond;  //!< the cause of max loop
 };
