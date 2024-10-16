@@ -1,16 +1,18 @@
-var a = "123";
-var b = 10;
-if (a == "123"){
-  b = 100;
-}
-
-var a = "foo1";
-var b = "foo2";
+var a = "before a";
+var b = "before a";
 
 fun foo(a, b) {
   print "In foo";
   print "a = " + a;
   print "b = " + b;
 }
+
+a = "before";
+b = "before";
+
+foo(a, b);
+
+a = "after b";
+b = "after b";
 
 foo(a, b);
