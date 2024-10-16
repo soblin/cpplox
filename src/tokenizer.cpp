@@ -54,7 +54,6 @@ auto Tokenizer::add_token(const TokenType & token_type) -> void
                      ? (current_cursor_ - current_ctx_start_cursor_ - 2)
                      : (current_cursor_ - current_ctx_start_cursor_);
   const auto text = std::string_view(source_).substr(start, len);
-  // std::cout << "adding token " << text << std::endl;
   if (token_type == TokenType::Identifier and is_keyword(text)) {
     tokens_.emplace_back(keyword_map.find(text)->second, text, lines_.back(), start);
     return;
