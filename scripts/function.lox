@@ -7,8 +7,8 @@ fun foo(a, b) {
   print "b = " + b;
 }
 
-a = "before";
-b = "before";
+a = "before a";
+b = "before b";
 
 foo(a, b);
 
@@ -16,3 +16,15 @@ a = "after b";
 b = "after b";
 
 foo(a, b);
+
+fun recursive(a) {
+  if (a == 0) {
+    print a;
+  }
+  else {
+    print a;
+    recursive(a-1);
+  }
+}
+
+recursive(10);

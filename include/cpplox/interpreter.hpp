@@ -17,11 +17,7 @@ inline namespace interpreter
 class Interpreter
 {
 public:
-  Interpreter()
-  {
-    global_env_ = std::make_shared<Environment>();
-    env_ = std::make_shared<Environment>(global_env_);
-  }
+  Interpreter() { global_env_ = std::make_shared<Environment>(); }
 
   /**
    * @brief execute the given program
@@ -37,7 +33,6 @@ public:
 
 private:
   std::shared_ptr<Environment> global_env_;
-  std::shared_ptr<Environment> env_;
 
   /**
    * @brief execute the given declaration
