@@ -34,12 +34,13 @@ public:
 
   /**
    * @brief <statement> ::= <expr_stmt> | <print_stmt> | <block> | <if_block> | <while_stmt> |
-   *                        <for_stmt> | <break_stmt> | <continue_stmt>
+   *                        <for_stmt> | <break_stmt> | <continue_stmt> | <return_stmt>
    */
   auto statement() -> std::variant<Stmt, SyntaxError>;
 
   /**
    * @brief <func_decl> ::= "fun" IDENTIFIER "(" <parameters>? ")" block
+   * @detail responsible for consuming from "fun" to the end of the { <body> }
    */
   auto func_decl() -> std::variant<FuncDecl, SyntaxError>;
 
@@ -94,6 +95,11 @@ public:
    * @brief <continue_stmt> ::= "continue" ";"
    */
   auto continue_stmt() -> std::variant<ContinueStmt, SyntaxError>;
+
+  /**
+   * @brief <return_stmt> ::= "return" <expression>? ";"
+   */
+  auto return_stmt() -> std::variant<ReturnStmt, SyntaxError>;
 
   /**
    * @brief parse (...) {...}

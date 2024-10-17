@@ -100,13 +100,13 @@ struct NotInvocableError
   const std::string desc;
 };
 
-enum class PseudoSignalKind {
-  Break,
-  Continue,
+struct NoReturnFromFunction
+{
+  const Callable callee;
 };
 
-using RuntimeError =
-  std::variant<TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError>;
+using RuntimeError = std::variant<
+  TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError, NoReturnFromFunction>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

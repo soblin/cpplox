@@ -204,6 +204,12 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << err.desc << std::endl;
     return ss.str();
   }
+  /*
+  if (is_variant_v<NoReturnFromFunction>(error)) {
+    const auto & err = as_variant<NoReturnFromFunction>(error);
+    return ss.str();
+  }
+  */
   assert(false);
 }
 

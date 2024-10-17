@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cpplox/control_flow.hpp>
 #include <cpplox/environment.hpp>
 #include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
@@ -86,15 +87,15 @@ class ExecuteStmtVisitor : boost::static_visitor<std::optional<RuntimeError>>
 private:
   std::shared_ptr<Environment> env;
   std::shared_ptr<Environment> global_env;
-  std::optional<PseudoSignalKind> & signal;
+  std::optional<ControlFlowKind> & procedure;
 
 public:
   explicit ExecuteStmtVisitor(
     std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
-    std::optional<PseudoSignalKind> & sig)
-  : env(env), global_env(global_env), signal(sig)
+    std::optional<ControlFlowKind> & proc)
+  : env(env), global_env(global_env), procedure(proc)
   {
-    assert(!signal);
+    assert(!procedure);
   }
 
   std::variant<bool, RuntimeError> execute_branch_clause(
@@ -102,69 +103,75 @@ public:
 
   /**
    * @brief execute <expr_statement>, so environment is updated
-   * @post signal remains null
+   * @post procedure remains null
    */
   std::optional<RuntimeError> operator()(const ExprStmt & stmt);
 
   /**
    * @brief execute <print_statement>
-   * @post signal remains null
+   * @post procedure remains null
    */
   std::optional<RuntimeError> operator()(const PrintStmt & stmt);
 
   /**
    * @brief execute <expr_statement>, so environment is updated
-   * @post signal is activated if break/continue is called directly
+   * @post procedure is activated if break/continue is called directly
    */
   std::optional<RuntimeError> operator()(const Block & block);
 
   /**
    * @brief execute <if_block>, so environment is updated
-   * @post signal is activated if break/continue is called directly
+   * @post procedure is activated if break/continue is called directly
    */
   std::optional<RuntimeError> operator()(const IfBlock & if_block);
 
   /**
    * @brief execute <while_statement>
-   * @post signal remains null
+   * @post procedure remains null
    */
   std::optional<RuntimeError> operator()(const WhileStmt & while_stmt);
 
   /**
    * @brief execute <for_statement>
-   * @post signal remains null
+   * @post procedure remains null
    */
   std::optional<RuntimeError> operator()(const ForStmt & for_stmt);
 
   /**
    * @brief almost do nothing
-   * @post signal gets PseudoErrorKind::Break
+   * @post procedure gets ControlFlowKind::Break
    */
   std::optional<RuntimeError> operator()(const BreakStmt & break_stmt);
 
   /**
    * @brief almost do nothing
-   * @post signal gets PseudoErrorKind::Continue
+   * @post procedure gets ControlFlowKind::Continue
    */
   std::optional<RuntimeError> operator()(const ContinueStmt & continue_stmt);
+
+  /**
+   * @brief return value if provided
+   * @post procedure may turn ControlFlow::Return
+   */
+  std::optional<RuntimeError> operator()(const ReturnStmt & return_stmt);
 };
 
 auto execute_stmt_impl(
   const Stmt & stmt, std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
-  std::optional<PseudoSignalKind> & signal) -> std::optional<RuntimeError>;
+  std::optional<ControlFlowKind> & procedure) -> std::optional<RuntimeError>;
 
 class ExecuteDeclarationVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
   std::shared_ptr<Environment> env;
   std::shared_ptr<Environment> global_env;
-  std::optional<PseudoSignalKind> & signal;
+  std::optional<ControlFlowKind> & procedure;
 
 public:
   explicit ExecuteDeclarationVisitor(
     std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
-    std::optional<PseudoSignalKind> & sig)
-  : env(env), global_env(global_env), signal(sig)
+    std::optional<ControlFlowKind> & proc)
+  : env(env), global_env(global_env), procedure(proc)
   {
   }
 
