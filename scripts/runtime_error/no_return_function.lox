@@ -1,0 +1,8 @@
+// -*- mode: lua -*-
+
+fun foo(a, b) {
+  var c = a + b;
+  print c;
+}
+
+foo(1, 2);
