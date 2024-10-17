@@ -677,14 +677,14 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const VarDecl 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const Stmt & stmt)
 {
   return execute_stmt_impl(stmt, env, global_env, procedure);
-}
+}  // LCOV_EXCL_LINE
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl & func_decl)
 {
   // functions are defined in global scope
   global_env->define(func_decl.name, Callable{std::make_shared<const FuncDecl>(func_decl)});
   return std::nullopt;
-}
+}  // LCOV_EXCL_LINE
 
 }  // namespace impl
 
