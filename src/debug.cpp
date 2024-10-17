@@ -1,4 +1,5 @@
 #include <cpplox/debug.hpp>
+#include <cpplox/statement.hpp>
 
 #include <boost/variant/recursive_variant.hpp>
 
@@ -204,12 +205,16 @@ auto get_line_string(const RuntimeError & error, const size_t offset) -> std::st
        << err.desc << std::endl;
     return ss.str();
   }
-  /*
   if (is_variant_v<NoReturnFromFunction>(error)) {
     const auto & err = as_variant<NoReturnFromFunction>(error);
+    const auto func_name_decl = err.callee.definition->name;
+    ss << "function " << func_name_decl.lexeme << " define at line " << func_name_decl.line->number
+       << ", column "
+       << (func_name_decl.start_index + func_name_decl.lexeme.size() -
+           func_name_decl.line->start_index + 1)
+       << " does not return" << std::endl;
     return ss.str();
   }
-  */
   assert(false);
 }
 
@@ -255,22 +260,27 @@ static auto get_visualization_string_expr(
 }
 
 auto get_visualization_string(
-  const std::string_view & source, const Token & token, const size_t offset) -> std::string
+  const std::string_view & source, const Token & from, const Token & to,
+  const size_t offset) -> std::string
 {
   std::stringstream ss;
   if (offset > 0) {
     ss << std::string(offset, ' ');
   }
   ss << debug::Thin
-     << source.substr(token.line->start_index, token.start_index - token.line->start_index)
+     << source.substr(from.line->start_index, from.start_index - from.line->start_index)
      << debug::Reset;
-  ss << debug::Bold << debug::Red << debug::Underline
-     << source.substr(token.start_index, token.line->end_index - token.start_index + 1)
+  ss << debug::Underline << debug::Red << debug::Bold
+     << source.substr(from.start_index, to.start_index - from.start_index + to.lexeme.size())
      << debug::Reset;
-  if (source.at(token.line->end_index) != '\n') {
-    ss << std::endl;
-  }
-  ss << std::string(offset + token.start_index - token.line->start_index, ' ') << "^" << std::endl;
+  ss << debug::Thin
+     << source.substr(
+          to.start_index + to.lexeme.size(),
+          to.line->end_index - (to.start_index + to.lexeme.size()))
+     << debug::Reset;
+  ss << std::endl;
+  ss << std::string(offset + (from.start_index - from.line->start_index), ' ')
+     << std::string(to.start_index - from.start_index + to.lexeme.size(), '^') << std::endl;
   return ss.str();
 }
 
@@ -296,10 +306,19 @@ auto get_visualization_string(
     if (err.cond) {
       const auto [expr_start, expr_end] =
         boost::apply_visitor(ExprRangeVisitor(), err.cond.value());
-      // TODO(soblin): customize for for/while
-      return get_visualization_string_expr(source, err.token, err.cond.value(), offset);
+      return get_visualization_string(source, err.token, expr_end, offset);
     }
-    return get_visualization_string(source, err.token, offset);
+    return get_visualization_string(source, err.token, err.token, offset);
+  }
+  if (is_variant_v<NotInvocableError>(error)) {
+    const auto & err = as_variant<NotInvocableError>(error);
+    const auto [start, end] = boost::apply_visitor(ExprRangeVisitor(), err.callee);
+    return get_visualization_string(source, start, end, offset);
+  }
+  if (is_variant_v<NoReturnFromFunction>(error)) {
+    const auto & err = as_variant<NoReturnFromFunction>(error);
+    return get_visualization_string(
+      source, err.callee.definition->name, err.callee.definition->name, offset);
   }
   assert(false);
 }
