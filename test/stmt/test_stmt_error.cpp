@@ -380,7 +380,24 @@ fun foo(a, b) {
   print a
 }
 )",
-      lox::SyntaxErrorKind::StmtWithoutSemicolun}));
+      lox::SyntaxErrorKind::StmtWithoutSemicolun},
+    //
+    TestSyntaxErrorKindParamT{
+      R"(
+fun foo(a, b) {
+  print a;
+  return 1
+}
+)",
+      lox::SyntaxErrorKind::StmtWithoutSemicolun},
+    //
+    TestSyntaxErrorKindParamT{
+      R"(
+fun foo(a, 3) {
+  print a;
+}
+)",
+      lox::SyntaxErrorKind::InvalidParameterDecl}));
 
 template <typename T>
 class TestRuntimeErrorKind : public ::testing::TestWithParam<const char *>
