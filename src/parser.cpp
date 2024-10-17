@@ -162,6 +162,15 @@ auto Parser::statement() -> std::variant<Stmt, SyntaxError>
     return as_variant<ContinueStmt>(stmt_opt);
   }
 
+  // <return_stmt>
+  if (match(TokenType::Return)) {
+    const auto stmt_opt = return_stmt();
+    if (is_variant_v<SyntaxError>(stmt_opt)) {
+      return as_variant<SyntaxError>(stmt_opt);
+    }
+    return as_variant<ReturnStmt>(stmt_opt);
+  }
+
   // <expr_stmt>
   const auto expr_stmt_opt = expr_statement();
   if (is_variant_v<SyntaxError>(expr_stmt_opt)) {
@@ -417,6 +426,25 @@ auto Parser::continue_stmt() -> std::variant<ContinueStmt, SyntaxError>
   }
   advance();  // consume ';'
   return ContinueStmt{};
+}
+
+auto Parser::return_stmt() -> std::variant<ReturnStmt, SyntaxError>
+{
+  const auto return_ctx = current_;
+  advance();  // consume "return"
+  if (match(TokenType::Semicolun)) {
+    advance();  // consume ";'"
+    return ReturnStmt{std::nullopt};
+  }
+  const auto expr_opt = expression();
+  if (is_variant_v<SyntaxError>(expr_opt)) {
+    return as_variant<SyntaxError>(expr_opt);
+  }
+  if (!match(TokenType::Semicolun)) {
+    return create_error(SyntaxErrorKind::StmtWithoutSemicolun, return_ctx);
+  }
+  advance();  // consume ';'
+  return ReturnStmt{as_variant<Expr>(expr_opt)};
 }
 
 auto Parser::branch_clause(const size_t if_start_ctx) -> std::variant<BranchClause, SyntaxError>

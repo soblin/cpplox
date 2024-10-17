@@ -744,6 +744,7 @@ fun foo(a, b, c) {
    glob_a = a;
    glob_b = b;
    glob_c = c;
+   return;
 }
 
 foo(10, 20, 30);
@@ -762,7 +763,71 @@ foo(10, 20, 30);
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
          30                        //<! test
-       }}}));
+       }}},
+    TestStmtVariableSideEffectParam{
+      R"(
+var a = 0;
+
+fun fib(a) {
+  if (a == 0) {
+    return 0;
+  } else if (a == 1) {
+    return 1;
+  } else {
+    return fib(a-1) + fib(a - 2);
+  }
+}
+
+a = fib(10);
+)",
+      {{
+        1,                        //<! "a"
+        lox::helper::long_Index,  //<! long
+        55                        //<! test
+      }}},
+    TestStmtVariableSideEffectParam{
+      R"(
+var a = 0;
+
+fun fib(a) {
+  if (a == 0) {
+    return 0;
+  }
+  if (a == 1) {
+    return 1;
+  } else {
+    return fib(a-1) + fib(a - 2);
+  }
+}
+
+a = fib(10);
+)",
+      {{
+        1,                        //<! "a"
+        lox::helper::long_Index,  //<! long
+        55                        //<! test
+      }}},
+    TestStmtVariableSideEffectParam{
+      R"(
+var a = 0;
+
+fun fib(a) {
+  if (a == 0) {
+    return 0;
+  }
+  if (a == 1) {
+    return 1;
+  }
+  return fib(a-1) + fib(a - 2);
+}
+
+a = fib(10);
+)",
+      {{
+        1,                        //<! "a"
+        lox::helper::long_Index,  //<! long
+        55                        //<! test
+      }}}));
 
 TEST(Statement, if_statement)
 {

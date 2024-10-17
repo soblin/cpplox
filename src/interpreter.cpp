@@ -39,8 +39,8 @@ auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, Runtim
 auto Interpreter::execute_declaration(const Declaration & declaration)
   -> std::optional<RuntimeError>
 {
-  std::optional<PseudoSignalKind> signal{std::nullopt};
-  impl::ExecuteDeclarationVisitor executor(global_env_, global_env_, signal);
+  std::optional<ControlFlowKind> procedure{std::nullopt};
+  impl::ExecuteDeclarationVisitor executor(global_env_, global_env_, procedure);
   return boost::apply_visitor(executor, declaration);
 }
 
@@ -331,13 +331,16 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
     }
     function_scope->define(parameters.at(i), as_variant<Value>(arg_opt));
   }
-  std::optional<PseudoSignalKind> signal;
-  const auto exec = execute_stmt_impl(callee.definition->body, function_scope, global_env, signal);
+  std::optional<ControlFlowKind> procedure;
+  const auto exec =
+    execute_stmt_impl(callee.definition->body, function_scope, global_env, procedure);
   if (exec) {
     return exec.value();
   }
-  // TODO(soblin): if `signal` indicates `return` value, use it
-  return Nil{};
+  if (!procedure || !is_variant_v<Return>(procedure.value())) {
+    return NoReturnFromFunction{callee};
+  }
+  return as_variant<Return>(procedure.value()).value;
 }
 
 auto evaluate_expr_impl(
@@ -376,15 +379,17 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
    * when a Block-statement is found, a inner env is created, and it is passed to
    * ExecuteDeclarationVisitor, which may process a Stmt-declaration, and the Stmt-declaration maybe
    * a Block-statement, thus a inner-inner env is created.
+   *
+   * Block is neutral against break/continue/return and keep it as it
    */
   auto sub_scope_env = std::make_shared<Environment>(env);
   for (const auto & declaration : block.declarations) {
     const auto eval_opt = boost::apply_visitor(
-      ExecuteDeclarationVisitor(sub_scope_env, global_env, signal), declaration);
+      ExecuteDeclarationVisitor(sub_scope_env, global_env, procedure), declaration);
     if (eval_opt) {
       return eval_opt;
     }
-    if (signal) {
+    if (procedure) {
       return std::nullopt;
     }
   }
@@ -409,22 +414,26 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
     }
     for (const auto & declaration : while_stmt.body.declarations) {
       const auto exec_opt =
-        boost::apply_visitor(ExecuteDeclarationVisitor(env, global_env, signal), declaration);
+        boost::apply_visitor(ExecuteDeclarationVisitor(env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt;
       }
-      if (signal) {
-        auto sig = signal;
-        signal = std::nullopt;
-        if (sig.value() == PseudoSignalKind::Break) {
+      if (procedure) {
+        if (is_variant_v<Return>(procedure.value())) {
+          return std::nullopt;
+        }
+        auto proc = procedure;
+        // while CONSUMES break/continue inside its scope
+        procedure = std::nullopt;
+        if (is_variant_v<Break>(proc.value())) {
           // if "direct break" occurred inside this for-block, it is only handled by this for-block
-          // and never notitfied to outer scope, so `signal` is reset to null. and this for-block is
-          // terminated
+          // and never notitfied to outer scope, so `procedure` is reset to null. and this for-block
+          // is terminated
           return std::nullopt;
         } else {
           // if "direct continue" occurred inside this for-block, it is only handled by this
-          // for-block and never notitfied to outer scope, so `signal` is reset to null. and later
-          // declarations are not executed
+          // for-block and never notitfied to outer scope, so `procedure` is reset to null. and
+          // later declarations are not executed
           break;
         }
       }
@@ -437,7 +446,7 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
 {
   if (clause.declaration) {
     const auto var_decl_opt = boost::apply_visitor(
-      ExecuteDeclarationVisitor(if_scope_env, global_env, signal),
+      ExecuteDeclarationVisitor(if_scope_env, global_env, procedure),
       Declaration{clause.declaration.value()});
     if (var_decl_opt) {
       return var_decl_opt.value();
@@ -451,12 +460,12 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   if (is_truthy(cond)) {
     for (const auto & declaration : clause.body.declarations) {
       const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(if_scope_env, global_env, signal), declaration);
+        ExecuteDeclarationVisitor(if_scope_env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt.value();
       }
-      // in case the block contained break/continue, the process needs to be terminated
-      if (signal) {
+      // in case the block contained break/continue/return, the process needs to be terminated
+      if (procedure) {
         return true;
       }
     }
@@ -470,7 +479,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
 {
   /**
    * in case this if-block is within a for/while, and this if-block contained break/continue,
-   * `signal` needs to be passed to execute_branch_clause to nofity it to outer for/while.
+   * `procedure` needs to be passed to execute_branch_clause to nofity it to outer for/while.
    */
 
   /**
@@ -506,11 +515,11 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
     // execute the last else
     for (const auto & declaration : if_block.else_body.value().declarations) {
       const auto exec_else_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(else_scope_env, global_env, signal), declaration);
+        ExecuteDeclarationVisitor(else_scope_env, global_env, procedure), declaration);
       if (exec_else_opt) {
         return exec_else_opt;
       }
-      if (signal) {
+      if (procedure) {
         return std::nullopt;
       }
     }
@@ -527,16 +536,16 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     const auto & init_stmt = for_stmt.init_stmt.value();
     if (is_variant_v<VarDecl>(init_stmt)) {
       const auto & init_var_stmt = as_variant<VarDecl>(init_stmt);
-      impl::ExecuteDeclarationVisitor executor(sub_for_env, global_env, signal);
+      impl::ExecuteDeclarationVisitor executor(sub_for_env, global_env, procedure);
       const auto exec = boost::apply_visitor(executor, Declaration{init_var_stmt});
-      assert(!signal);  //!< only var_decl/expr_statement is called, so there is no chance of
-                        //!< break/continue
+      assert(!procedure);  //!< only var_decl/expr_statement is called, so there is no chance of
+                           //!< break/continue
       if (exec) {
         return exec;
       }
     } else {
       const auto & init_var_stmt = as_variant<ExprStmt>(init_stmt);
-      const auto exec = impl::execute_stmt_impl(init_var_stmt, sub_for_env, global_env, signal);
+      const auto exec = impl::execute_stmt_impl(init_var_stmt, sub_for_env, global_env, procedure);
       if (exec) {
         return exec;
       }
@@ -582,22 +591,25 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     // do the body
     for (const auto & declaration : for_stmt.body.declarations) {
       const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(sub_for_env, global_env, signal), declaration);
+        ExecuteDeclarationVisitor(sub_for_env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt;
       }
-      if (signal) {
-        auto sig = signal;
-        signal = std::nullopt;
-        if (sig.value() == PseudoSignalKind::Break) {
+      if (procedure) {
+        if (is_variant_v<Return>(procedure.value())) {
+          return std::nullopt;
+        }
+        auto proc = procedure;
+        procedure = std::nullopt;
+        if (is_variant_v<Break>(proc.value())) {
           // if "direct break" occurred inside this for-block, it is only handled by this for-block
-          // and never notitfied to outer scope, so `signal` is reset to null. and this for-block is
-          // terminated
+          // and never notitfied to outer scope, so `procedure` is reset to null. and this for-block
+          // is terminated
           return std::nullopt;
         } else {
           // if "direct continue" occurred inside this for-block, it is only handled by this
-          // for-block and never notitfied to outer scope, so `signal` is reset to null. and later
-          // declarations are not executed
+          // for-block and never notitfied to outer scope, so `procedure` is reset to null. and
+          // later declarations are not executed
           break;
         }
       }
@@ -615,22 +627,36 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(
   [[maybe_unused]] const BreakStmt & break_stmt)
 {
-  signal = PseudoSignalKind::Break;
+  procedure = Break{};
   return std::nullopt;
 }
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(
   [[maybe_unused]] const ContinueStmt & continue_stmt)
 {
-  signal = PseudoSignalKind::Continue;
+  procedure = Continue{};
+  return std::nullopt;
+}
+
+std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ReturnStmt & return_stmt)
+{
+  std::optional<Value> value_opt{std::nullopt};
+  if (return_stmt.expr) {
+    const auto value = impl::evaluate_expr_impl(return_stmt.expr.value(), env, global_env);
+    if (is_variant_v<RuntimeError>(value)) {
+      return as_variant<RuntimeError>(value);
+    }
+    value_opt.emplace(as_variant<Value>(value));
+  }
+  procedure.emplace(value_opt.has_value() ? Return{value_opt.value()} : Return{Nil{}});
   return std::nullopt;
 }
 
 auto execute_stmt_impl(
   const Stmt & stmt, std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
-  std::optional<PseudoSignalKind> & signal) -> std::optional<RuntimeError>
+  std::optional<ControlFlowKind> & procedure) -> std::optional<RuntimeError>
 {
-  impl::ExecuteStmtVisitor executor(env, global_env, signal);
+  impl::ExecuteStmtVisitor executor(env, global_env, procedure);
   return boost::apply_visitor(executor, stmt);
 }
 
@@ -650,7 +676,7 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const VarDecl 
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const Stmt & stmt)
 {
-  return execute_stmt_impl(stmt, env, global_env, signal);
+  return execute_stmt_impl(stmt, env, global_env, procedure);
 }
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl & func_decl)

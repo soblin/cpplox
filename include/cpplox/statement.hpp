@@ -34,9 +34,15 @@ struct BreakStmt;
 
 struct ContinueStmt;
 
+struct ReturnStmt
+{
+  const std::optional<Expr> expr;
+};
+
 using Stmt = boost::variant<
   ExprStmt, PrintStmt, boost::recursive_wrapper<Block>, boost::recursive_wrapper<IfBlock>,
-  boost::recursive_wrapper<WhileStmt>, boost::recursive_wrapper<ForStmt>, BreakStmt, ContinueStmt>;
+  boost::recursive_wrapper<WhileStmt>, boost::recursive_wrapper<ForStmt>, BreakStmt, ContinueStmt,
+  ReturnStmt>;
 
 struct VarDecl
 {
