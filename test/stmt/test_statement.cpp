@@ -731,11 +731,42 @@ while (true) {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
          10                        //<! test
-       }}},
+       }}}));
+
+using TestFunctionValueParam = std::tuple<
+  const char *, std::vector<std::tuple<
+                  size_t,     //<! variable token index
+                  size_t,     //<! type index
+                  lox::Value  //<! expected value
+                  >>>;
+
+class TestFunctionValue : public ::testing::TestWithParam<TestFunctionValueParam>
+{
+};
+
+TEST_P(TestFunctionValue, function_value)
+{
+  const auto [source_str, targets] = GetParam();
+  const auto source = std::string(source_str);
+  ASSERT_NO_FATAL_FAILURE(CheckParseProgramTest(source));
+  const auto [program, tokens] = ParseProgramTest(source);
+
+  lox::Interpreter interpreter{};
+  const auto err = interpreter.execute(program);
+  EXPECT_EQ(err.has_value(), false);
+  for (const auto & [var_index, type_index, test] : targets) {
+    const auto var_opt = interpreter.get_variable(tokens[var_index]);
+    ASSERT_NO_FATAL_FAILURE(test_as(var_opt, test, type_index));
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+  TestFunctionValue, TestFunctionValue,
+  ::testing::Values(
     /**
      * function
      */
-    TestStmtVariableSideEffectParam{
+    TestFunctionValueParam{
       R"(
 var glob_a = 0;
 var glob_b = 0;
@@ -764,7 +795,8 @@ foo(10, 20, 30);
          lox::helper::long_Index,  //<! long
          30                        //<! test
        }}},
-    TestStmtVariableSideEffectParam{
+    //
+    TestFunctionValueParam{
       R"(
 var a = 0;
 
@@ -785,7 +817,8 @@ a = fib(10);
         lox::helper::long_Index,  //<! long
         55                        //<! test
       }}},
-    TestStmtVariableSideEffectParam{
+    //
+    TestFunctionValueParam{
       R"(
 var a = 0;
 
@@ -807,7 +840,8 @@ a = fib(10);
         lox::helper::long_Index,  //<! long
         55                        //<! test
       }}},
-    TestStmtVariableSideEffectParam{
+    //
+    TestFunctionValueParam{
       R"(
 var a = 0;
 
@@ -822,6 +856,50 @@ fun fib(a) {
 }
 
 a = fib(10);
+)",
+      {{
+        1,                        //<! "a"
+        lox::helper::long_Index,  //<! long
+        55                        //<! test
+      }}},
+    //
+    TestFunctionValueParam{
+      R"(
+var a = 0;
+
+fun sum(a) {
+  var ret = 0;
+  for(var i = 0; i <= a; i = i + 1) {
+    ret = ret + i;
+  }
+  return ret;
+}
+
+a = sum(10);
+)",
+      {{
+        1,                        //<! "a"
+        lox::helper::long_Index,  //<! long
+        55                        //<! test
+      }}},
+    //
+    TestFunctionValueParam{
+      R"(
+var a = 0;
+
+fun sum(a) {
+  var ret = 0;
+  for(var i = 0;;) {
+    if (i > a) {
+      return ret;
+    }
+    ret = ret + i;
+    i = i + 1;
+  }
+  return ret;
+}
+
+a = sum(10);
 )",
       {{
         1,                        //<! "a"

@@ -357,6 +357,29 @@ for (var b = 1+2; b < 10; b = b + 1) {
   continue
 }
 )",
+      lox::SyntaxErrorKind::StmtWithoutSemicolun},
+    //
+    TestSyntaxErrorKindParamT{
+      R"(
+fun foo {
+  print a;
+}
+)",
+      lox::SyntaxErrorKind::MissingFuncParameterDecl},
+    //
+    TestSyntaxErrorKindParamT{
+      R"(
+fun foo(a, b)
+  print a;
+)",
+      lox::SyntaxErrorKind::MissingFuncBodyDecl},
+    //
+    TestSyntaxErrorKindParamT{
+      R"(
+fun foo(a, b) {
+  print a
+}
+)",
       lox::SyntaxErrorKind::StmtWithoutSemicolun}));
 
 template <typename T>
@@ -399,6 +422,36 @@ TEST_P(TestUndefinedVariableError, expr_statment_runtime_errors)
 using TestMaxLoopError = TestRuntimeErrorKind<lox::MaxLoopError>;
 
 TEST_P(TestMaxLoopError, expr_statment_runtime_errors)
+{
+  const auto & source = std::string(GetParam());
+
+  ASSERT_NO_FATAL_FAILURE(CheckParseProgramTest(source));
+  const auto [program, _] = ParseProgramTest(source);
+
+  lox::Interpreter interpreter{};
+  const auto exec = interpreter.execute(program);
+  EXPECT_EQ(exec.has_value(), true);
+  EXPECT_EQ(lox::is_variant_v<typename std::decay_t<Type>>(exec.value()), true);
+}
+
+using TestNotInvocableError = TestRuntimeErrorKind<lox::NotInvocableError>;
+
+TEST_P(TestNotInvocableError, test_not_invocable)
+{
+  const auto & source = std::string(GetParam());
+
+  ASSERT_NO_FATAL_FAILURE(CheckParseProgramTest(source));
+  const auto [program, _] = ParseProgramTest(source);
+
+  lox::Interpreter interpreter{};
+  const auto exec = interpreter.execute(program);
+  EXPECT_EQ(exec.has_value(), true);
+  EXPECT_EQ(lox::is_variant_v<typename std::decay_t<Type>>(exec.value()), true);
+}
+
+using TestNoReturnFromFunction = TestRuntimeErrorKind<lox::NoReturnFromFunction>;
+
+TEST_P(TestNoReturnFromFunction, test_no_return_value)
 {
   const auto & source = std::string(GetParam());
 
@@ -557,6 +610,26 @@ for (var a = 0; a < 10; a = a + "1") {
       c = c + 20;
    }
 }
+)",
+    //
+    R"(
+var a = 0;
+
+fun fib(a) {
+  return a + "a";
+}
+
+a = fib(10);
+)",
+    //
+    R"(
+var a = 0;
+
+fun I(a) {
+  return a;
+}
+
+a = I(10 + "10");
 )"));
 
 INSTANTIATE_TEST_SUITE_P(
@@ -574,6 +647,32 @@ var a = 1;
 while (a > 0) {
   a = a + 1;
 }
+)"));
+
+INSTANTIATE_TEST_SUITE_P(
+  TestTypeKindCases, TestNotInvocableError,
+  ::testing::Values(
+    //
+    R"(
+fun foo(a, b, c){
+  return a + b + c;
+}
+
+print foo(1,2,3)();
+)"));
+
+INSTANTIATE_TEST_SUITE_P(
+  TestTypeKindCases, TestNoReturnFromFunction,
+  ::testing::Values(
+    //
+    R"(
+fun foo(a, b, c){
+  print a;
+  print b;
+  print c;
+}
+
+print foo(1,2, 3);
 )"));
 
 int main(int argc, char ** argv)
