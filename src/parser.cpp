@@ -191,6 +191,9 @@ auto Parser::func_decl() -> std::variant<FuncDecl, SyntaxError>
   advance();  // consume '('
   Tokens parameters{};
   while (true) {
+    if (match(TokenType::RightParen)) {
+      break;
+    }
     if (!match(TokenType::Identifier)) {
       return create_error(SyntaxErrorKind::InvalidParameterDecl, current_);
     }
