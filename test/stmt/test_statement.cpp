@@ -905,6 +905,23 @@ a = sum(10);
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
         55                        //<! test
+      }}},
+    //
+    TestFunctionValueParam{
+      R"(
+var a = 0;
+
+fun foo() {
+  a = 10;
+  return;
+}
+
+foo();
+)",
+      {{
+        1,                        //<! "a"
+        lox::helper::long_Index,  //<! long
+        10                        //<! test
       }}}));
 
 TEST(Statement, if_statement)
