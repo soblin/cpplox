@@ -8,9 +8,8 @@ inline namespace environment
 
 auto Environment::assign(const Token & var, const Value & var_value) -> std::optional<RuntimeError>
 {
-  const auto key = std::string(var.lexeme);
-  if (const auto it = values_.find(key); it != values_.end()) {
-    values_[key] = var_value;
+  if (const auto it = values_.find(var.lexeme); it != values_.end()) {
+    values_[var.lexeme] = var_value;
     return std::nullopt;
   }
   if (enclosing_) {
@@ -21,7 +20,7 @@ auto Environment::assign(const Token & var, const Value & var_value) -> std::opt
 
 auto Environment::get(const Token & name) const -> std::variant<Value, RuntimeError>
 {
-  if (const auto it = values_.find(std::string(name.lexeme)); it != values_.end()) {
+  if (const auto it = values_.find(name.lexeme); it != values_.end()) {
     return it->second;
   } else if (enclosing_) {
     return enclosing_->get(name);

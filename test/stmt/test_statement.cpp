@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
+
 void CheckParseTokensTest(const std::string & source)
 {
   auto tokenizer = lox::Tokenizer(source);
