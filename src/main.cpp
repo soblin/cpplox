@@ -111,11 +111,13 @@ auto runPrompt() -> int
   // NOTE: if this interpreter is instantiated in each cycle, it will "forget" the prior
   // environment, thus we cannot reuse the variables we have defined in the previous prompt
   lox::Interpreter interpreter;
+  std::vector<std::string> prompts;
 
   for (;;) {
     const auto reader = Readline(">>> ");
     if (const auto prompt_opt = reader.get_input(); prompt_opt) {
-      const auto & prompt = prompt_opt.value();
+      prompts.push_back(prompt_opt.value());
+      const auto & prompt = prompts.back();
       const auto exec_opt = run(interpreter, prompt);
       if (lox::is_variant_v<lox::SyntaxError>(exec_opt)) {
         const auto & exec = lox::as_variant<lox::SyntaxError>(exec_opt);
