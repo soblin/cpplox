@@ -83,6 +83,7 @@ struct TypeError
 
 struct UndefinedVariableError
 {
+  // TODO(soblin): move this to compile error
   const Token variable;  //!< the variable
   const Expr expr;       //!< the entire expression
 };
@@ -107,6 +108,18 @@ struct NoReturnFromFunction
 
 using RuntimeError = std::variant<
   TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError, NoReturnFromFunction>;
+
+struct UndefVariableError
+{
+  const Token variable;  //!< the variable
+};
+
+struct RedefinitionError
+{
+  const Token variable;
+};
+
+using CompileError = std::variant<UndefVariableError, RedefinitionError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;
