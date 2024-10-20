@@ -16,6 +16,11 @@ inline namespace stmt
 struct FuncDecl;
 }
 
+inline namespace environment
+{
+class Environment;
+}
+
 inline namespace expression
 {
 
@@ -92,6 +97,12 @@ using Nil = std::monostate;
 struct Callable
 {
   std::shared_ptr<const FuncDecl> definition;
+  /**
+   * NOTE: when a closure is defined in a subscope, the subscope owns this Callable object, and the
+   * closure object itself refers to the subscope at `closure` field. Thus `closure` field needs to
+   * be weak_ptr because otherwise they form a circular dependency.
+   */
+  std::shared_ptr<Environment> closure;
 };
 
 using Value = std::variant<Nil, bool, int64_t, double, std::string, Callable>;

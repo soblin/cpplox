@@ -322,7 +322,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
   if (parameters.size() != arguments.size()) {
     return NotInvocableError{call.callee, "parameter and argument size do not match"};
   }
-  auto function_scope = std::make_shared<Environment>(global_env);
+  auto function_scope = std::make_shared<Environment>(callee.closure);
   for (unsigned i = 0; i < parameters.size(); ++i) {
     // evaluate argument using current environment
     const auto arg_opt = evaluate_expr_impl(arguments.at(i), env, global_env);
@@ -681,8 +681,15 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const Stmt & s
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl & func_decl)
 {
-  // functions are defined in global scope
-  global_env->define(func_decl.name, Callable{std::make_shared<const FuncDecl>(func_decl)});
+  // functions defined in global scope refer to global_scope
+  // functions defined in local scope(closure) refer to current scope and is regsitered in current
+  // scope
+  if (env == global_env) {
+    global_env->define(
+      func_decl.name, Callable{std::make_shared<const FuncDecl>(func_decl), global_env});
+  } else {
+    env->define(func_decl.name, Callable{std::make_shared<const FuncDecl>(func_decl), env});
+  }
   return std::nullopt;
 }  // LCOV_EXCL_LINE
 
