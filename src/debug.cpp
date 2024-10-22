@@ -383,14 +383,14 @@ void PrintResolveExprVisitor::operator()(const Call & expr)
 
 void PrintResolveStmtVisitor::operator()(const ExprStmt & stmt)
 {
-  PrintResolveExprVisitor expr_visitor(offset, lookup);
+  PrintResolveExprVisitor expr_visitor(lookup);
   boost::apply_visitor(expr_visitor, stmt.expression);
   ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
 }
 
 void PrintResolveStmtVisitor::operator()(const PrintStmt & stmt)
 {
-  PrintResolveExprVisitor expr_visitor(offset, lookup);
+  PrintResolveExprVisitor expr_visitor(lookup);
   boost::apply_visitor(expr_visitor, stmt.expression);
   ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
 }
@@ -399,7 +399,7 @@ void PrintResolveStmtVisitor::operator()(const Block & stmt)
 {
   ss << std::string(offset, ' ') << "| <-- begin block -->" << std::endl;
   for (const auto & declaration : stmt.declarations) {
-    PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
+    PrintResolveDeclVisitor decl_visitor(offset, lookup);
     boost::apply_visitor(decl_visitor, declaration);
     ss << decl_visitor.ss.str();
   }
@@ -417,7 +417,7 @@ void PrintResolveStmtVisitor::operator()(const IfBlock & stmt)
       ss << decl_visitor.ss.str();
     }
     {
-      PrintResolveExprVisitor expr_visitor(next_offset, lookup);
+      PrintResolveExprVisitor expr_visitor(lookup);
       boost::apply_visitor(expr_visitor, branch_clause.cond);
       ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
     }
@@ -447,11 +447,11 @@ void PrintResolveStmtVisitor::operator()(const IfBlock & stmt)
 void PrintResolveStmtVisitor::operator()(const WhileStmt & stmt)
 {
   ss << std::string(offset, ' ') << "| <-- in while -->" << std::endl;
-  PrintResolveExprVisitor expr_visitor(offset + skip, lookup);
+  PrintResolveExprVisitor expr_visitor(lookup);
   boost::apply_visitor(expr_visitor, stmt.cond);
   ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
 
-  PrintResolveDeclVisitor decl_visitor(offset + 2 * skip, lookup);
+  PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
   boost::apply_visitor(decl_visitor, Stmt{stmt.body});
   ss << decl_visitor.ss.str();
   ss << std::string(offset, ' ') << "| <-- end while -->" << std::endl;
@@ -469,22 +469,22 @@ void PrintResolveStmtVisitor::operator()(const ForStmt & stmt)
       ss << decl_visitor.ss.str();
     } else if (is_variant_v<ExprStmt>(init_stmt)) {
       const auto & expr_stmt = as_variant<ExprStmt>(init_stmt);
-      PrintResolveExprVisitor expr_visitor(offset + skip, lookup);
+      PrintResolveExprVisitor expr_visitor(lookup);
       boost::apply_visitor(expr_visitor, expr_stmt.expression);
       ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
     }
   }
   if (stmt.cond) {
-    PrintResolveExprVisitor expr_visitor(offset + skip, lookup);
+    PrintResolveExprVisitor expr_visitor(lookup);
     boost::apply_visitor(expr_visitor, stmt.cond.value());
     ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
   }
   if (stmt.next) {
-    PrintResolveExprVisitor expr_visitor(offset + skip, lookup);
+    PrintResolveExprVisitor expr_visitor(lookup);
     boost::apply_visitor(expr_visitor, stmt.next.value());
     ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
   }
-  PrintResolveDeclVisitor decl_visitor(offset + 2 * skip, lookup);
+  PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
   boost::apply_visitor(decl_visitor, Declaration{stmt.body});
   ss << decl_visitor.ss.str();
   ss << std::string(offset, ' ') << "| <-- end for -->" << std::endl;
@@ -502,7 +502,7 @@ void PrintResolveStmtVisitor::operator()(const ReturnStmt & stmt)
 {
   if (stmt.expr) {
     ss << std::string(offset, ' ') << "| <-- in return -->" << std::endl;
-    PrintResolveExprVisitor expr_visitor(offset + skip, lookup);
+    PrintResolveExprVisitor expr_visitor(lookup);
     boost::apply_visitor(expr_visitor, stmt.expr.value());
     ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
     ss << std::string(offset, ' ') << "| <-- end return -->" << std::endl;

@@ -28,7 +28,7 @@ public:
 
   [[nodiscard]] auto resolve(const Program & program) -> std::optional<CompileError>;
 
-  auto print_resolve(const Program & program) const -> void;
+  auto print_resolve(const Program & program) -> void;
 
   /**
    * @brief evaluate the given expression

@@ -55,8 +55,14 @@ target_link_libraries(${PROJECT_NAME}_lib readline magic_enum::magic_enum
                       Boost::unordered Boost::variant)
 
 add_executable(lox src/main.cpp)
-target_link_libraries(lox ${PROJECT_NAME}_lib readline magic_enum::magic_enum
-                      Boost::unordered Boost::variant)
+target_link_libraries(
+  lox
+  ${PROJECT_NAME}_lib
+  readline
+  magic_enum::magic_enum
+  Boost::unordered
+  Boost::variant
+  Boost::program_options)
 
 enable_testing()
 add_subdirectory(test)

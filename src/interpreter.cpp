@@ -53,15 +53,6 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
       return result.value();
     }
   }
-  if (const auto resolve_result = resolve(program); resolve_result) {
-    std::cout << "failed to resolve" << std::endl;
-  } else {
-    for (const auto & declaration : program) {
-      PrintResolveDeclVisitor decl_visitor(0, lookup_);
-      boost::apply_visitor(decl_visitor, declaration);
-      std::cout << decl_visitor.ss.str();
-    }
-  }
   return std::nullopt;
 }
 
@@ -77,6 +68,19 @@ auto Interpreter::resolve(const Program & program) -> std::optional<CompileError
     }
   }
   return std::nullopt;
+}
+
+auto Interpreter::print_resolve(const Program & program) -> void
+{
+  if (const auto resolve_result = resolve(program); resolve_result) {
+    std::cout << "failed to resolve" << std::endl;
+  } else {
+    for (const auto & declaration : program) {
+      PrintResolveDeclVisitor decl_visitor(0, lookup_);
+      boost::apply_visitor(decl_visitor, declaration);
+      std::cout << decl_visitor.ss.str();
+    }
+  }
 }
 
 auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>

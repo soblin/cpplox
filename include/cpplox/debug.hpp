@@ -36,10 +36,7 @@ class PrintResolveExprVisitor : boost::static_visitor<void>
 public:
   std::stringstream ss;
 
-  PrintResolveExprVisitor(const size_t offset, const ScopeLookup & lookup)
-  : offset(offset), lookup(lookup)
-  {
-  }
+  explicit PrintResolveExprVisitor(const ScopeLookup & lookup) : lookup(lookup) {}
 
   void operator()(const Literal & expr);
 
@@ -58,7 +55,6 @@ public:
   void operator()(const Call & expr);
 
 private:
-  const size_t offset;
   const ScopeLookup & lookup;
 };
 
