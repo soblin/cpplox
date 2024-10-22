@@ -2,6 +2,25 @@ cmake_minimum_required(VERSION 3.12)
 
 project("lox" VERSION 0.0.0)
 
+# download dependency
+include(FetchContent)
+
+# download boost
+FetchContent_Declare(
+  Boost
+  DOWNLOAD_EXTRACT_TIMESTAMP ON
+  URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+  URL_MD5 "893b5203b862eb9bbd08553e24ff146a")
+set(BOOST_INCLUDE_LIBRARIES unordered variant program_options)
+FetchContent_MakeAvailable(Boost)
+
+# download magic-enum
+FetchContent_Declare(
+  magic-enum
+  GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+  GIT_TAG v0.9.6)
+FetchContent_MakeAvailable(magic-enum)
+
 option(TRACE_COVERAGE "Measure Coverage" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -19,25 +38,6 @@ if(TRACE_COVERAGE)
   set(CMAKE_EXE_LINKER_FLAGS
       "${CMAKE_EXE_LINKER_FLAGS} -fprofile-arcs -ftest-coverage")
 endif()
-
-# download dependency
-include(FetchContent)
-
-# download boost
-FetchContent_Declare(
-  Boost
-  DOWNLOAD_EXTRACT_TIMESTAMP ON
-  URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
-  URL_MD5 "893b5203b862eb9bbd08553e24ff146a")
-set(BOOST_INCLUDE_LIBRARIES unordered variant)
-FetchContent_MakeAvailable(Boost)
-
-# download magic-enum
-FetchContent_Declare(
-  magic-enum
-  GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
-  GIT_TAG v0.9.6)
-FetchContent_MakeAvailable(magic-enum)
 
 # targets
 include_directories(include/)
