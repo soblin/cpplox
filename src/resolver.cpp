@@ -19,14 +19,12 @@ std::optional<CompileError> StmtResolver::operator()(const PrintStmt & stmt)
 
 std::optional<CompileError> StmtResolver::operator()(const Block & block)
 {
-  begin_scope();
   DeclResolver decl_resolver(scopes, lookup);
   for (const auto & declaration : block.declarations) {
     if (const auto err = boost::apply_visitor(decl_resolver, declaration); err) {
       return err;
     }
   }
-  end_scope();
   return std::nullopt;
 }
 
@@ -51,7 +49,6 @@ std::optional<CompileError> StmtResolver::operator()(const IfBlock & stmt)
   };
 
   // for if
-  begin_scope();
   if (const auto err = resolve_branch_clause(stmt.if_clause); err) {
     return err;
   }
@@ -61,6 +58,8 @@ std::optional<CompileError> StmtResolver::operator()(const IfBlock & stmt)
     }
   }
   if (stmt.else_body) {
+    n_nest_call++;
+    begin_scope();
     if (const auto err = boost::apply_visitor(*this, Stmt{stmt.else_body.value()}); err) {
       return err;
     }
@@ -68,7 +67,6 @@ std::optional<CompileError> StmtResolver::operator()(const IfBlock & stmt)
   for (unsigned i = 1; i <= n_nest_call; ++i) {
     end_scope();
   }
-  end_scope();
   return std::nullopt;
 }
 
@@ -78,10 +76,12 @@ std::optional<CompileError> StmtResolver::operator()(const WhileStmt & stmt)
   if (const auto err = boost::apply_visitor(expr_resolver, stmt.cond); err) {
     return err;
   }
+  begin_scope();
   StmtResolver stmt_resolver(scopes, lookup);
   if (const auto err = boost::apply_visitor(stmt_resolver, Stmt{stmt.body}); err) {
     return err;
   }
+  end_scope();
   return std::nullopt;
 }
 
