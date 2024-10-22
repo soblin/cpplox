@@ -4,6 +4,7 @@
 #include <cpplox/environment.hpp>
 #include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
+#include <cpplox/resolver.hpp>
 #include <cpplox/statement.hpp>
 
 #include <memory>
@@ -25,6 +26,10 @@ public:
    */
   [[nodiscard]] auto execute(const Program & program) -> std::optional<RuntimeError>;
 
+  [[nodiscard]] auto resolve(const Program & program) -> std::optional<CompileError>;
+
+  auto print_resolve(const Program & program) const -> void;
+
   /**
    * @brief evaluate the given expression
    */
@@ -34,6 +39,7 @@ public:
 
 private:
   std::shared_ptr<Environment> global_env_;
+  ScopeLookup lookup_;
 
   /**
    * @brief execute the given declaration

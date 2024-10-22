@@ -109,6 +109,11 @@ public:
   {
   }
 
+  bool operator==(const Token & other) const
+  {
+    return type == other.type && lexeme == other.lexeme && start_index == other.start_index;
+  }
+
   /**
    * @brief get the column number on its line, starting from 1
    */

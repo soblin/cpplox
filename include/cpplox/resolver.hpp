@@ -4,11 +4,26 @@
 #include <cpplox/expression.hpp>
 #include <cpplox/statement.hpp>
 
-#include <boost/unordered/unordered_flat_map.hpp>
 #include <boost/variant/recursive_variant.hpp>
 
 #include <deque>
 #include <string>
+#include <unordered_map>
+
+namespace std
+{
+template <>
+struct hash<lox::token::Token>
+{
+  size_t operator()(const lox::token::Token & token) const
+  {
+    size_t h1 = std::hash<lox::token::TokenType>()(token.type);
+    size_t h2 = std::hash<std::string_view>()(token.lexeme);
+    size_t h3 = std::hash<size_t>()(token.start_index);
+    return h1 ^ (h2 << 1) ^ (h3 << 2);
+  }
+};
+}  // namespace std
 
 namespace lox
 {
@@ -16,8 +31,8 @@ namespace lox
 inline namespace resolver
 {
 
-using ScopeChain = std::deque<boost::unordered_flat_map<std::string, bool>>;
-using ScopeLookup = boost::unordered_flat_map<Token, size_t>;
+using ScopeChain = std::deque<std::unordered_map<std::string_view, bool>>;
+using ScopeLookup = std::unordered_map<Token, size_t>;
 
 class StmtResolver : boost::static_visitor<std::optional<CompileError>>
 {

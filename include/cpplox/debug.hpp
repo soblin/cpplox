@@ -2,7 +2,9 @@
 
 #include <cpplox/error.hpp>
 #include <cpplox/expression.hpp>
+#include <cpplox/resolver.hpp>
 
+#include <sstream>
 #include <string>
 
 namespace lox
@@ -28,6 +30,93 @@ static constexpr const char * Magenta = "\033[35m";
 static constexpr const char * Cyan = "\033[36m";
 
 static constexpr const char * Reset = "\033[0m";
+
+class PrintResolveExprVisitor : boost::static_visitor<void>
+{
+public:
+  std::stringstream ss;
+
+  PrintResolveExprVisitor(const size_t offset, const ScopeLookup & lookup)
+  : offset(offset), lookup(lookup)
+  {
+  }
+
+  void operator()(const Literal & expr);
+
+  void operator()(const Unary & expr);
+
+  void operator()(const Binary & expr);
+
+  void operator()(const Group & expr);
+
+  void operator()(const Variable & expr);
+
+  void operator()(const Assign & expr);
+
+  void operator()(const Logical & expr);
+
+  void operator()(const Call & expr);
+
+private:
+  const size_t offset;
+  const ScopeLookup & lookup;
+};
+
+class PrintResolveStmtVisitor : boost::static_visitor<void>
+{
+public:
+  std::stringstream ss;
+
+  PrintResolveStmtVisitor(const size_t offset, const ScopeLookup & lookup)
+  : offset(offset), lookup(lookup)
+  {
+  }
+
+  void operator()(const ExprStmt & stmt);
+
+  void operator()(const PrintStmt & stmt);
+
+  void operator()(const Block & stmt);
+
+  void operator()(const IfBlock & stmt);
+
+  void operator()(const WhileStmt & stmt);
+
+  void operator()(const ForStmt & stmt);
+
+  void operator()(const BreakStmt & stmt);
+
+  void operator()(const ContinueStmt & stmt);
+
+  void operator()(const ReturnStmt & stmt);
+
+private:
+  const size_t offset;
+  const ScopeLookup & lookup;
+  const size_t skip{4};
+};
+
+class PrintResolveDeclVisitor : boost::static_visitor<void>
+{
+public:
+  std::stringstream ss;
+
+  PrintResolveDeclVisitor(const size_t offset, const ScopeLookup & lookup)
+  : offset(offset), lookup(lookup)
+  {
+  }
+
+  void operator()(const VarDecl & var_decl);
+
+  void operator()(const Stmt & stmt);
+
+  void operator()(const FuncDecl & func_decl);
+
+private:
+  const size_t offset;
+  const ScopeLookup & lookup;
+  const size_t skip{4};
+};
 
 }  // namespace debug
 }  // namespace lox

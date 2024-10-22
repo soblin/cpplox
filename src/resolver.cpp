@@ -207,7 +207,7 @@ void DeclResolver::declare(const Token & name)
   if (scopes.empty()) {
     return;
   }
-  scopes.back()[std::string(name.lexeme)] = false;
+  scopes.back()[name.lexeme] = false;
 }
 
 void DeclResolver::define(const Token & name)
@@ -215,7 +215,7 @@ void DeclResolver::define(const Token & name)
   if (scopes.empty()) {
     return;
   }
-  scopes.back()[std::string(name.lexeme)] = true;
+  scopes.back()[name.lexeme] = true;
 }
 
 std::optional<CompileError> ExprResolver::operator()(const Literal & literal)
@@ -244,7 +244,7 @@ std::optional<CompileError> ExprResolver::operator()(const Group & group)
 std::optional<CompileError> ExprResolver::operator()(const Variable & expr)
 {
   if (!scopes.empty()) {
-    const auto it = scopes.back().find(std::string(expr.name.lexeme));
+    const auto it = scopes.back().find(expr.name.lexeme);
     if (it != scopes.back().end() && it->second == false) {
       return UndefVariableError{expr.name};
     }
@@ -291,9 +291,8 @@ std::optional<CompileError> ExprResolver::operator()(const Call & call)
 void ExprResolver::resolve_local(const Token & name)
 {
   for (int i = scopes.size() - 1; i >= 0; i--) {
-    if (scopes.at(i).contains(std::string(name.lexeme))) {
+    if (const auto it = scopes.at(i).find(name.lexeme); it != scopes.at(i).end()) {
       // if depth == 0, do not traverse enclosing
-      // TODO(soblin): hash for Token
       lookup[name] = scopes.size() - 1 - i;
       return;
     }
