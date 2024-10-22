@@ -106,9 +106,6 @@ struct NoReturnFromFunction
   const Callable callee;
 };
 
-using RuntimeError = std::variant<
-  TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError, NoReturnFromFunction>;
-
 struct UndefVariableError
 {
   const Token variable;  //!< the variable
@@ -120,6 +117,10 @@ struct RedefinitionError
 };
 
 using CompileError = std::variant<UndefVariableError, RedefinitionError>;
+
+using RuntimeError = std::variant<
+  TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError, NoReturnFromFunction,
+  CompileError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

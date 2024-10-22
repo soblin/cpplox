@@ -47,6 +47,9 @@ auto Interpreter::execute_declaration(const Declaration & declaration)
 
 auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError>
 {
+  if (const auto resolve_opt = resolve(program); resolve_opt) {
+    return resolve_opt.value();
+  }
   for (const auto & declaration : program) {
     const std::optional<RuntimeError> result = execute_declaration(declaration);
     if (result) {
