@@ -5,6 +5,8 @@
 #include <cpplox/tokenizer.hpp>
 #include <cpplox/variant.hpp>
 
+#include <boost/program_options.hpp>
+
 #include <readline/history.h>
 #include <readline/readline.h>
 
@@ -47,16 +49,6 @@ public:
 private:
   char * input_{nullptr};
 };
-
-auto report(const int line, const std::string & where, const std::string & message) -> void
-{
-  std::cout << "[line " << line << "] Error" << where << ": " << message << std::endl;
-}
-
-auto error(const int line, const std::string & message) -> void
-{
-  report(line, "", message);
-}
 
 auto run(lox::Interpreter & interpreter, const std::string & program)
   -> std::variant<std::monostate, lox::SyntaxError, lox::RuntimeError>
@@ -106,6 +98,39 @@ auto runFile(const char * path) -> int
   return 0;
 }
 
+auto runScopeAnalysisFile(const char * path) -> int
+{
+  std::ifstream ifs(path);
+  if (!ifs) {
+    std::cerr << path << " does not exist" << std::endl;
+    return 1;
+  }
+  std::stringstream ss;
+  ss << ifs.rdbuf();
+  const auto & source = ss.str();
+  auto tokenizer = lox::Tokenizer(source);
+  const auto result = tokenizer.take_tokens();
+  if (lox::is_variant_v<lox::SyntaxError>(result)) {
+    const auto & exec = lox::as_variant<lox::SyntaxError>(result);
+    std::cout << exec.get_line_string(2);
+    std::cout << exec.get_visualization_string(ss.str(), 4);
+    return 1;
+  }
+  const auto & tokens = lox::as_variant<lox::Tokens>(result);
+  auto parser = lox::Parser(tokens);
+  const auto program_result = parser.program();
+  if (lox::is_variant_v<lox::SyntaxError>(program_result)) {
+    const auto & exec = lox::as_variant<lox::SyntaxError>(program_result);
+    std::cout << exec.get_line_string(2);
+    std::cout << exec.get_visualization_string(ss.str(), 4);
+    return 1;
+  }
+  const auto & program = lox::as_variant<lox::Program>(program_result);
+  lox::Interpreter interpreter;
+  interpreter.print_resolve(program);
+  return 0;
+}
+
 auto runPrompt() -> int
 {
   // NOTE: if this interpreter is instantiated in each cycle, it will "forget" the prior
@@ -135,15 +160,36 @@ auto runPrompt() -> int
 
 auto REPL(int argc, char ** argv) -> int
 {
-  if (argc > 2) {
-    std::cout << "usage: jlox <script>" << std::endl;
-    return 0;
-  }
-  if (argc == 2) {
-    return runFile(argv[1]);
-  } else {
+  if (argc == 1) {
     return runPrompt();
   }
+
+  namespace argparse = boost::program_options;
+  argparse::options_description options("options");
+  options.add_options()("help,h", "show help")  // -h [ --help ]
+    ("scope", "show scope analysis")            // -scope
+    ("file,f", argparse::value<std::string>(), "relative path to source file");
+
+  argparse::variables_map args_opt;
+  argparse::store(argparse::parse_command_line(argc, argv, options), args_opt);
+  argparse::notify(args_opt);
+
+  if (args_opt.count("help")) {
+    std::cout << options << std::endl;
+    return 0;
+  }
+
+  if (!args_opt.count("file")) {
+    std::cout << "Usage: <executable> -f [ --file ] <relpath to source file>" << std::endl;
+    return 0;
+  }
+
+  const std::string file = args_opt["file"].as<std::string>();
+
+  if (args_opt.count("scope")) {
+    return runScopeAnalysisFile(file.c_str());
+  }
+  return runFile(file.c_str());
 }
 
 auto main(int argc, char ** argv) -> int

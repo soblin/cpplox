@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/environment.hpp>
 #include <cpplox/interpreter.hpp>
 
@@ -46,6 +47,9 @@ auto Interpreter::execute_declaration(const Declaration & declaration)
 
 auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError>
 {
+  if (const auto resolve_opt = resolve(program); resolve_opt) {
+    return resolve_opt.value();
+  }
   for (const auto & declaration : program) {
     const std::optional<RuntimeError> result = execute_declaration(declaration);
     if (result) {
@@ -53,6 +57,33 @@ auto Interpreter::execute(const Program & program) -> std::optional<RuntimeError
     }
   }
   return std::nullopt;
+}
+
+auto Interpreter::resolve(const Program & program) -> std::optional<CompileError>
+{
+  ScopeChain scope_chain;
+  scope_chain.push_back({});
+  DeclResolver resolver(scope_chain, lookup_);
+  for (const auto & declaration : program) {
+    const auto err = boost::apply_visitor(resolver, declaration);
+    if (err) {
+      return err;
+    }
+  }
+  return std::nullopt;
+}
+
+auto Interpreter::print_resolve(const Program & program) -> void
+{
+  if (const auto resolve_result = resolve(program); resolve_result) {
+    std::cout << "failed to resolve" << std::endl;
+  } else {
+    for (const auto & declaration : program) {
+      PrintResolveDeclVisitor decl_visitor(0, lookup_);
+      boost::apply_visitor(decl_visitor, declaration);
+      std::cout << decl_visitor.ss.str();
+    }
+  }
 }
 
 auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>
