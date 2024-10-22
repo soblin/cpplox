@@ -422,7 +422,7 @@ void PrintResolveStmtVisitor::operator()(const IfBlock & stmt)
       ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
     }
     {
-      PrintResolveDeclVisitor decl_visitor(next_offset + skip, lookup);
+      PrintResolveDeclVisitor decl_visitor(next_offset, lookup);
       boost::apply_visitor(decl_visitor, Declaration{branch_clause.body});
       ss << decl_visitor.ss.str();
     }
