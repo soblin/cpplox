@@ -284,7 +284,17 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Group & 
 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Variable & variable)
 {
-  return env->get(variable.name);
+  if (const auto it = lookup_.find(variable.name); it != lookup_.end()) {
+    const auto & var = variable.name;
+    std::cout << var.lexeme << " at line " << var.line->number << ", column "
+              << var.get_lexical_column() << " has depth " << it->second << std::endl;
+    return env->get_deBruijn(variable.name, it->second);
+  } else {
+    const auto & var = variable.name;
+    std::cout << var.lexeme << " at line " << var.line->number << ", column "
+              << var.get_lexical_column() << " could not find depth " << std::endl;
+    return UndefinedVariableError{var, Literal{var.type, var.lexeme, var.line, var.start_index}};
+  }
 }
 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Assign & assign)
@@ -294,12 +304,16 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Assign &
     return as_variant<RuntimeError>(rvalue_opt);
   }
   const auto & rvalue = as_variant<Value>(rvalue_opt);
-  const auto assign_err = env->assign(assign.name, rvalue);
-  if (assign_err) {
-    // NOTE: returned value from env does not contain expr information
+  if (const auto it = lookup_.find(assign.name); it != lookup_.end()) {
+    const auto assign_err = env->assign_deBruijn(assign.name, rvalue, it->second);
+    if (assign_err) {
+      // NOTE: returned value from env does not contain expr information
+      return UndefinedVariableError{assign.name, assign.expr};
+    }
+    return rvalue;
+  } else {
     return UndefinedVariableError{assign.name, assign.expr};
   }
-  return rvalue;
 }
 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Logical & logical)
