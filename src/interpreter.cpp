@@ -34,14 +34,14 @@ auto stringify = [](const Value & value) -> std::string {
 
 auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {
-  return impl::evaluate_expr_impl(expr, global_env_, global_env_);
+  return impl::evaluate_expr_impl(expr, lookup_, global_env_, global_env_);
 }  // LCOV_EXCL_LINE
 
 auto Interpreter::execute_declaration(const Declaration & declaration)
   -> std::optional<RuntimeError>
 {
   std::optional<ControlFlowKind> procedure{std::nullopt};
-  impl::ExecuteDeclarationVisitor executor(global_env_, global_env_, procedure);
+  impl::ExecuteDeclarationVisitor executor(lookup_, global_env_, global_env_, procedure);
   return boost::apply_visitor(executor, declaration);
 }
 
@@ -356,7 +356,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
   auto function_scope = std::make_shared<Environment>(callee.closure);
   for (unsigned i = 0; i < parameters.size(); ++i) {
     // evaluate argument using current environment
-    const auto arg_opt = evaluate_expr_impl(arguments.at(i), env, global_env);
+    const auto arg_opt = evaluate_expr_impl(arguments.at(i), lookup_, env, global_env);
     if (is_variant_v<RuntimeError>(arg_opt)) {
       return as_variant<RuntimeError>(arg_opt);
     }
@@ -364,7 +364,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
   }
   std::optional<ControlFlowKind> procedure;
   const auto exec =
-    execute_stmt_impl(callee.definition->body, function_scope, global_env, procedure);
+    execute_stmt_impl(callee.definition->body, lookup_, function_scope, global_env, procedure);
   if (exec) {
     return exec.value();
   }
@@ -375,16 +375,16 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
 }
 
 auto evaluate_expr_impl(
-  const Expr & expr, std::shared_ptr<Environment> env,
+  const Expr & expr, const ScopeLookup & lookup, std::shared_ptr<Environment> env,
   std::shared_ptr<Environment> global_env) -> std::variant<Value, RuntimeError>
 {
-  auto evaluator = EvaluateExprVisitor(env, global_env);
+  auto evaluator = EvaluateExprVisitor(lookup, env, global_env);
   return boost::apply_visitor(evaluator, expr);
 }
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ExprStmt & stmt)
 {
-  const auto eval_opt = impl::evaluate_expr_impl(stmt.expression, env, global_env);
+  const auto eval_opt = impl::evaluate_expr_impl(stmt.expression, lookup_, env, global_env);
   if (is_variant_v<RuntimeError>(eval_opt)) {
     return as_variant<RuntimeError>(eval_opt);
   }
@@ -393,7 +393,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ExprStmt & stmt
 
 std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const PrintStmt & stmt)
 {
-  const auto eval_opt = impl::evaluate_expr_impl(stmt.expression, env, global_env);
+  const auto eval_opt = impl::evaluate_expr_impl(stmt.expression, lookup_, env, global_env);
   if (is_variant_v<RuntimeError>(eval_opt)) {
     return as_variant<RuntimeError>(eval_opt);
   }
@@ -416,7 +416,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const Block & block)
   auto sub_scope_env = std::make_shared<Environment>(env);
   for (const auto & declaration : block.declarations) {
     const auto eval_opt = boost::apply_visitor(
-      ExecuteDeclarationVisitor(sub_scope_env, global_env, procedure), declaration);
+      ExecuteDeclarationVisitor(lookup_, sub_scope_env, global_env, procedure), declaration);
     if (eval_opt) {
       return eval_opt;
     }
@@ -435,7 +435,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
     if (cnt > MaxLoopError::Limit) {
       return MaxLoopError{while_stmt.while_token, while_stmt.cond};
     }
-    const auto eval_cond_opt = impl::evaluate_expr_impl(while_stmt.cond, env, global_env);
+    const auto eval_cond_opt = impl::evaluate_expr_impl(while_stmt.cond, lookup_, env, global_env);
     if (is_variant_v<RuntimeError>(eval_cond_opt)) {
       return as_variant<RuntimeError>(eval_cond_opt);
     }
@@ -444,8 +444,8 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
       return std::nullopt;
     }
     for (const auto & declaration : while_stmt.body.declarations) {
-      const auto exec_opt =
-        boost::apply_visitor(ExecuteDeclarationVisitor(env, global_env, procedure), declaration);
+      const auto exec_opt = boost::apply_visitor(
+        ExecuteDeclarationVisitor(lookup_, env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt;
       }
@@ -477,13 +477,13 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
 {
   if (clause.declaration) {
     const auto var_decl_opt = boost::apply_visitor(
-      ExecuteDeclarationVisitor(if_scope_env, global_env, procedure),
+      ExecuteDeclarationVisitor(lookup_, if_scope_env, global_env, procedure),
       Declaration{clause.declaration.value()});
     if (var_decl_opt) {
       return var_decl_opt.value();
     }
   }
-  const auto cond_opt = impl::evaluate_expr_impl(clause.cond, if_scope_env, global_env);
+  const auto cond_opt = impl::evaluate_expr_impl(clause.cond, lookup_, if_scope_env, global_env);
   if (is_variant_v<RuntimeError>(cond_opt)) {
     return as_variant<RuntimeError>(cond_opt);
   }
@@ -491,7 +491,7 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   if (is_truthy(cond)) {
     for (const auto & declaration : clause.body.declarations) {
       const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(if_scope_env, global_env, procedure), declaration);
+        ExecuteDeclarationVisitor(lookup_, if_scope_env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt.value();
       }
@@ -546,7 +546,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
     // execute the last else
     for (const auto & declaration : if_block.else_body.value().declarations) {
       const auto exec_else_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(else_scope_env, global_env, procedure), declaration);
+        ExecuteDeclarationVisitor(lookup_, else_scope_env, global_env, procedure), declaration);
       if (exec_else_opt) {
         return exec_else_opt;
       }
@@ -567,7 +567,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     const auto & init_stmt = for_stmt.init_stmt.value();
     if (is_variant_v<VarDecl>(init_stmt)) {
       const auto & init_var_stmt = as_variant<VarDecl>(init_stmt);
-      impl::ExecuteDeclarationVisitor executor(sub_for_env, global_env, procedure);
+      impl::ExecuteDeclarationVisitor executor(lookup_, sub_for_env, global_env, procedure);
       const auto exec = boost::apply_visitor(executor, Declaration{init_var_stmt});
       assert(!procedure);  //!< only var_decl/expr_statement is called, so there is no chance of
                            //!< break/continue
@@ -576,7 +576,8 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
       }
     } else {
       const auto & init_var_stmt = as_variant<ExprStmt>(init_stmt);
-      const auto exec = impl::execute_stmt_impl(init_var_stmt, sub_for_env, global_env, procedure);
+      const auto exec =
+        impl::execute_stmt_impl(init_var_stmt, lookup_, sub_for_env, global_env, procedure);
       if (exec) {
         return exec;
       }
@@ -587,7 +588,8 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     if (!for_stmt.cond) {
       return true;
     }
-    const auto cond_opt = impl::evaluate_expr_impl(for_stmt.cond.value(), sub_for_env, global_env);
+    const auto cond_opt =
+      impl::evaluate_expr_impl(for_stmt.cond.value(), lookup_, sub_for_env, global_env);
     if (is_variant_v<RuntimeError>(cond_opt)) {
       return as_variant<RuntimeError>(cond_opt);
     }
@@ -599,7 +601,8 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     if (!for_stmt.next) {
       return std::nullopt;
     }
-    const auto exec = impl::evaluate_expr_impl(for_stmt.next.value(), sub_for_env, global_env);
+    const auto exec =
+      impl::evaluate_expr_impl(for_stmt.next.value(), lookup_, sub_for_env, global_env);
     if (is_variant_v<RuntimeError>(exec)) {
       return as_variant<RuntimeError>(exec);
     }
@@ -622,7 +625,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     // do the body
     for (const auto & declaration : for_stmt.body.declarations) {
       const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(sub_for_env, global_env, procedure), declaration);
+        ExecuteDeclarationVisitor(lookup_, sub_for_env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt;
       }
@@ -673,7 +676,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ReturnStmt & re
 {
   std::optional<Value> value_opt{std::nullopt};
   if (return_stmt.expr) {
-    const auto value = impl::evaluate_expr_impl(return_stmt.expr.value(), env, global_env);
+    const auto value = impl::evaluate_expr_impl(return_stmt.expr.value(), lookup_, env, global_env);
     if (is_variant_v<RuntimeError>(value)) {
       return as_variant<RuntimeError>(value);
     }
@@ -684,17 +687,19 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ReturnStmt & re
 }
 
 auto execute_stmt_impl(
-  const Stmt & stmt, std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
+  const Stmt & stmt, const ScopeLookup & lookup, std::shared_ptr<Environment> env,
+  std::shared_ptr<Environment> global_env,
   std::optional<ControlFlowKind> & procedure) -> std::optional<RuntimeError>
 {
-  impl::ExecuteStmtVisitor executor(env, global_env, procedure);
+  impl::ExecuteStmtVisitor executor(lookup, env, global_env, procedure);
   return boost::apply_visitor(executor, stmt);
 }
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const VarDecl & decl)
 {
   if (decl.initializer) {
-    const auto eval_opt = impl::evaluate_expr_impl(decl.initializer.value(), env, global_env);
+    const auto eval_opt =
+      impl::evaluate_expr_impl(decl.initializer.value(), lookup_, env, global_env);
     if (is_variant_v<RuntimeError>(eval_opt)) {
       return as_variant<RuntimeError>(eval_opt);
     }
@@ -707,7 +712,7 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const VarDecl 
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const Stmt & stmt)
 {
-  return execute_stmt_impl(stmt, env, global_env, procedure);
+  return execute_stmt_impl(stmt, lookup_, env, global_env, procedure);
 }  // LCOV_EXCL_LINE
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl & func_decl)

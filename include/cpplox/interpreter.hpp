@@ -53,6 +53,7 @@ namespace impl
 class EvaluateExprVisitor : boost::static_visitor<std::variant<Value, RuntimeError>>
 {
 private:
+  const ScopeLookup & lookup_;
   // NOTE: passing env as mutable reference does not meet the const requirement of operator()
   std::shared_ptr<Environment> env;
   // if the expression contained function call, the function must not use `env`, because function
@@ -62,8 +63,9 @@ private:
 
 public:
   explicit EvaluateExprVisitor(
-    std::shared_ptr<Environment> env_, std::shared_ptr<Environment> global_env_)
-  : env(env_), global_env(global_env_)
+    const ScopeLookup & lookup, std::shared_ptr<Environment> env_,
+    std::shared_ptr<Environment> global_env_)
+  : lookup_(lookup), env(env_), global_env(global_env_)
   {
   }
 
@@ -85,21 +87,22 @@ public:
 };
 
 auto evaluate_expr_impl(
-  const Expr & expr, std::shared_ptr<Environment> env,
+  const Expr & expr, const ScopeLookup & lookup, std::shared_ptr<Environment> env,
   std::shared_ptr<Environment> global_env) -> std::variant<Value, RuntimeError>;
 
 class ExecuteStmtVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
+  const ScopeLookup & lookup_;
   std::shared_ptr<Environment> env;
   std::shared_ptr<Environment> global_env;
   std::optional<ControlFlowKind> & procedure;
 
 public:
   explicit ExecuteStmtVisitor(
-    std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
-    std::optional<ControlFlowKind> & proc)
-  : env(env), global_env(global_env), procedure(proc)
+    const ScopeLookup & lookup, std::shared_ptr<Environment> env,
+    std::shared_ptr<Environment> global_env, std::optional<ControlFlowKind> & proc)
+  : lookup_(lookup), env(env), global_env(global_env), procedure(proc)
   {
     assert(!procedure);
   }
@@ -163,21 +166,23 @@ public:
 };
 
 auto execute_stmt_impl(
-  const Stmt & stmt, std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
+  const Stmt & stmt, const ScopeLookup & lookup, std::shared_ptr<Environment> env,
+  std::shared_ptr<Environment> global_env,
   std::optional<ControlFlowKind> & procedure) -> std::optional<RuntimeError>;
 
 class ExecuteDeclarationVisitor : boost::static_visitor<std::optional<RuntimeError>>
 {
 private:
+  const ScopeLookup & lookup_;
   std::shared_ptr<Environment> env;
   std::shared_ptr<Environment> global_env;
   std::optional<ControlFlowKind> & procedure;
 
 public:
   explicit ExecuteDeclarationVisitor(
-    std::shared_ptr<Environment> env, std::shared_ptr<Environment> global_env,
-    std::optional<ControlFlowKind> & proc)
-  : env(env), global_env(global_env), procedure(proc)
+    const ScopeLookup & lookup, std::shared_ptr<Environment> env,
+    std::shared_ptr<Environment> global_env, std::optional<ControlFlowKind> & proc)
+  : lookup_(lookup), env(env), global_env(global_env), procedure(proc)
   {
   }
 
