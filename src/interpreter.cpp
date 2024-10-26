@@ -285,14 +285,18 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Group & 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Variable & variable)
 {
   if (const auto it = lookup_.find(variable.name); it != lookup_.end()) {
-    const auto & var = variable.name;
+    // const auto & var = variable.name;
+    /*
     std::cout << var.lexeme << " at line " << var.line->number << ", column "
               << var.get_lexical_column() << " has depth " << it->second << std::endl;
+    */
     return env->get_deBruijn(variable.name, it->second);
   } else {
     const auto & var = variable.name;
+    /*
     std::cout << var.lexeme << " at line " << var.line->number << ", column "
               << var.get_lexical_column() << " could not find depth " << std::endl;
+    */
     return UndefinedVariableError{var, Literal{var.type, var.lexeme, var.line, var.start_index}};
   }
 }
@@ -377,10 +381,14 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
     function_scope->define(parameters.at(i), as_variant<Value>(arg_opt));
   }
   std::optional<ControlFlowKind> procedure;
-  const auto exec =
-    execute_stmt_impl(callee.definition->body, lookup_, function_scope, global_env, procedure);
-  if (exec) {
-    return exec.value();
+  // NOTE: function_scope is already defined, so if execute_stmt_impl is called against
+  // callee.definition->body, which is a Block, it unintentionally adds a new scope.
+  for (const auto & declaration : callee.definition->body.declarations) {
+    const auto exec = boost::apply_visitor(
+      ExecuteDeclarationVisitor(lookup_, function_scope, global_env, procedure), declaration);
+    if (exec) {
+      return exec.value();
+    }
   }
   if (!procedure || !is_variant_v<Return>(procedure.value())) {
     return NoReturnFromFunction{callee};
@@ -457,9 +465,10 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
     if (!is_truthy(cond)) {
       return std::nullopt;
     }
+    auto sub_scope_env = std::make_shared<Environment>(env);
     for (const auto & declaration : while_stmt.body.declarations) {
       const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(lookup_, env, global_env, procedure), declaration);
+        ExecuteDeclarationVisitor(lookup_, sub_scope_env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt;
       }

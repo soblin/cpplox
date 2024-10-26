@@ -19,12 +19,14 @@ std::optional<CompileError> StmtResolver::operator()(const PrintStmt & stmt)
 
 std::optional<CompileError> StmtResolver::operator()(const Block & block)
 {
+  begin_scope();
   DeclResolver decl_resolver(scopes, lookup);
   for (const auto & declaration : block.declarations) {
     if (const auto err = boost::apply_visitor(decl_resolver, declaration); err) {
       return err;
     }
   }
+  end_scope();
   return std::nullopt;
 }
 
