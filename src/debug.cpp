@@ -399,7 +399,7 @@ void PrintResolveStmtVisitor::operator()(const Block & stmt)
 {
   ss << std::string(offset, ' ') << "| <-- begin block -->" << std::endl;
   for (const auto & declaration : stmt.declarations) {
-    PrintResolveDeclVisitor decl_visitor(offset, lookup);
+    PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
     boost::apply_visitor(decl_visitor, declaration);
     ss << decl_visitor.ss.str();
   }
@@ -526,7 +526,7 @@ void PrintResolveDeclVisitor::operator()(const FuncDecl & func_decl)
 {
   ss << std::string(offset, ' ') << "| <-- in function '" << func_decl.name.lexeme << "' -->"
      << std::endl;
-  PrintResolveStmtVisitor stmt_visitor(offset + skip, lookup);
+  PrintResolveStmtVisitor stmt_visitor(offset, lookup);
   boost::apply_visitor(stmt_visitor, Stmt{func_decl.body});
   ss << stmt_visitor.ss.str();
   ss << std::string(offset, ' ') << "| <-- end function -->" << std::endl;

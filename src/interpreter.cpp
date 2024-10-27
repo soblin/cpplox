@@ -512,16 +512,14 @@ std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
   }
   const auto & cond = as_variant<Value>(cond_opt);
   if (is_truthy(cond)) {
-    for (const auto & declaration : clause.body.declarations) {
-      const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(lookup_, if_scope_env, global_env, procedure), declaration);
-      if (exec_opt) {
-        return exec_opt.value();
-      }
-      // in case the block contained break/continue/return, the process needs to be terminated
-      if (procedure) {
-        return true;
-      }
+    const auto exec_opt = boost::apply_visitor(
+      ExecuteStmtVisitor(lookup_, if_scope_env, global_env, procedure), Stmt{clause.body});
+    if (exec_opt) {
+      return exec_opt.value();
+    }
+    // in case the block contained break/continue/return, the process needs to be terminated
+    if (procedure) {
+      return true;
     }
     return true;
   } else {
@@ -565,19 +563,14 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const IfBlock & if_bl
     }
   }
   if (if_block.else_body) {
-    auto else_scope_env = std::make_shared<Environment>(envs.back());
+    // auto else_scope_env = std::make_shared<Environment>(envs.back());
     // execute the last else
-    for (const auto & declaration : if_block.else_body.value().declarations) {
-      const auto exec_else_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(lookup_, else_scope_env, global_env, procedure), declaration);
-      if (exec_else_opt) {
-        return exec_else_opt;
-      }
-      if (procedure) {
-        return std::nullopt;
-      }
+    const auto exec_else_opt = boost::apply_visitor(
+      ExecuteStmtVisitor(lookup_, envs.back(), global_env, procedure),
+      Stmt{if_block.else_body.value()});
+    if (exec_else_opt) {
+      return exec_else_opt;
     }
-    return std::nullopt;
   }
   return std::nullopt;
 }
@@ -633,6 +626,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
   };
 
   size_t cnt = 0;
+  auto for_block_env = std::make_shared<Environment>(sub_for_env);
   while (true) {
     cnt++;
     if (cnt > MaxLoopError::Limit) {
@@ -648,7 +642,7 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
     // do the body
     for (const auto & declaration : for_stmt.body.declarations) {
       const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(lookup_, sub_for_env, global_env, procedure), declaration);
+        ExecuteDeclarationVisitor(lookup_, for_block_env, global_env, procedure), declaration);
       if (exec_opt) {
         return exec_opt;
       }

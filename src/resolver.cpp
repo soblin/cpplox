@@ -47,7 +47,8 @@ std::optional<CompileError> StmtResolver::operator()(const IfBlock & stmt)
     if (const auto err = boost::apply_visitor(resolver, clause.cond); err) {
       return err;
     }
-    return boost::apply_visitor(*this, Stmt{clause.body});
+    const auto body_resolve_opt = boost::apply_visitor(*this, Stmt{clause.body});
+    return body_resolve_opt;
   };
 
   // for if
@@ -60,8 +61,7 @@ std::optional<CompileError> StmtResolver::operator()(const IfBlock & stmt)
     }
   }
   if (stmt.else_body) {
-    n_nest_call++;
-    begin_scope();
+    // NOTE: for else, nest is not added
     if (const auto err = boost::apply_visitor(*this, Stmt{stmt.else_body.value()}); err) {
       return err;
     }
@@ -186,9 +186,11 @@ std::optional<CompileError> DeclResolver::operator()(const FuncDecl & func_decl)
     declare(param);
     define(param);
   }
-  StmtResolver body_resolver(scopes, lookup);
-  if (const auto err = boost::apply_visitor(body_resolver, Stmt{func_decl.body}); err) {
-    return err;
+  DeclResolver body_resolver(scopes, lookup);
+  for (const auto & declaration : func_decl.body.declarations) {
+    if (const auto err = boost::apply_visitor(body_resolver, declaration); err) {
+      return err;
+    }
   }
   end_scope();
   return std::nullopt;
