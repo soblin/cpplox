@@ -451,7 +451,7 @@ void PrintResolveStmtVisitor::operator()(const WhileStmt & stmt)
   boost::apply_visitor(expr_visitor, stmt.cond);
   ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
 
-  PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
+  PrintResolveDeclVisitor decl_visitor(offset, lookup);
   boost::apply_visitor(decl_visitor, Stmt{stmt.body});
   ss << decl_visitor.ss.str();
   ss << std::string(offset, ' ') << "| <-- end while -->" << std::endl;

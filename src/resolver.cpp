@@ -78,12 +78,11 @@ std::optional<CompileError> StmtResolver::operator()(const WhileStmt & stmt)
   if (const auto err = boost::apply_visitor(expr_resolver, stmt.cond); err) {
     return err;
   }
-  begin_scope();
+  // NOTE: begin_scope is unnecessary because body is Block
   StmtResolver stmt_resolver(scopes, lookup);
   if (const auto err = boost::apply_visitor(stmt_resolver, Stmt{stmt.body}); err) {
     return err;
   }
-  end_scope();
   return std::nullopt;
 }
 
