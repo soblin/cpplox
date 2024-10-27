@@ -384,10 +384,13 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
   // NOTE: function_scope is already defined, so if execute_stmt_impl is called against
   // callee.definition->body, which is a Block, it unintentionally adds a new scope.
   for (const auto & declaration : callee.definition->body.declarations) {
-    const auto exec = boost::apply_visitor(
+    const auto exec_err = boost::apply_visitor(
       ExecuteDeclarationVisitor(lookup_, function_scope, global_env, procedure), declaration);
-    if (exec) {
-      return exec.value();
+    if (exec_err) {
+      return exec_err.value();
+    }
+    if (procedure) {
+      break;
     }
   }
   if (!procedure || !is_variant_v<Return>(procedure.value())) {
