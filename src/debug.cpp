@@ -324,4 +324,214 @@ auto get_visualization_string(
 }
 
 }  // namespace error
+
+inline namespace debug
+{
+
+void PrintResolveExprVisitor::operator()(const Literal & expr)
+{
+}
+
+void PrintResolveExprVisitor::operator()(const Unary & expr)
+{
+  boost::apply_visitor(*this, expr.expr);
+}
+
+void PrintResolveExprVisitor::operator()(const Binary & expr)
+{
+  boost::apply_visitor(*this, expr.left);
+  boost::apply_visitor(*this, expr.right);
+}
+
+void PrintResolveExprVisitor::operator()(const Group & expr)
+{
+  boost::apply_visitor(*this, expr.expr);
+}
+
+void PrintResolveExprVisitor::operator()(const Variable & expr)
+{
+  if (const auto it = lookup.find(expr.name); it != lookup.end()) {
+    ss << expr.name.lexeme << "(" << it->second << "), ";
+  } else {
+    ss << expr.name.lexeme << "(failed to resolve), ";
+  }
+}
+
+void PrintResolveExprVisitor::operator()(const Assign & expr)
+{
+  if (const auto it = lookup.find(expr.name); it != lookup.end()) {
+    ss << expr.name.lexeme << "(" << it->second << "), ";
+  } else {
+    ss << "assign target '" << expr.name.lexeme << "'(failed to resolve), ";
+  }
+  boost::apply_visitor(*this, expr.expr);
+}
+
+void PrintResolveExprVisitor::operator()(const Logical & expr)
+{
+  boost::apply_visitor(*this, expr.left);
+  boost::apply_visitor(*this, expr.right);
+}
+
+void PrintResolveExprVisitor::operator()(const Call & expr)
+{
+  boost::apply_visitor(*this, expr.callee);
+  for (const auto & argument : expr.arguments) {
+    boost::apply_visitor(*this, argument);
+  }
+}
+
+void PrintResolveStmtVisitor::operator()(const ExprStmt & stmt)
+{
+  PrintResolveExprVisitor expr_visitor(lookup);
+  boost::apply_visitor(expr_visitor, stmt.expression);
+  ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+}
+
+void PrintResolveStmtVisitor::operator()(const PrintStmt & stmt)
+{
+  PrintResolveExprVisitor expr_visitor(lookup);
+  boost::apply_visitor(expr_visitor, stmt.expression);
+  ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+}
+
+void PrintResolveStmtVisitor::operator()(const Block & stmt)
+{
+  ss << std::string(offset, ' ') << "| <-- begin block -->" << std::endl;
+  for (const auto & declaration : stmt.declarations) {
+    PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
+    boost::apply_visitor(decl_visitor, declaration);
+    ss << decl_visitor.ss.str();
+  }
+  ss << std::string(offset, ' ') << "| <-- end block -->" << std::endl;
+}
+
+void PrintResolveStmtVisitor::operator()(const IfBlock & stmt)
+{
+  ss << std::string(offset, ' ') << "| <-- in if -->" << std::endl;
+  size_t next_offset = offset + skip;
+  auto process_branch_clause = [&](const BranchClause & branch_clause) {
+    if (branch_clause.declaration) {
+      PrintResolveDeclVisitor decl_visitor(next_offset, lookup);
+      boost::apply_visitor(decl_visitor, Declaration{branch_clause.declaration.value()});
+      ss << decl_visitor.ss.str();
+    }
+    {
+      PrintResolveExprVisitor expr_visitor(lookup);
+      boost::apply_visitor(expr_visitor, branch_clause.cond);
+      ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+    }
+    {
+      PrintResolveDeclVisitor decl_visitor(next_offset, lookup);
+      boost::apply_visitor(decl_visitor, Declaration{branch_clause.body});
+      ss << decl_visitor.ss.str();
+    }
+  };
+
+  process_branch_clause(stmt.if_clause);
+
+  for (const auto & elseif_clause : stmt.elseif_clauses) {
+    next_offset += skip;
+    process_branch_clause(elseif_clause);
+  }
+
+  if (stmt.else_body) {
+    next_offset += skip;
+    PrintResolveDeclVisitor decl_visitor(next_offset, lookup);
+    boost::apply_visitor(decl_visitor, Declaration{stmt.else_body.value()});
+    ss << decl_visitor.ss.str();
+  }
+  ss << std::string(offset, ' ') << "| <-- end if -->" << std::endl;
+}
+
+void PrintResolveStmtVisitor::operator()(const WhileStmt & stmt)
+{
+  ss << std::string(offset, ' ') << "| <-- in while -->" << std::endl;
+  PrintResolveExprVisitor expr_visitor(lookup);
+  boost::apply_visitor(expr_visitor, stmt.cond);
+  ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+
+  PrintResolveDeclVisitor decl_visitor(offset, lookup);
+  boost::apply_visitor(decl_visitor, Stmt{stmt.body});
+  ss << decl_visitor.ss.str();
+  ss << std::string(offset, ' ') << "| <-- end while -->" << std::endl;
+}
+
+void PrintResolveStmtVisitor::operator()(const ForStmt & stmt)
+{
+  ss << std::string(offset, ' ') << "| <-- in for -->" << std::endl;
+  if (stmt.init_stmt) {
+    const auto & init_stmt = stmt.init_stmt.value();
+    if (is_variant_v<VarDecl>(init_stmt)) {
+      const auto & decl = as_variant<VarDecl>(init_stmt);
+      PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
+      boost::apply_visitor(decl_visitor, Declaration{decl});
+      ss << decl_visitor.ss.str();
+    } else if (is_variant_v<ExprStmt>(init_stmt)) {
+      const auto & expr_stmt = as_variant<ExprStmt>(init_stmt);
+      PrintResolveExprVisitor expr_visitor(lookup);
+      boost::apply_visitor(expr_visitor, expr_stmt.expression);
+      ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+    }
+  }
+  if (stmt.cond) {
+    PrintResolveExprVisitor expr_visitor(lookup);
+    boost::apply_visitor(expr_visitor, stmt.cond.value());
+    ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+  }
+  if (stmt.next) {
+    PrintResolveExprVisitor expr_visitor(lookup);
+    boost::apply_visitor(expr_visitor, stmt.next.value());
+    ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+  }
+  PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
+  boost::apply_visitor(decl_visitor, Declaration{stmt.body});
+  ss << decl_visitor.ss.str();
+  ss << std::string(offset, ' ') << "| <-- end for -->" << std::endl;
+}
+
+void PrintResolveStmtVisitor::operator()(const BreakStmt & stmt)
+{
+}
+
+void PrintResolveStmtVisitor::operator()(const ContinueStmt & stmt)
+{
+}
+
+void PrintResolveStmtVisitor::operator()(const ReturnStmt & stmt)
+{
+  if (stmt.expr) {
+    ss << std::string(offset, ' ') << "| <-- in return -->" << std::endl;
+    PrintResolveExprVisitor expr_visitor(lookup);
+    boost::apply_visitor(expr_visitor, stmt.expr.value());
+    ss << std::string(offset, ' ') << "| " << expr_visitor.ss.str() << std::endl;
+    ss << std::string(offset, ' ') << "| <-- end return -->" << std::endl;
+  }
+}
+
+void PrintResolveDeclVisitor::operator()(const VarDecl & var_decl)
+{
+  ss << std::string(offset, ' ') << "| <-- declare variable '" << var_decl.name.lexeme << "' -->"
+     << std::endl;
+}
+
+void PrintResolveDeclVisitor::operator()(const Stmt & stmt)
+{
+  PrintResolveStmtVisitor stmt_visitor(offset, lookup);
+  boost::apply_visitor(stmt_visitor, stmt);
+  ss << stmt_visitor.ss.str();
+}
+
+void PrintResolveDeclVisitor::operator()(const FuncDecl & func_decl)
+{
+  ss << std::string(offset, ' ') << "| <-- in function '" << func_decl.name.lexeme << "' -->"
+     << std::endl;
+  PrintResolveStmtVisitor stmt_visitor(offset, lookup);
+  boost::apply_visitor(stmt_visitor, Stmt{func_decl.body});
+  ss << stmt_visitor.ss.str();
+  ss << std::string(offset, ' ') << "| <-- end function -->" << std::endl;
+}
+
+}  // namespace debug
+
 }  // namespace lox

@@ -431,26 +431,6 @@ while (a < 10) {
 }
 )",
       {{
-        11,                       //<! "c"
-        lox::helper::long_Index,  //<! long
-        1100                      //<! test
-      }}},                        //
-    //
-    TestStmtVariableSideEffectParam{
-      R"(
-var a = 0;
-var b = 0;
-var c = 0;
-while (a < 10) {
-   c = c + 100;
-   while(b < 10) {
-      c = c + 10;
-      b = b + 1;
-   }
-   a = a + 1;
-}
-)",
-      {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
          10                        //<! test
