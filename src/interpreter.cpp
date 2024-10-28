@@ -468,34 +468,32 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const WhileStmt & whi
     if (!is_truthy(cond)) {
       return std::nullopt;
     }
-    auto sub_scope_env = std::make_shared<Environment>(env);
-    for (const auto & declaration : while_stmt.body.declarations) {
-      const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(lookup_, sub_scope_env, global_env, procedure), declaration);
-      if (exec_opt) {
-        return exec_opt;
+    const auto exec_opt = boost::apply_visitor(
+      ExecuteStmtVisitor(lookup_, env, global_env, procedure), Stmt{while_stmt.body});
+    if (exec_opt) {
+      return exec_opt;
+    }
+    if (procedure) {
+      if (is_variant_v<Return>(procedure.value())) {
+        return std::nullopt;
       }
-      if (procedure) {
-        if (is_variant_v<Return>(procedure.value())) {
-          return std::nullopt;
-        }
-        auto proc = procedure;
-        // while CONSUMES break/continue inside its scope
-        procedure = std::nullopt;
-        if (is_variant_v<Break>(proc.value())) {
-          // if "direct break" occurred inside this for-block, it is only handled by this for-block
-          // and never notitfied to outer scope, so `procedure` is reset to null. and this for-block
-          // is terminated
-          return std::nullopt;
-        } else {
-          // if "direct continue" occurred inside this for-block, it is only handled by this
-          // for-block and never notitfied to outer scope, so `procedure` is reset to null. and
-          // later declarations are not executed
-          break;
-        }
+      auto proc = procedure;
+      // while CONSUMES break/continue inside its scope
+      procedure = std::nullopt;
+      if (is_variant_v<Break>(proc.value())) {
+        // if "direct break" occurred inside this for-block, it is only handled by this for-block
+        // and never notitfied to outer scope, so `procedure` is reset to null. and this for-block
+        // is terminated
+        break;
+      } else {
+        // if "direct continue" occurred inside this while-block, it is only handled by this
+        // while-block and never notitfied to outer scope, so `procedure` is reset to null. and
+        // later declarations are not executed
+        continue;
       }
     }
   }
+  return std::nullopt;
 }
 
 std::variant<bool, RuntimeError> ExecuteStmtVisitor::execute_branch_clause(
@@ -629,7 +627,6 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
   };
 
   size_t cnt = 0;
-  auto for_block_env = std::make_shared<Environment>(sub_for_env);
   while (true) {
     cnt++;
     if (cnt > MaxLoopError::Limit) {
@@ -643,29 +640,27 @@ std::optional<RuntimeError> ExecuteStmtVisitor::operator()(const ForStmt & for_s
       break;
     }
     // do the body
-    for (const auto & declaration : for_stmt.body.declarations) {
-      const auto exec_opt = boost::apply_visitor(
-        ExecuteDeclarationVisitor(lookup_, for_block_env, global_env, procedure), declaration);
-      if (exec_opt) {
-        return exec_opt;
+    const auto exec_opt = boost::apply_visitor(
+      ExecuteStmtVisitor(lookup_, sub_for_env, global_env, procedure), Stmt{for_stmt.body});
+    if (exec_opt) {
+      return exec_opt;
+    }
+    if (procedure) {
+      if (is_variant_v<Return>(procedure.value())) {
+        return std::nullopt;
       }
-      if (procedure) {
-        if (is_variant_v<Return>(procedure.value())) {
-          return std::nullopt;
-        }
-        auto proc = procedure;
-        procedure = std::nullopt;
-        if (is_variant_v<Break>(proc.value())) {
-          // if "direct break" occurred inside this for-block, it is only handled by this for-block
-          // and never notitfied to outer scope, so `procedure` is reset to null. and this for-block
-          // is terminated
-          return std::nullopt;
-        } else {
-          // if "direct continue" occurred inside this for-block, it is only handled by this
-          // for-block and never notitfied to outer scope, so `procedure` is reset to null. and
-          // later declarations are not executed
-          break;
-        }
+      auto proc = procedure;
+      procedure = std::nullopt;
+      if (is_variant_v<Break>(proc.value())) {
+        // if "direct break" occurred inside this for-block, it is only handled by this for-block
+        // and never notitfied to outer scope, so `procedure` is reset to null. and this for-block
+        // is terminated
+        break;
+      } else {
+        // if "direct continue" occurred inside this for-block, it is only handled by this
+        // for-block and never notitfied to outer scope, so `procedure` is reset to null. and
+        // later declarations are not executed
+        continue;
       }
     }
 
