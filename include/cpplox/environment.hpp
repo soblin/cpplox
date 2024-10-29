@@ -22,13 +22,14 @@ public:
     values_[var.lexeme] = var_value;
   }
 
+  /*
   [[nodiscard]] auto assign(const Token & var, const Value & var_value)
     -> std::optional<RuntimeError>;
+  auto get(const Token & name) const -> std::variant<Value, RuntimeError>;
+  */
 
   [[nodiscard]] auto assign_deBruijn(const Token & var, const Value & var_value, const size_t depth)
     -> std::optional<RuntimeError>;
-
-  auto get(const Token & name) const -> std::variant<Value, RuntimeError>;
 
   auto get_deBruijn(const Token & name, const size_t depth) const
     -> std::variant<Value, RuntimeError>;

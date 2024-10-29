@@ -88,7 +88,7 @@ auto Interpreter::print_resolve(const Program & program) -> void
 
 auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>
 {
-  if (const auto it = global_env_->get(token); is_variant_v<Value>(it) == true) {
+  if (const auto it = global_env_->get_deBruijn(token, 0); is_variant_v<Value>(it) == true) {
     return as_variant<Value>(it);
   }
   return std::nullopt;
