@@ -195,6 +195,13 @@ std::optional<CompileError> DeclResolver::operator()(const FuncDecl & func_decl)
   return std::nullopt;
 }
 
+std::optional<CompileError> DeclResolver::operator()(const ClassDecl & class_decl)
+{
+  declare(class_decl.name);
+  define(class_decl.name);
+  return std::nullopt;
+}
+
 void DeclResolver::begin_scope()
 {
   scopes.push_back({});
