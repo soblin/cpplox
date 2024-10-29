@@ -109,6 +109,8 @@ public:
 
   void operator()(const FuncDecl & func_decl);
 
+  void operator()(const ClassDecl & class_decl);
+
 private:
   const size_t offset;
   const ScopeLookup & lookup;

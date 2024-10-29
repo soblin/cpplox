@@ -52,6 +52,15 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
     return as_variant<FuncDecl>(func_decl_opt);
   }
 
+  // <class_decl>
+  if (match(TokenType::Class)) {
+    const auto class_decl_opt = class_decl();
+    if (is_variant_v<SyntaxError>(class_decl_opt)) {
+      return as_variant<SyntaxError>(class_decl_opt);
+    }
+    return as_variant<ClassDecl>(class_decl_opt);
+  }
+
   const auto statement_opt = statement();
   if (is_variant_v<SyntaxError>(statement_opt)) {
     return as_variant<SyntaxError>(statement_opt);
@@ -216,6 +225,30 @@ auto Parser::func_decl() -> std::variant<FuncDecl, SyntaxError>
     return as_variant<SyntaxError>(block_opt);
   }
   return FuncDecl{name, parameters, as_variant<Block>(block_opt)};
+}
+
+auto Parser::class_decl() -> std::variant<ClassDecl, SyntaxError>
+{
+  advance();  // consume "class"
+  const auto name = peek();
+  advance();  // consume class-name
+  const auto class_ctx = current_;
+  if (!match(TokenType::LeftParen)) {
+    return create_error(SyntaxErrorKind::MissingClassBodyDecl, class_ctx);
+  }
+  advance();  // consume "("
+  std::vector<FuncDecl> methods;
+  while (true) {
+    if (match(TokenType::RightParen)) {
+      break;
+    }
+    const auto method_opt = func_decl();
+    if (is_variant_v<SyntaxError>(method_opt)) {
+      return as_variant<SyntaxError>(method_opt);
+    }
+    methods.push_back(as_variant<FuncDecl>(method_opt));
+  }
+  return ClassDecl{name, methods};
 }
 
 auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>

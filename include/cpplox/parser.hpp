@@ -22,7 +22,7 @@ public:
   auto program() -> std::variant<Program, SyntaxError>;
 
   /**
-   * @brief <declaration> ::= <var_decl> | <statement> | <func_decl>
+   * @brief <declaration> ::= <var_decl> | <statement> | <func_decl> | <class_decl>
    */
   auto declaration() -> std::variant<Declaration, SyntaxError>;
 
@@ -43,6 +43,12 @@ public:
    * @detail responsible for consuming from "fun" to the end of the { <body> }
    */
   auto func_decl() -> std::variant<FuncDecl, SyntaxError>;
+
+  /**
+   * @brief <class_decl> ::= "class" IDENTIFIER "{" <func_decl>* "}"
+   * @detail responsible for consuming from "class" to last "}"
+   */
+  auto class_decl() -> std::variant<ClassDecl, SyntaxError>;
 
   /**
    * @brief <parameters> ::= IDENTIFIER ( "," IDENTIFIER )*

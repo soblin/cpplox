@@ -34,6 +34,7 @@ enum class SyntaxErrorKind {
   MissingFuncParameterDecl,    //<! function declaration without parenthesis "()"
   InvalidParameterDecl,        //<! parameter is not identifier
   MissingFuncBodyDecl,         //<! function declaration lacks body
+  MissingClassBodyDecl,        //<! class declaration lacks body
 };
 
 struct SyntaxError

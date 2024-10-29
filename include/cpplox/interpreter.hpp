@@ -191,6 +191,8 @@ public:
   std::optional<RuntimeError> operator()(const Stmt & stmt);
 
   std::optional<RuntimeError> operator()(const FuncDecl & func_decl);
+
+  std::optional<RuntimeError> operator()(const ClassDecl & class_decl);
 };
 
 }  // namespace impl
