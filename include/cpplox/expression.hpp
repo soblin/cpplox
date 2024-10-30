@@ -105,7 +105,12 @@ struct Callable
   std::shared_ptr<Environment> closure;
 };
 
-using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable>;
+struct Class
+{
+  const Token name;
+};
+
+using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class>;
 
 namespace helper
 {

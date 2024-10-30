@@ -725,6 +725,21 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl
   return std::nullopt;
 }  // LCOV_EXCL_LINE
 
+std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDecl & class_decl)
+{
+  env->define(class_decl.name, Callable{nullptr, env});
+  if (const auto it = lookup_.find(class_decl.name); it != lookup_.end()) {
+    const auto assign_err =
+      env->assign_deBruijn(class_decl.name, Class{class_decl.name}, it->second);
+    if (assign_err) {
+      return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
+    }
+    return std::nullopt;
+  } else {
+    return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
+  }
+}
+
 }  // namespace impl
 
 }  // namespace interpreter
