@@ -729,8 +729,8 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDec
 {
   env->define(class_decl.name, Callable{nullptr, env});
   if (const auto it = lookup_.find(class_decl.name); it != lookup_.end()) {
-    const auto assign_err =
-      env->assign_deBruijn(class_decl.name, Class{class_decl.name}, it->second);
+    const auto assign_err = env->assign_deBruijn(
+      class_decl.name, ClassInstance{std::make_shared<const ClassDecl>(class_decl)}, it->second);
     if (assign_err) {
       return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
     }

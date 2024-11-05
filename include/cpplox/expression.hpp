@@ -14,7 +14,8 @@ namespace lox
 inline namespace stmt
 {
 struct FuncDecl;
-}
+struct ClassDecl;
+}  // namespace stmt
 
 inline namespace environment
 {
@@ -105,9 +106,9 @@ struct Callable
   std::shared_ptr<Environment> closure;
 };
 
-struct Class
+struct ClassInstance
 {
-  const Token name;
+  std::shared_ptr<const ClassDecl> definition;
 };
 
 using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class>;
