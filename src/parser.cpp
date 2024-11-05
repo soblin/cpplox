@@ -233,13 +233,14 @@ auto Parser::class_decl() -> std::variant<ClassDecl, SyntaxError>
   const auto name = peek();
   advance();  // consume class-name
   const auto class_ctx = current_;
-  if (!match(TokenType::LeftParen)) {
+  if (!match(TokenType::LeftBrace)) {
     return create_error(SyntaxErrorKind::MissingClassBodyDecl, class_ctx);
   }
-  advance();  // consume "("
+  advance();  // consume "{"
   std::vector<FuncDecl> methods;
   while (true) {
-    if (match(TokenType::RightParen)) {
+    if (match(TokenType::RightBrace)) {
+      advance();  // consume "}"
       break;
     }
     const auto method_opt = func_decl();

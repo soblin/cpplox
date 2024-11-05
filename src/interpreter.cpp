@@ -733,6 +733,7 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDecl & class_decl)
 {
+  /*
   if (const auto it = lookup_.find(class_decl.name); it != lookup_.end()) {
     const auto assign_err = env->assign_deBruijn(
       class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)}, it->second);
@@ -743,6 +744,9 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDec
   } else {
     return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
   }
+  */
+  global_env->define(class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)});
+  return std::nullopt;
 }
 
 }  // namespace impl
