@@ -106,12 +106,17 @@ struct Callable
   std::shared_ptr<Environment> closure;
 };
 
-struct ClassInstance
+struct Class
 {
   std::shared_ptr<const ClassDecl> definition;
 };
 
-using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class>;
+struct Instance
+{
+  std::shared_ptr<const ClassDecl> definition;
+};
+
+using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class, Instance>;
 
 namespace helper
 {

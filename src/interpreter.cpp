@@ -343,9 +343,15 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
     return as_variant<RuntimeError>(callee_opt);
   }
   const auto & callee_value = as_variant<Value>(callee_opt);
-  if (!is_variant_v<Callable>(callee_value)) {
+  if (!is_variant_v<Callable>(callee_value) && !is_variant_v<Class>(callee_value)) {
     return NotInvocableError{call.callee, "operand is not callable"};
   }
+
+  if (is_variant_v<Class>(callee_value)) {
+    const auto & cls = as_variant<Class>(callee_value);
+    return Instance{cls.definition};
+  }
+
   const auto & callee = as_variant<Callable>(callee_value);
   const auto & parameters = callee.definition->parameters;
   const auto & arguments = call.arguments;
@@ -727,10 +733,9 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDecl & class_decl)
 {
-  env->define(class_decl.name, Callable{nullptr, env});
   if (const auto it = lookup_.find(class_decl.name); it != lookup_.end()) {
     const auto assign_err = env->assign_deBruijn(
-      class_decl.name, ClassInstance{std::make_shared<const ClassDecl>(class_decl)}, it->second);
+      class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)}, it->second);
     if (assign_err) {
       return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
     }
