@@ -386,6 +386,20 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
   return as_variant<Return>(procedure.value()).value;
 }
 
+std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProperty & property)
+{
+  const auto base_opt = boost::apply_visitor(*this, property.base);
+  if (is_variant_v<RuntimeError>(base_opt)) {
+    return as_variant<RuntimeError>(base_opt);
+  }
+  const auto & base = as_variant<Value>(base_opt);
+  if (!is_variant_v<Instance>(base)) {
+    return InvalidAttributeError{property};
+  }
+  const auto & base_instance = as_variant<Instance>(base);
+  // todo: return base_instance.get(property.prop);
+}
+
 auto evaluate_expr_impl(
   const Expr & expr, const ScopeLookup & lookup, std::shared_ptr<Environment> env,
   std::shared_ptr<Environment> global_env) -> std::variant<Value, RuntimeError>

@@ -119,9 +119,14 @@ struct RedefinitionError
 
 using CompileError = std::variant<UndefVariableError, RedefinitionError>;
 
+struct InvalidAttributeError
+{
+  const ReadProperty property;
+};
+
 using RuntimeError = std::variant<
   TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError, NoReturnFromFunction,
-  CompileError>;
+  CompileError, InvalidAttributeError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

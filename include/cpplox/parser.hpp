@@ -164,8 +164,8 @@ private:
   auto unary() -> std::variant<Expr, SyntaxError>;
 
   /**
-   * @brief <call> ::= <primary> ( "(" <arguments>?")" )*
-   * matches like foo(), foo()(), foo(1)(1,2)(1,2,3)
+   * @brief <call> ::= <primary> ( "(" <arguments>?")" | "." IDENTIFIER)*
+   * matches like foo(), foo()(), foo(1)(1,2)(1,2,3). foo().bar
    */
   auto call() -> std::variant<Expr, SyntaxError>;
 

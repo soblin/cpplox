@@ -109,6 +109,8 @@ public:
 
   std::optional<CompileError> operator()(const Call & call);
 
+  std::optional<CompileError> operator()(const ReadProperty & property);
+
 private:
   ScopeChain & scopes;
   ScopeLookup & lookup;

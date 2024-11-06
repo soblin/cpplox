@@ -298,6 +298,14 @@ std::optional<CompileError> ExprResolver::operator()(const Call & call)
   return std::nullopt;
 }
 
+std::optional<CompileError> ExprResolver::operator()(const ReadProperty & property)
+{
+  // NOTE: the property itself is resolved by the interpreter dynamically, so only `a, b, c` are
+  // evaluated in `foo.bar(a).foo2.bar2(b, c) for example
+  boost::apply_visitor(*this, property.base);
+  return std::nullopt;
+}
+
 void ExprResolver::resolve_local(const Token & name)
 {
   for (int i = scopes.size() - 1; i >= 0; i--) {

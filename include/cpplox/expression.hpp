@@ -33,12 +33,13 @@ struct Variable;
 struct Assign;
 struct Logical;
 struct Call;
+struct ReadProperty;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
   boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
   boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>,
-  boost::recursive_wrapper<Call>>;
+  boost::recursive_wrapper<Call>, boost::recursive_wrapper<ReadProperty>>;
 
 struct Literal : public Token
 {
@@ -91,6 +92,12 @@ struct Call
 {
   const Expr callee;
   const std::vector<Expr> arguments;
+};
+
+struct ReadProperty
+{
+  const Expr base;
+  const Token prop;
 };
 
 using Nil = std::monostate;

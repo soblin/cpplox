@@ -687,19 +687,27 @@ auto Parser::call() -> std::variant<Expr, SyntaxError>
     return prim;
   }
   std::vector<Expr> exprs{prim};
-  while (match(TokenType::LeftParen)) {
-    const auto paren_ctx = current_;
-    advance();  // consume '('
-    const auto arguments_opt = arguments();
-    if (is_variant_v<SyntaxError>(arguments_opt)) {
-      return as_variant<SyntaxError>(arguments_opt);
+  while (true) {
+    if (match(TokenType::LeftParen)) {
+      const auto paren_ctx = current_;
+      advance();  // consume '('
+      const auto arguments_opt = arguments();
+      if (is_variant_v<SyntaxError>(arguments_opt)) {
+        return as_variant<SyntaxError>(arguments_opt);
+      }
+      const auto caller = Call{exprs.back(), as_variant<std::vector<Expr>>(arguments_opt)};
+      if (!match(TokenType::RightParen)) {
+        create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
+      }
+      exprs.push_back(caller);
+      advance();  // consume ')'
+    } else if (match(TokenType::Dot)) {
+      advance();  // consume '.'
+      const auto r_prop = ReadProperty{exprs.back(), peek()};
+      advance();  // consume property-name after '.'
+      exprs.push_back(r_prop);
     }
-    const auto caller = Call{exprs.back(), as_variant<std::vector<Expr>>(arguments_opt)};
-    if (!match(TokenType::RightParen)) {
-      create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
-    }
-    exprs.push_back(caller);
-    advance();  // consume ')'
+    break;
   }
   return exprs.back();
 }
