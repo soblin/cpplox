@@ -1,3 +1,4 @@
+#include "cpplox/error.hpp"
 #include <cpplox/debug.hpp>
 #include <cpplox/environment.hpp>
 #include <cpplox/interpreter.hpp>
@@ -394,10 +395,14 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProp
   }
   const auto & base = as_variant<Value>(base_opt);
   if (!is_variant_v<Instance>(base)) {
-    return InvalidAttributeError{property};
+    return NotInstanceError{property};
   }
   const auto & base_instance = as_variant<Instance>(base);
-  // todo: return base_instance.get(property.prop);
+  const auto it = base_instance.fields.find(property.prop.lexeme);
+  if (it == base_instance.fields.end()) {
+    return InvalidAttributeError{property};
+  }
+  return it->second;
 }
 
 auto evaluate_expr_impl(

@@ -55,6 +55,8 @@ public:
 
   void operator()(const Call & expr);
 
+  void operator()(const ReadProperty & expr);
+
 private:
   const ScopeLookup & lookup;
 };
@@ -133,6 +135,16 @@ public:
   std::string operator()(const Callable & expr)
   {
     return "<fn " + std::string(expr.definition->name.lexeme) + " >";
+  }
+
+  std::string operator()(const Class & expr)
+  {
+    return "<class definition " + std::string(expr.definition->name.lexeme) + " >";
+  }
+
+  std::string operator()(const Instance & expr)
+  {
+    return "<instance " + std::string(expr.definition->name.lexeme) + ">";
   }
 };
 

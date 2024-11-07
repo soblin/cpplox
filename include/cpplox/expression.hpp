@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace lox
@@ -118,12 +119,15 @@ struct Class
   std::shared_ptr<const ClassDecl> definition;
 };
 
+struct Instance;
+
+using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class, Instance>;
+
 struct Instance
 {
   std::shared_ptr<const ClassDecl> definition;
+  std::unordered_map<std::string_view, Value> fields;
 };
-
-using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class, Instance>;
 
 namespace helper
 {

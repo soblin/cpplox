@@ -73,6 +73,13 @@ public:
     }
     ss << ")";
   }
+
+  void operator()(const ReadProperty & property)
+  {
+    ss << "(dot ";
+    boost::apply_visitor(*this, property.base);
+    ss << property.prop.lexeme << ")";
+  }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string
@@ -165,6 +172,12 @@ public:
     }
     const auto [right_start, right_end] = boost::apply_visitor(*this, call.arguments.back());
     return {left_start, right_end};
+  }
+
+  std::pair<Token, Token> operator()(const ReadProperty & property)
+  {
+    const auto [left_start, ignore1] = boost::apply_visitor(*this, property.base);
+    return {left_start, property.prop};
   }
 };
 
@@ -379,6 +392,12 @@ void PrintResolveExprVisitor::operator()(const Call & expr)
   for (const auto & argument : expr.arguments) {
     boost::apply_visitor(*this, argument);
   }
+}
+
+void PrintResolveExprVisitor::operator()(const ReadProperty & property)
+{
+  // NOTE: for method/fields, there is no lexical scope
+  boost::apply_visitor(*this, property.base);
 }
 
 void PrintResolveStmtVisitor::operator()(const ExprStmt & stmt)

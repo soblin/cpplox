@@ -706,8 +706,9 @@ auto Parser::call() -> std::variant<Expr, SyntaxError>
       const auto r_prop = ReadProperty{exprs.back(), peek()};
       advance();  // consume property-name after '.'
       exprs.push_back(r_prop);
+    } else {
+      break;
     }
-    break;
   }
   return exprs.back();
 }
