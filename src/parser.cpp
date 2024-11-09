@@ -1,3 +1,4 @@
+#include "cpplox/expression.hpp"
 #include <cpplox/parser.hpp>
 #include <cpplox/variant.hpp>
 
@@ -531,17 +532,22 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
   }
   if (match(TokenType::Equal)) {
     const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
-    if (!is_variant_v<Variable>(lvalue_expr)) {
+    if (!is_variant_v<Variable>(lvalue_expr) && !is_variant_v<ReadProperty>(lvalue_expr)) {
       return create_error(SyntaxErrorKind::InvalidAssignmentTarget, error_ctx_assign_target);
     }
-    const auto & lvalue = as_variant<Variable>(lvalue_expr);
     advance();  // consume '='
     const auto rvalue_expr = assignment();
     if (is_variant_v<SyntaxError>(rvalue_expr)) {
       return as_variant<SyntaxError>(rvalue_expr);
     }
     const auto & rvalue = as_variant<Expr>(rvalue_expr);
-    return Assign{lvalue.name, rvalue};
+    if (is_variant_v<Variable>(lvalue_expr)) {
+      const auto & lvalue = as_variant<Variable>(lvalue_expr);
+      return Assign{lvalue.name, rvalue};
+    } else {
+      const auto & lvalue = as_variant<ReadProperty>(lvalue_expr);
+      return SetProperty{lvalue.base, lvalue.prop, rvalue};
+    }
   }
   return left_expr_opt;
 }

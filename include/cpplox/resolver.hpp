@@ -111,6 +111,8 @@ public:
 
   std::optional<CompileError> operator()(const ReadProperty & property);
 
+  std::optional<CompileError> operator()(const SetProperty & property);
+
 private:
   ScopeChain & scopes;
   ScopeLookup & lookup;

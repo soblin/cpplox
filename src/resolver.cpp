@@ -302,7 +302,22 @@ std::optional<CompileError> ExprResolver::operator()(const ReadProperty & proper
 {
   // NOTE: the property itself is resolved by the interpreter dynamically, so only `a, b, c` are
   // evaluated in `foo.bar(a).foo2.bar2(b, c) for example
-  boost::apply_visitor(*this, property.base);
+  if (const auto err = boost::apply_visitor(*this, property.base); err) {
+    return err;
+  }
+  return std::nullopt;
+}
+
+std::optional<CompileError> ExprResolver::operator()(const SetProperty & property)
+{
+  // NOTE: the property itself is resolved by the interpreter dynamically, so only `a, b, c, d` are
+  // evaluated in `foo.bar(a).foo2.bar2(b, c) = d` for example
+  if (const auto err = boost::apply_visitor(*this, property.base); err) {
+    return err;
+  }
+  if (const auto err = boost::apply_visitor(*this, property.value); err) {
+    return err;
+  }
   return std::nullopt;
 }
 

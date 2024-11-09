@@ -127,7 +127,24 @@ auto as_variant(V && v) ->
     return std::get<T>(std::forward<V>(v));
   }
   if constexpr (detail::checker_for_boost<typename std::decay_t<V>>::value) {
-    return boost::get<T>(v);
+    return boost::get<T>(std::forward<V>(v));
+  }
+}
+
+/**
+ * @brief statically check if the specified type is the candidate of the given variant and return
+ * the reference to the internal hold data as specified type
+ */
+template <typename T, typename V>
+auto as_variant_mut(V && v) ->
+  typename std::enable_if_t<
+    detail::is_within<typename std::decay_t<T>, typename std::decay_t<V>>, T &>
+{
+  if constexpr (detail::checker_for_std<typename std::decay_t<V>>::value) {
+    return std::get<T>(std::forward<V>(v));
+  }
+  if constexpr (detail::checker_for_boost<typename std::decay_t<V>>::value) {
+    return boost::get<T>(std::forward<V>(v));
   }
 }
 

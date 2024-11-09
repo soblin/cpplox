@@ -76,8 +76,16 @@ public:
 
   void operator()(const ReadProperty & property)
   {
-    ss << "(dot ";
+    ss << "(get-dot ";
     boost::apply_visitor(*this, property.base);
+    ss << property.prop.lexeme << ")";
+  }
+
+  void operator()(const SetProperty & property)
+  {
+    ss << "(set-dot ";
+    boost::apply_visitor(*this, property.base);
+    boost::apply_visitor(*this, property.value);
     ss << property.prop.lexeme << ")";
   }
 };
@@ -178,6 +186,13 @@ public:
   {
     const auto [left_start, ignore1] = boost::apply_visitor(*this, property.base);
     return {left_start, property.prop};
+  }
+
+  std::pair<Token, Token> operator()(const SetProperty & property)
+  {
+    const auto [left_start, ignore1] = boost::apply_visitor(*this, property.base);
+    const auto [ignore2, right_end] = boost::apply_visitor(*this, property.value);
+    return {left_start, right_end};
   }
 };
 
@@ -398,6 +413,13 @@ void PrintResolveExprVisitor::operator()(const ReadProperty & property)
 {
   // NOTE: for method/fields, there is no lexical scope
   boost::apply_visitor(*this, property.base);
+}
+
+void PrintResolveExprVisitor::operator()(const SetProperty & property)
+{
+  // NOTE: for method/fields, there is no lexical scope
+  boost::apply_visitor(*this, property.base);
+  boost::apply_visitor(*this, property.value);
 }
 
 void PrintResolveStmtVisitor::operator()(const ExprStmt & stmt)

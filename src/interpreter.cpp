@@ -395,7 +395,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProp
   }
   const auto & base = as_variant<Value>(base_opt);
   if (!is_variant_v<Instance>(base)) {
-    return NotInstanceError{property};
+    return NotInstanceError{property.base, property.prop};
   }
   const auto & base_instance = as_variant<Instance>(base);
   const auto it = base_instance.fields.find(property.prop.lexeme);
@@ -403,6 +403,26 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProp
     return InvalidAttributeError{property};
   }
   return it->second;
+}
+
+std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const SetProperty & property)
+{
+  auto base_opt = boost::apply_visitor(*this, property.base);
+  if (is_variant_v<RuntimeError>(base_opt)) {
+    return as_variant<RuntimeError>(base_opt);
+  }
+  auto & base = as_variant_mut<Value>(base_opt);
+  if (!is_variant_v<Instance>(base)) {
+    return NotInstanceError{property.base, property.prop};
+  }
+  const auto rvalue_opt = impl::evaluate_expr_impl(property.value, lookup_, env, global_env);
+  if (is_variant_v<RuntimeError>(rvalue_opt)) {
+    return as_variant<RuntimeError>(rvalue_opt);
+  }
+  const auto & rvalue = as_variant<Value>(rvalue_opt);
+  auto & base_instance = as_variant_mut<Instance>(base);
+  base_instance.fields[property.prop.lexeme] = rvalue;
+  return rvalue;
 }
 
 auto evaluate_expr_impl(

@@ -57,6 +57,8 @@ public:
 
   void operator()(const ReadProperty & expr);
 
+  void operator()(const SetProperty & expr);
+
 private:
   const ScopeLookup & lookup;
 };

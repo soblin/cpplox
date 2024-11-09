@@ -121,7 +121,8 @@ using CompileError = std::variant<UndefVariableError, RedefinitionError>;
 
 struct NotInstanceError
 {
-  const ReadProperty property;
+  const Expr base;
+  const Token prop;
 };
 
 struct InvalidAttributeError

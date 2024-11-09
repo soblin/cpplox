@@ -86,6 +86,8 @@ public:
   std::variant<Value, RuntimeError> operator()(const Call & call);
 
   std::variant<Value, RuntimeError> operator()(const ReadProperty & property);
+
+  std::variant<Value, RuntimeError> operator()(const SetProperty & property);
 };
 
 auto evaluate_expr_impl(

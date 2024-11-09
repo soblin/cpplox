@@ -120,7 +120,7 @@ public:
   auto expression() -> std::variant<Expr, SyntaxError>;
 
   /**
-    @brief <assignment> ::= IDENTIFIER "=" <assignment> | <logic_or>
+    @brief <assignment> ::= ( <call> "." )? IDENTIFIER "=" <assignment> | <logic_or>
    */
   auto assignment() -> std::variant<Expr, SyntaxError>;
 
