@@ -4,7 +4,7 @@
 #include <cpplox/expression.hpp>
 #include <cpplox/resolver.hpp>
 
-#include <iostream>
+#include <iosfwd>
 #include <sstream>
 #include <string>
 
