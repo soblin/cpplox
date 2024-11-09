@@ -76,7 +76,6 @@ struct ClassDecl
 };
 
 struct BranchClause
-
 {
   const std::optional<VarDecl> declaration;
   const Expr cond;

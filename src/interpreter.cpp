@@ -1,4 +1,3 @@
-#include "cpplox/error.hpp"
 #include <cpplox/debug.hpp>
 #include <cpplox/environment.hpp>
 #include <cpplox/interpreter.hpp>
@@ -6,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <functional>
+#include <iostream>
 
 namespace lox
 {
