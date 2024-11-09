@@ -105,7 +105,7 @@ struct Callable
   std::shared_ptr<Environment> closure;
 };
 
-using Value = std::variant<Nil, bool, int64_t, double, std::string, Callable>;
+using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable>;
 
 namespace helper
 {
@@ -117,32 +117,32 @@ constexpr size_t str_Index = 4;
 
 inline auto is_nil(const Value & value) -> bool
 {
-  return value.index() == Nil_Index;
+  return is_variant_v<Nil>(value);
 }
 
 inline auto is_bool(const Value & value) -> bool
 {
-  return value.index() == bool_Index;
+  return is_variant_v<bool>(value);
 }
 
 inline auto is_long(const Value & value) -> bool
 {
-  return value.index() == long_Index;
+  return is_variant_v<int64_t>(value);
 }
 
 inline auto is_double(const Value & value) -> bool
 {
-  return value.index() == double_Index;
+  return is_variant_v<double>(value);
 }
 
 inline auto is_numeric(const Value & value) -> bool
 {
-  return value.index() == long_Index || value.index() == double_Index;
+  return is_long(value) || is_double(value);
 }
 
 inline auto is_str(const Value & value) -> bool
 {
-  return value.index() == str_Index;
+  return is_variant_v<std::string>(value);
 }
 
 };  // namespace helper

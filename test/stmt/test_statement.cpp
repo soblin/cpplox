@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/interpreter.hpp>
 #include <cpplox/parser.hpp>
 #include <cpplox/tokenizer.hpp>
@@ -156,7 +157,7 @@ if (a == "123"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        100                       //<! test
+        int64_t{100}              //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -172,7 +173,7 @@ if (a == "1234"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        1000                      //<! test
+        int64_t{1000}             //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -190,7 +191,7 @@ if (a == "1234"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        200                       //<! test
+        int64_t{200}              //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -209,7 +210,7 @@ print b;
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        200                       //<! test
+        int64_t{200}              //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -228,7 +229,7 @@ print b;
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        10                        //<! test
+        int64_t{10}               //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -246,7 +247,7 @@ if (a == "1234"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        300                       //<! test
+        int64_t{300}              //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -264,7 +265,7 @@ if (var c = "12345"; c == "12345"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        100                       //<! test
+        int64_t{100}              //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -282,7 +283,7 @@ if (var c = "12345"; c != "12345"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        12345                     //<! test
+        int64_t{12345}            //<! test
       }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -300,10 +301,10 @@ if (var c = "12345"; c != "12345"){
 }
 )",
       {{
-        6,                        //<! "b"
-        lox::helper::long_Index,  //<! long
-        10 + 12345 + 123456       //<! test
-      }}},                        //
+        6,                            //<! "b"
+        lox::helper::long_Index,      //<! long
+        int64_t{10 + 12345 + 123456}  //<! test
+      }}},                            //
     //
     TestStmtVariableSideEffectParam{
       R"(
@@ -322,7 +323,7 @@ if (var c = "12345"; c != "12345"){
       {{
         6,                        //<! "b"
         lox::helper::long_Index,  //<! long
-        54321                     //<! test
+        int64_t{54321}            //<! test
       }}},                        //
     /**
      * logical and/or, test side-effect of short-circuit
@@ -343,7 +344,7 @@ b = (c == "before") and (c = "after") == "after";
        {
          11,                      //<! "c"
          lox::helper::str_Index,  //<! string
-         "after",                 //<! test
+         std::string("after"),    //<! test
        }}},                       //
     //
     TestStmtVariableSideEffectParam{
@@ -361,7 +362,7 @@ b = (c == "before") or (c = "after") == "after";
        {
          11,                      //<! "c"
          lox::helper::str_Index,  //<! string
-         "before"                 //<! test
+         std::string("before")    //<! test
        }}},                       //
     //
     TestStmtVariableSideEffectParam{
@@ -379,7 +380,7 @@ b = (c == "before2") and (c = "after") == "after";
        {
          11,                      //<! "c"
          lox::helper::str_Index,  //<! string
-         "before"                 //<! test
+         std::string("before")    //<! test
        }}},                       //
     //
     TestStmtVariableSideEffectParam{
@@ -397,7 +398,7 @@ b = (c == "before2") or (c = "after") == "after";
        {
          11,                      //<! "c"
          lox::helper::str_Index,  //<! string
-         "after"                  //<! test
+         std::string("after")     //<! test
        }}},                       //
     //
     TestStmtVariableSideEffectParam{
@@ -433,17 +434,17 @@ while (a < 10) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
-         1100                      //<! test
+         int64_t{1100}             //<! test
        }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -461,18 +462,18 @@ for (a = 0; a < 10; a = a + 1) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
          7,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
-         13,                       //<! "c"
-         lox::helper::long_Index,  //<! long
-         (10 + (10 * 20)) * 10     //<! test
-       }}},                        //
+         13,                             //<! "c"
+         lox::helper::long_Index,        //<! long
+         int64_t{(10 + (10 * 20)) * 10}  //<! test
+       }}},                              //
     //
     TestStmtVariableSideEffectParam{
       R"(
@@ -489,13 +490,13 @@ for (a = 0; a < 10; a = a + 1) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
-         13,                       //<! "c"
-         lox::helper::long_Index,  //<! long
-         (10 + (10 * 20)) * 10     //<! test
-       }}},                        //
+         13,                             //<! "c"
+         lox::helper::long_Index,        //<! long
+         int64_t{(10 + (10 * 20)) * 10}  //<! test
+       }}},                              //
     //
     TestStmtVariableSideEffectParam{
       R"(
@@ -513,18 +514,18 @@ for (; a < 10; a = a + 1) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
-         11,                       //<! "c"
-         lox::helper::long_Index,  //<! long
-         10 * 20 + 10 * 10         //<! test
-       }}},                        //
+         11,                         //<! "c"
+         lox::helper::long_Index,    //<! long
+         int64_t{10 * 20 + 10 * 10}  //<! test
+       }}},                          //
     //
     TestStmtVariableSideEffectParam{
       R"(
@@ -544,18 +545,18 @@ for (; a < 10;) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
-         11,                       //<! "c"
-         lox::helper::long_Index,  //<! long
-         10 * 20 + 10 * 10         //<! test
-       }}},                        //
+         11,                         //<! "c"
+         lox::helper::long_Index,    //<! long
+         int64_t{10 * 20 + 10 * 10}  //<! test
+       }}},                          //
     //
     TestStmtVariableSideEffectParam{
       R"(
@@ -574,12 +575,12 @@ for (;;) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         0                         //<! test
+         int64_t{0}                //<! test
        }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -599,12 +600,12 @@ for (;;) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         0                         //<! test
+         int64_t{0}                //<! test
        }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -629,17 +630,17 @@ for (;;) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -664,17 +665,17 @@ while (true) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        }}},                        //
     //
     TestStmtVariableSideEffectParam{
@@ -702,17 +703,17 @@ while (true) {
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         11                        //<! test
+         int64_t{11}               //<! test
        },
        {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        }}}));
 
 using TestFunctionValueParam = std::tuple<
@@ -765,17 +766,17 @@ foo(10, 20, 30);
       {{
          1,                        //<! "a"
          lox::helper::long_Index,  //<! long
-         10                        //<! test
+         int64_t{10}               //<! test
        },
        {
          6,                        //<! "b"
          lox::helper::long_Index,  //<! long
-         20                        //<! test
+         int64_t{20}               //<! test
        },
        {
          11,                       //<! "c"
          lox::helper::long_Index,  //<! long
-         30                        //<! test
+         int64_t{30}               //<! test
        }}},
     //
     TestFunctionValueParam{
@@ -797,7 +798,7 @@ a = fib(10);
       {{
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
-        55                        //<! test
+        int64_t{55}               //<! test
       }}},
     //
     TestFunctionValueParam{
@@ -820,7 +821,7 @@ a = fib(10);
       {{
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
-        55                        //<! test
+        int64_t{55}               //<! test
       }}},
     //
     TestFunctionValueParam{
@@ -842,7 +843,7 @@ a = fib(10);
       {{
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
-        55                        //<! test
+        int64_t{55}               //<! test
       }}},
     //
     TestFunctionValueParam{
@@ -862,7 +863,7 @@ a = sum(10);
       {{
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
-        55                        //<! test
+        int64_t{55}               //<! test
       }}},
     //
     TestFunctionValueParam{
@@ -886,7 +887,7 @@ a = sum(10);
       {{
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
-        55                        //<! test
+        int64_t{55}               //<! test
       }}},
     //
     TestFunctionValueParam{
@@ -903,7 +904,7 @@ foo();
       {{
         1,                        //<! "a"
         lox::helper::long_Index,  //<! long
-        10                        //<! test
+        int64_t{10}               //<! test
       }}}));
 
 TEST(Statement, if_statement)

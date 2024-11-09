@@ -5,32 +5,12 @@
 #include <boost/lexical_cast.hpp>
 
 #include <functional>
-#include <iostream>
 
 namespace lox
 {
 
 inline namespace interpreter
 {
-
-namespace
-{
-// LCOV_EXCL_START
-auto stringify = [](const Value & value) -> std::string {
-  return std::visit(
-    visit_variant{
-      [](const Nil & nil) -> std::string { return "nil"; },
-      [](const bool & boolean) -> std::string { return boolean ? "true" : "false"; },
-      [](const int64_t & i) -> std::string { return std::to_string(i); },
-      [](const double & d) -> std::string { return std::to_string(d); },
-      [](const std::string & str) -> std::string { return str; },
-      [](const Callable & callable) -> std::string {
-        return "<fn " + std::string(callable.definition->name.lexeme) + " >";
-      }},
-    value);
-};
-// LCOV_EXCL_STOP
-}  // namespace
 
 auto Interpreter::evaluate_expr(const Expr & expr) -> std::variant<Value, RuntimeError>
 {

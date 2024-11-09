@@ -532,6 +532,22 @@ void PrintResolveDeclVisitor::operator()(const FuncDecl & func_decl)
   ss << std::string(offset, ' ') << "| <-- end function -->" << std::endl;
 }
 
+auto stringify(const Value & value) -> std::string
+{
+  return boost::apply_visitor(StringifyExprVisitor(), value);
+}
+
 }  // namespace debug
 
+}  // namespace lox
+
+namespace lox
+{
+inline namespace expression
+{
+std::ostream & operator<<(std::ostream & os, const Value & value)
+{
+  return os << stringify(value);
+}
+}  // namespace expression
 }  // namespace lox

@@ -1,3 +1,4 @@
+#include <cpplox/debug.hpp>
 #include <cpplox/error.hpp>
 #include <cpplox/interpreter.hpp>
 #include <cpplox/parser.hpp>
@@ -94,7 +95,7 @@ INSTANTIATE_TEST_SUITE_P(
      * Math
      */
     //
-    TestExprValueParam{R"(45 * 67)", lox::helper::long_Index, 45 * 67},
+    TestExprValueParam{R"(45 * 67)", lox::helper::long_Index, int64_t{45 * 67}},
     //
     TestExprValueParam{
       R"(-123 * ((45.67) / (89.0)) - 1.23 + (4.567))", lox::helper::double_Index,
@@ -185,7 +186,8 @@ INSTANTIATE_TEST_SUITE_P(
     /**
      * String
      */
-    TestExprValueParam{R"("abc" + "def" + "ghi")", lox::helper::str_Index, "abcdefghi"}));
+    TestExprValueParam{
+      R"("abc" + "def" + "ghi")", lox::helper::str_Index, std::string("abcdefghi")}));
 
 int main(int argc, char ** argv)
 {
