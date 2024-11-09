@@ -689,9 +689,6 @@ auto Parser::call() -> std::variant<Expr, SyntaxError>
     return as_variant<SyntaxError>(primary_opt);
   }
   const auto & prim = as_variant<Expr>(primary_opt);
-  if (!match(TokenType::LeftParen)) {
-    return prim;
-  }
   std::vector<Expr> exprs{prim};
   while (true) {
     if (match(TokenType::LeftParen)) {

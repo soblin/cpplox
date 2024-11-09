@@ -6,7 +6,6 @@
 #include <boost/lexical_cast.hpp>
 
 #include <functional>
-#include <iostream>
 
 namespace lox
 {
@@ -350,7 +349,8 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
 
   if (is_variant_v<Class>(callee_value)) {
     const auto & cls = as_variant<Class>(callee_value);
-    return Instance{cls.definition};
+    return Instance{
+      cls.definition, std::make_shared<std::unordered_map<std::string_view, Value>>()};
   }
 
   const auto & callee = as_variant<Callable>(callee_value);
@@ -398,8 +398,8 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProp
     return NotInstanceError{property.base, property.prop};
   }
   const auto & base_instance = as_variant<Instance>(base);
-  const auto it = base_instance.fields.find(property.prop.lexeme);
-  if (it == base_instance.fields.end()) {
+  const auto it = base_instance.fields->find(property.prop.lexeme);
+  if (it == base_instance.fields->end()) {
     return InvalidAttributeError{property};
   }
   return it->second;
@@ -421,7 +421,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const SetPrope
   }
   const auto & rvalue = as_variant<Value>(rvalue_opt);
   auto & base_instance = as_variant_mut<Instance>(base);
-  base_instance.fields[property.prop.lexeme] = rvalue;
+  (*base_instance.fields)[property.prop.lexeme] = rvalue;
   return rvalue;
 }
 

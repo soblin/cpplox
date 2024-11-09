@@ -135,7 +135,7 @@ using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, 
 struct Instance
 {
   std::shared_ptr<const ClassDecl> definition;
-  std::unordered_map<std::string_view, Value> fields;
+  std::shared_ptr<std::unordered_map<std::string_view, Value>> fields;
 };
 
 namespace helper
