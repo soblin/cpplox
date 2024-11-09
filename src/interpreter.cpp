@@ -54,6 +54,7 @@ auto Interpreter::resolve(const Program & program) -> std::optional<CompileError
   return std::nullopt;
 }
 
+// LCOV_EXCL_START
 auto Interpreter::print_resolve(const Program & program) -> void
 {
   if (const auto resolve_result = resolve(program); resolve_result) {
@@ -66,6 +67,8 @@ auto Interpreter::print_resolve(const Program & program) -> void
     }
   }
 }
+
+// LCOV_EXCL_STOP
 
 auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>
 {
@@ -343,9 +346,16 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
     return as_variant<RuntimeError>(callee_opt);
   }
   const auto & callee_value = as_variant<Value>(callee_opt);
-  if (!is_variant_v<Callable>(callee_value)) {
+  if (!is_variant_v<Callable>(callee_value) && !is_variant_v<Class>(callee_value)) {
     return NotInvocableError{call.callee, "operand is not callable"};
   }
+
+  if (is_variant_v<Class>(callee_value)) {
+    const auto & cls = as_variant<Class>(callee_value);
+    return Instance{
+      cls.definition, std::make_shared<std::unordered_map<std::string_view, Value>>()};
+  }
+
   const auto & callee = as_variant<Callable>(callee_value);
   const auto & parameters = callee.definition->parameters;
   const auto & arguments = call.arguments;
@@ -378,6 +388,44 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
     return NoReturnFromFunction{callee};
   }
   return as_variant<Return>(procedure.value()).value;
+}
+
+std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProperty & property)
+{
+  const auto base_opt = boost::apply_visitor(*this, property.base);
+  if (is_variant_v<RuntimeError>(base_opt)) {
+    return as_variant<RuntimeError>(base_opt);
+  }
+  const auto & base = as_variant<Value>(base_opt);
+  if (!is_variant_v<Instance>(base)) {
+    return NotInstanceError{property.base, property.prop};
+  }
+  const auto & base_instance = as_variant<Instance>(base);
+  const auto it = base_instance.fields->find(property.prop.lexeme);
+  if (it == base_instance.fields->end()) {
+    return InvalidAttributeError{property};
+  }
+  return it->second;
+}
+
+std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const SetProperty & property)
+{
+  auto base_opt = boost::apply_visitor(*this, property.base);
+  if (is_variant_v<RuntimeError>(base_opt)) {
+    return as_variant<RuntimeError>(base_opt);
+  }
+  auto & base = as_variant_mut<Value>(base_opt);
+  if (!is_variant_v<Instance>(base)) {
+    return NotInstanceError{property.base, property.prop};
+  }
+  const auto rvalue_opt = impl::evaluate_expr_impl(property.value, lookup_, env, global_env);
+  if (is_variant_v<RuntimeError>(rvalue_opt)) {
+    return as_variant<RuntimeError>(rvalue_opt);
+  }
+  const auto & rvalue = as_variant<Value>(rvalue_opt);
+  auto & base_instance = as_variant_mut<Instance>(base);
+  base_instance.fields->operator[](property.prop.lexeme) = rvalue;
+  return rvalue;
 }
 
 auto evaluate_expr_impl(
@@ -724,6 +772,24 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl
   }
   return std::nullopt;
 }  // LCOV_EXCL_LINE
+
+std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDecl & class_decl)
+{
+  /*
+  if (const auto it = lookup_.find(class_decl.name); it != lookup_.end()) {
+    const auto assign_err = env->assign_deBruijn(
+      class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)}, it->second);
+    if (assign_err) {
+      return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
+    }
+    return std::nullopt;
+  } else {
+    return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
+  }
+  */
+  global_env->define(class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)});
+  return std::nullopt;
+}
 
 }  // namespace impl
 

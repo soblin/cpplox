@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace lox
@@ -14,7 +15,8 @@ namespace lox
 inline namespace stmt
 {
 struct FuncDecl;
-}
+struct ClassDecl;
+}  // namespace stmt
 
 inline namespace environment
 {
@@ -32,12 +34,15 @@ struct Variable;
 struct Assign;
 struct Logical;
 struct Call;
+struct ReadProperty;
+struct SetProperty;
 
 using Expr = boost::variant<
   Literal, boost::recursive_wrapper<Unary>, boost::recursive_wrapper<Binary>,
   boost::recursive_wrapper<Group>, boost::recursive_wrapper<Variable>,
   boost::recursive_wrapper<Assign>, boost::recursive_wrapper<Logical>,
-  boost::recursive_wrapper<Call>>;
+  boost::recursive_wrapper<Call>, boost::recursive_wrapper<ReadProperty>,
+  boost::recursive_wrapper<SetProperty>>;
 
 struct Literal : public Token
 {
@@ -92,6 +97,19 @@ struct Call
   const std::vector<Expr> arguments;
 };
 
+struct ReadProperty
+{
+  const Expr base;
+  const Token prop;
+};
+
+struct SetProperty
+{
+  const Expr base;
+  const Token prop;
+  const Expr value;
+};
+
 using Nil = std::monostate;
 
 struct Callable
@@ -105,7 +123,20 @@ struct Callable
   std::shared_ptr<Environment> closure;
 };
 
-using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable>;
+struct Class
+{
+  std::shared_ptr<const ClassDecl> definition;
+};
+
+struct Instance;
+
+using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, Class, Instance>;
+
+struct Instance
+{
+  std::shared_ptr<const ClassDecl> definition;
+  std::shared_ptr<std::unordered_map<std::string_view, Value>> fields;
+};
 
 namespace helper
 {

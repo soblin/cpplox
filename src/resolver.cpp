@@ -195,6 +195,13 @@ std::optional<CompileError> DeclResolver::operator()(const FuncDecl & func_decl)
   return std::nullopt;
 }
 
+std::optional<CompileError> DeclResolver::operator()(const ClassDecl & class_decl)
+{
+  declare(class_decl.name);
+  define(class_decl.name);
+  return std::nullopt;
+}
+
 void DeclResolver::begin_scope()
 {
   scopes.push_back({});
@@ -287,6 +294,29 @@ std::optional<CompileError> ExprResolver::operator()(const Call & call)
     if (const auto err = boost::apply_visitor(*this, argument); err) {
       return err;
     }
+  }
+  return std::nullopt;
+}
+
+std::optional<CompileError> ExprResolver::operator()(const ReadProperty & property)
+{
+  // NOTE: the property itself is resolved by the interpreter dynamically, so only `a, b, c` are
+  // evaluated in `foo.bar(a).foo2.bar2(b, c) for example
+  if (const auto err = boost::apply_visitor(*this, property.base); err) {
+    return err;
+  }
+  return std::nullopt;
+}
+
+std::optional<CompileError> ExprResolver::operator()(const SetProperty & property)
+{
+  // NOTE: the property itself is resolved by the interpreter dynamically, so only `a, b, c, d` are
+  // evaluated in `foo.bar(a).foo2.bar2(b, c) = d` for example
+  if (const auto err = boost::apply_visitor(*this, property.base); err) {
+    return err;
+  }
+  if (const auto err = boost::apply_visitor(*this, property.value); err) {
+    return err;
   }
   return std::nullopt;
 }

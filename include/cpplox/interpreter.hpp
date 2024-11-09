@@ -84,6 +84,10 @@ public:
   std::variant<Value, RuntimeError> operator()(const Logical & logical);
 
   std::variant<Value, RuntimeError> operator()(const Call & call);
+
+  std::variant<Value, RuntimeError> operator()(const ReadProperty & property);
+
+  std::variant<Value, RuntimeError> operator()(const SetProperty & property);
 };
 
 auto evaluate_expr_impl(
@@ -191,6 +195,8 @@ public:
   std::optional<RuntimeError> operator()(const Stmt & stmt);
 
   std::optional<RuntimeError> operator()(const FuncDecl & func_decl);
+
+  std::optional<RuntimeError> operator()(const ClassDecl & class_decl);
 };
 
 }  // namespace impl

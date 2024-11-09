@@ -52,7 +52,10 @@ struct VarDecl
 
 struct FuncDecl;
 
-using Declaration = boost::variant<VarDecl, Stmt, boost::recursive_wrapper<FuncDecl>>;
+struct ClassDecl;
+
+using Declaration = boost::variant<
+  VarDecl, Stmt, boost::recursive_wrapper<FuncDecl>, boost::recursive_wrapper<ClassDecl>>;
 
 struct Block
 {
@@ -64,6 +67,12 @@ struct FuncDecl
   const Token name;
   const Tokens parameters;
   const Block body;
+};
+
+struct ClassDecl
+{
+  const Token name;
+  std::vector<FuncDecl> methods;
 };
 
 struct BranchClause

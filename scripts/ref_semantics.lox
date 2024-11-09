@@ -1,0 +1,20 @@
+class Foo {
+  fun bar(a) {
+    print a;
+    return;
+  }
+}
+
+var foo1 = Foo();
+foo1.a = "hello world@foo1";
+print "foo1.a = " + foo1.a;
+
+var foo2 = foo1;
+
+print "--- foo2 = foo1 ---";
+print "foo2.a = " + foo2.a;
+
+print "--- foo2.a = 'hello world@foo2' ---";
+foo2.a = "hello world@foo2";
+
+print "foo1.a = " + foo1.a;

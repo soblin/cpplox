@@ -34,6 +34,7 @@ enum class SyntaxErrorKind {
   MissingFuncParameterDecl,    //<! function declaration without parenthesis "()"
   InvalidParameterDecl,        //<! parameter is not identifier
   MissingFuncBodyDecl,         //<! function declaration lacks body
+  MissingClassBodyDecl,        //<! class declaration lacks body
 };
 
 struct SyntaxError
@@ -118,9 +119,20 @@ struct RedefinitionError
 
 using CompileError = std::variant<UndefVariableError, RedefinitionError>;
 
+struct NotInstanceError
+{
+  const Expr base;
+  const Token prop;
+};
+
+struct InvalidAttributeError
+{
+  const ReadProperty property;
+};
+
 using RuntimeError = std::variant<
   TypeError, UndefinedVariableError, MaxLoopError, NotInvocableError, NoReturnFromFunction,
-  CompileError>;
+  CompileError, NotInstanceError, InvalidAttributeError>;
 
 // LCOV_EXCL_START
 auto get_line_string(const RuntimeError & error, const size_t offset = 0) -> std::string;

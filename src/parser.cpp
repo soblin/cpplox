@@ -52,6 +52,15 @@ auto Parser::declaration() -> std::variant<Declaration, SyntaxError>
     return as_variant<FuncDecl>(func_decl_opt);
   }
 
+  // <class_decl>
+  if (match(TokenType::Class)) {
+    const auto class_decl_opt = class_decl();
+    if (is_variant_v<SyntaxError>(class_decl_opt)) {
+      return as_variant<SyntaxError>(class_decl_opt);
+    }
+    return as_variant<ClassDecl>(class_decl_opt);
+  }
+
   const auto statement_opt = statement();
   if (is_variant_v<SyntaxError>(statement_opt)) {
     return as_variant<SyntaxError>(statement_opt);
@@ -216,6 +225,31 @@ auto Parser::func_decl() -> std::variant<FuncDecl, SyntaxError>
     return as_variant<SyntaxError>(block_opt);
   }
   return FuncDecl{name, parameters, as_variant<Block>(block_opt)};
+}
+
+auto Parser::class_decl() -> std::variant<ClassDecl, SyntaxError>
+{
+  advance();  // consume "class"
+  const auto name = peek();
+  advance();  // consume class-name
+  const auto class_ctx = current_;
+  if (!match(TokenType::LeftBrace)) {
+    return create_error(SyntaxErrorKind::MissingClassBodyDecl, class_ctx);
+  }
+  advance();  // consume "{"
+  std::vector<FuncDecl> methods;
+  while (true) {
+    if (match(TokenType::RightBrace)) {
+      advance();  // consume "}"
+      break;
+    }
+    const auto method_opt = func_decl();
+    if (is_variant_v<SyntaxError>(method_opt)) {
+      return as_variant<SyntaxError>(method_opt);
+    }
+    methods.push_back(as_variant<FuncDecl>(method_opt));
+  }
+  return ClassDecl{name, methods};
 }
 
 auto Parser::expr_statement() -> std::variant<ExprStmt, SyntaxError>
@@ -497,17 +531,22 @@ auto Parser::assignment() -> std::variant<Expr, SyntaxError>
   }
   if (match(TokenType::Equal)) {
     const auto & lvalue_expr = as_variant<Expr>(left_expr_opt);
-    if (!is_variant_v<Variable>(lvalue_expr)) {
+    if (!is_variant_v<Variable>(lvalue_expr) && !is_variant_v<ReadProperty>(lvalue_expr)) {
       return create_error(SyntaxErrorKind::InvalidAssignmentTarget, error_ctx_assign_target);
     }
-    const auto & lvalue = as_variant<Variable>(lvalue_expr);
     advance();  // consume '='
     const auto rvalue_expr = assignment();
     if (is_variant_v<SyntaxError>(rvalue_expr)) {
       return as_variant<SyntaxError>(rvalue_expr);
     }
     const auto & rvalue = as_variant<Expr>(rvalue_expr);
-    return Assign{lvalue.name, rvalue};
+    if (is_variant_v<Variable>(lvalue_expr)) {
+      const auto & lvalue = as_variant<Variable>(lvalue_expr);
+      return Assign{lvalue.name, rvalue};
+    } else {
+      const auto & lvalue = as_variant<ReadProperty>(lvalue_expr);
+      return SetProperty{lvalue.base, lvalue.prop, rvalue};
+    }
   }
   return left_expr_opt;
 }
@@ -649,23 +688,29 @@ auto Parser::call() -> std::variant<Expr, SyntaxError>
     return as_variant<SyntaxError>(primary_opt);
   }
   const auto & prim = as_variant<Expr>(primary_opt);
-  if (!match(TokenType::LeftParen)) {
-    return prim;
-  }
   std::vector<Expr> exprs{prim};
-  while (match(TokenType::LeftParen)) {
-    const auto paren_ctx = current_;
-    advance();  // consume '('
-    const auto arguments_opt = arguments();
-    if (is_variant_v<SyntaxError>(arguments_opt)) {
-      return as_variant<SyntaxError>(arguments_opt);
+  while (true) {
+    if (match(TokenType::LeftParen)) {
+      const auto paren_ctx = current_;
+      advance();  // consume '('
+      const auto arguments_opt = arguments();
+      if (is_variant_v<SyntaxError>(arguments_opt)) {
+        return as_variant<SyntaxError>(arguments_opt);
+      }
+      const auto caller = Call{exprs.back(), as_variant<std::vector<Expr>>(arguments_opt)};
+      if (!match(TokenType::RightParen)) {
+        create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
+      }
+      exprs.push_back(caller);
+      advance();  // consume ')'
+    } else if (match(TokenType::Dot)) {
+      advance();  // consume '.'
+      const auto r_prop = ReadProperty{exprs.back(), peek()};
+      advance();  // consume property-name after '.'
+      exprs.push_back(r_prop);
+    } else {
+      break;
     }
-    const auto caller = Call{exprs.back(), as_variant<std::vector<Expr>>(arguments_opt)};
-    if (!match(TokenType::RightParen)) {
-      create_error(SyntaxErrorKind::UnmatchedParenError, paren_ctx);
-    }
-    exprs.push_back(caller);
-    advance();  // consume ')'
   }
   return exprs.back();
 }

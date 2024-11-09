@@ -73,6 +73,21 @@ public:
     }
     ss << ")";
   }
+
+  void operator()(const ReadProperty & property)
+  {
+    ss << "(get-dot ";
+    boost::apply_visitor(*this, property.base);
+    ss << property.prop.lexeme << ")";
+  }
+
+  void operator()(const SetProperty & property)
+  {
+    ss << "(set-dot ";
+    boost::apply_visitor(*this, property.base);
+    boost::apply_visitor(*this, property.value);
+    ss << property.prop.lexeme << ")";
+  }
 };
 
 auto to_lisp_repr(const Expr & expr) -> std::string
@@ -164,6 +179,19 @@ public:
       return {left_start, left_end};
     }
     const auto [right_start, right_end] = boost::apply_visitor(*this, call.arguments.back());
+    return {left_start, right_end};
+  }
+
+  std::pair<Token, Token> operator()(const ReadProperty & property)
+  {
+    const auto [left_start, ignore1] = boost::apply_visitor(*this, property.base);
+    return {left_start, property.prop};
+  }
+
+  std::pair<Token, Token> operator()(const SetProperty & property)
+  {
+    const auto [left_start, ignore1] = boost::apply_visitor(*this, property.base);
+    const auto [ignore2, right_end] = boost::apply_visitor(*this, property.value);
     return {left_start, right_end};
   }
 };
@@ -381,6 +409,19 @@ void PrintResolveExprVisitor::operator()(const Call & expr)
   }
 }
 
+void PrintResolveExprVisitor::operator()(const ReadProperty & property)
+{
+  // NOTE: for method/fields, there is no lexical scope
+  boost::apply_visitor(*this, property.base);
+}
+
+void PrintResolveExprVisitor::operator()(const SetProperty & property)
+{
+  // NOTE: for method/fields, there is no lexical scope
+  boost::apply_visitor(*this, property.base);
+  boost::apply_visitor(*this, property.value);
+}
+
 void PrintResolveStmtVisitor::operator()(const ExprStmt & stmt)
 {
   PrintResolveExprVisitor expr_visitor(lookup);
@@ -529,6 +570,18 @@ void PrintResolveDeclVisitor::operator()(const FuncDecl & func_decl)
   PrintResolveStmtVisitor stmt_visitor(offset, lookup);
   boost::apply_visitor(stmt_visitor, Stmt{func_decl.body});
   ss << stmt_visitor.ss.str();
+  ss << std::string(offset, ' ') << "| <-- end function -->" << std::endl;
+}
+
+void PrintResolveDeclVisitor::operator()(const ClassDecl & class_decl)
+{
+  ss << std::string(offset, ' ') << "| <-- in class '" << class_decl.name.lexeme << "' -->"
+     << std::endl;
+  for (const auto & method : class_decl.methods) {
+    PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
+    boost::apply_visitor(decl_visitor, Declaration{method});
+    ss << decl_visitor.ss.str();
+  }
   ss << std::string(offset, ' ') << "| <-- end function -->" << std::endl;
 }
 

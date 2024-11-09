@@ -76,6 +76,8 @@ public:
 
   std::optional<CompileError> operator()(const FuncDecl & func_decl);
 
+  std::optional<CompileError> operator()(const ClassDecl & class_decl);
+
 private:
   ScopeChain & scopes;
   ScopeLookup & lookup;
@@ -106,6 +108,10 @@ public:
   std::optional<CompileError> operator()(const Logical & logical);
 
   std::optional<CompileError> operator()(const Call & call);
+
+  std::optional<CompileError> operator()(const ReadProperty & property);
+
+  std::optional<CompileError> operator()(const SetProperty & property);
 
 private:
   ScopeChain & scopes;

@@ -22,7 +22,7 @@ public:
   auto program() -> std::variant<Program, SyntaxError>;
 
   /**
-   * @brief <declaration> ::= <var_decl> | <statement> | <func_decl>
+   * @brief <declaration> ::= <var_decl> | <statement> | <func_decl> | <class_decl>
    */
   auto declaration() -> std::variant<Declaration, SyntaxError>;
 
@@ -43,6 +43,12 @@ public:
    * @detail responsible for consuming from "fun" to the end of the { <body> }
    */
   auto func_decl() -> std::variant<FuncDecl, SyntaxError>;
+
+  /**
+   * @brief <class_decl> ::= "class" IDENTIFIER "{" <func_decl>* "}"
+   * @detail responsible for consuming from "class" to last "}"
+   */
+  auto class_decl() -> std::variant<ClassDecl, SyntaxError>;
 
   /**
    * @brief <parameters> ::= IDENTIFIER ( "," IDENTIFIER )*
@@ -114,7 +120,7 @@ public:
   auto expression() -> std::variant<Expr, SyntaxError>;
 
   /**
-    @brief <assignment> ::= IDENTIFIER "=" <assignment> | <logic_or>
+    @brief <assignment> ::= ( <call> "." )? IDENTIFIER "=" <assignment> | <logic_or>
    */
   auto assignment() -> std::variant<Expr, SyntaxError>;
 
@@ -158,8 +164,8 @@ private:
   auto unary() -> std::variant<Expr, SyntaxError>;
 
   /**
-   * @brief <call> ::= <primary> ( "(" <arguments>?")" )*
-   * matches like foo(), foo()(), foo(1)(1,2)(1,2,3)
+   * @brief <call> ::= <primary> ( "(" <arguments>?")" | "." IDENTIFIER)*
+   * matches like foo(), foo()(), foo(1)(1,2)(1,2,3). foo().bar
    */
   auto call() -> std::variant<Expr, SyntaxError>;
 
