@@ -54,6 +54,7 @@ auto Interpreter::resolve(const Program & program) -> std::optional<CompileError
   return std::nullopt;
 }
 
+// LCOV_EXCL_START
 auto Interpreter::print_resolve(const Program & program) -> void
 {
   if (const auto resolve_result = resolve(program); resolve_result) {
@@ -66,6 +67,8 @@ auto Interpreter::print_resolve(const Program & program) -> void
     }
   }
 }
+
+// LCOV_EXCL_STOP
 
 auto Interpreter::get_variable(const Token & token) const -> std::optional<Value>
 {
