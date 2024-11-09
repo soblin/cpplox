@@ -421,7 +421,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const SetPrope
   }
   const auto & rvalue = as_variant<Value>(rvalue_opt);
   auto & base_instance = as_variant_mut<Instance>(base);
-  (*base_instance.fields)[property.prop.lexeme] = rvalue;
+  base_instance.fields->operator[](property.prop.lexeme) = rvalue;
   return rvalue;
 }
 
