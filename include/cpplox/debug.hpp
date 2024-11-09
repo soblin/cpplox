@@ -4,6 +4,7 @@
 #include <cpplox/expression.hpp>
 #include <cpplox/resolver.hpp>
 
+#include <iosfwd>
 #include <sstream>
 #include <string>
 
@@ -114,5 +115,34 @@ private:
   const size_t skip{4};
 };
 
+class StringifyExprVisitor : boost::static_visitor<std::string>
+{
+public:
+  std::string operator()(const Nil & expr) { return "nil"; }
+
+  std::string operator()(const bool & expr) { return expr ? "true" : "false"; }
+
+  std::string operator()(const int64_t & expr) { return std::to_string(expr); }
+
+  std::string operator()(const double & expr) { return std::to_string(expr); }
+
+  std::string operator()(const std::string & expr) { return expr; }
+
+  std::string operator()(const Callable & expr)
+  {
+    return "<fn " + std::string(expr.definition->name.lexeme) + " >";
+  }
+};
+
+auto stringify(const Value & value) -> std::string;
+
 }  // namespace debug
+}  // namespace lox
+
+namespace lox
+{
+inline namespace expression
+{
+std::ostream & operator<<(std::ostream & os, const Value & value);
+}  // namespace expression
 }  // namespace lox
