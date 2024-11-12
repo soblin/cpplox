@@ -352,8 +352,7 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const Call & c
 
   if (is_variant_v<Class>(callee_value)) {
     const auto & cls = as_variant<Class>(callee_value);
-    return Instance{
-      cls.definition, std::make_shared<std::unordered_map<std::string_view, Value>>()};
+    return Instance{cls, std::make_shared<std::unordered_map<std::string_view, Value>>()};
   }
 
   const auto & callee = as_variant<Callable>(callee_value);
@@ -401,11 +400,16 @@ std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const ReadProp
     return NotInstanceError{property.base, property.prop};
   }
   const auto & base_instance = as_variant<Instance>(base);
-  const auto it = base_instance.fields->find(property.prop.lexeme);
-  if (it == base_instance.fields->end()) {
-    return InvalidAttributeError{property};
+  const auto it_field = base_instance.fields->find(property.prop.lexeme);
+  if (it_field == base_instance.fields->end()) {
+    const auto & methods = base_instance.cls->methods;
+    const auto it_method = methods.find(property.prop.lexeme);
+    if (it_method == methods.end()) {
+      return InvalidAttributeError{property};
+    }
+    return it_method->second;
   }
-  return it->second;
+  return it_field->second;
 }
 
 std::variant<Value, RuntimeError> EvaluateExprVisitor::operator()(const SetProperty & property)
@@ -775,19 +779,15 @@ std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const FuncDecl
 
 std::optional<RuntimeError> ExecuteDeclarationVisitor::operator()(const ClassDecl & class_decl)
 {
-  /*
-  if (const auto it = lookup_.find(class_decl.name); it != lookup_.end()) {
-    const auto assign_err = env->assign_deBruijn(
-      class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)}, it->second);
-    if (assign_err) {
-      return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
-    }
-    return std::nullopt;
-  } else {
-    return UndefinedVariableError{class_decl.name, Variable{class_decl.name}};
+  std::unordered_map<std::string_view, Callable> methods;
+  // TODO(soblin): define "this" here
+  auto class_env = std::make_shared<Environment>(global_env);
+  for (const auto & [name, decl] : class_decl.methods) {
+    methods.emplace(name, Callable{std::make_shared<FuncDecl>(decl), class_env});
   }
-  */
-  global_env->define(class_decl.name, Class{std::make_shared<const ClassDecl>(class_decl)});
+  global_env->define(
+    class_decl.name,
+    std::make_shared<ClassTemplate>(std::make_shared<const ClassDecl>(class_decl), methods));
   return std::nullopt;
 }
 

@@ -141,12 +141,12 @@ public:
 
   std::string operator()(const Class & expr)
   {
-    return "<class definition " + std::string(expr.definition->name.lexeme) + " >";
+    return "<class definition " + std::string(expr->definition->name.lexeme) + " >";
   }
 
   std::string operator()(const Instance & expr)
   {
-    return "<instance " + std::string(expr.definition->name.lexeme) + ">";
+    return "<instance " + std::string(expr.cls->definition->name.lexeme) + ">";
   }
 };
 

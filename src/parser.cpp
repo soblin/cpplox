@@ -237,7 +237,7 @@ auto Parser::class_decl() -> std::variant<ClassDecl, SyntaxError>
     return create_error(SyntaxErrorKind::MissingClassBodyDecl, class_ctx);
   }
   advance();  // consume "{"
-  std::vector<FuncDecl> methods;
+  std::unordered_map<std::string_view, FuncDecl> methods;
   while (true) {
     if (match(TokenType::RightBrace)) {
       advance();  // consume "}"
@@ -247,7 +247,9 @@ auto Parser::class_decl() -> std::variant<ClassDecl, SyntaxError>
     if (is_variant_v<SyntaxError>(method_opt)) {
       return as_variant<SyntaxError>(method_opt);
     }
-    methods.push_back(as_variant<FuncDecl>(method_opt));
+    const auto & method = as_variant<FuncDecl>(method_opt);
+    // TODO(soblin): deal with overloads
+    methods.emplace(method.name.lexeme, method);
   }
   return ClassDecl{name, methods};
 }
