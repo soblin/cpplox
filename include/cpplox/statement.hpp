@@ -4,6 +4,7 @@
 #include <boost/variant/recursive_variant.hpp>
 
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace lox
@@ -72,7 +73,7 @@ struct FuncDecl
 struct ClassDecl
 {
   const Token name;
-  std::vector<FuncDecl> methods;
+  const std::unordered_map<std::string_view, FuncDecl> methods;
 };
 
 struct BranchClause

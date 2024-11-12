@@ -577,7 +577,7 @@ void PrintResolveDeclVisitor::operator()(const ClassDecl & class_decl)
 {
   ss << std::string(offset, ' ') << "| <-- in class '" << class_decl.name.lexeme << "' -->"
      << std::endl;
-  for (const auto & method : class_decl.methods) {
+  for (const auto & [name, method] : class_decl.methods) {
     PrintResolveDeclVisitor decl_visitor(offset + skip, lookup);
     boost::apply_visitor(decl_visitor, Declaration{method});
     ss << decl_visitor.ss.str();

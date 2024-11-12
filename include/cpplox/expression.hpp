@@ -123,10 +123,20 @@ struct Callable
   std::shared_ptr<Environment> closure;
 };
 
-struct Class
+struct ClassTemplate
 {
   std::shared_ptr<const ClassDecl> definition;
+  std::unordered_map<std::string_view, Callable> methods;
+
+  ClassTemplate(
+    const std::shared_ptr<const ClassDecl> definition,
+    const std::unordered_map<std::string_view, Callable> & methods)
+  : definition(definition), methods(methods)
+  {
+  }
 };
+
+using Class = std::shared_ptr<ClassTemplate>;
 
 struct Instance;
 
@@ -134,7 +144,7 @@ using Value = boost::variant<Nil, bool, int64_t, double, std::string, Callable, 
 
 struct Instance
 {
-  std::shared_ptr<const ClassDecl> definition;
+  Class cls;
   std::shared_ptr<std::unordered_map<std::string_view, Value>> fields;
 };
 

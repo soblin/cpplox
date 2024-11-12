@@ -199,6 +199,12 @@ std::optional<CompileError> DeclResolver::operator()(const ClassDecl & class_dec
 {
   declare(class_decl.name);
   define(class_decl.name);
+
+  for (const auto & [name, method] : class_decl.methods) {
+    if (const auto err = boost::apply_visitor(DeclResolver(scopes, lookup), Declaration{method});
+        err)
+      return err;
+  }
   return std::nullopt;
 }
 
