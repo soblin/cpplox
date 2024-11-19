@@ -97,6 +97,9 @@ struct Call
   const std::vector<Expr> arguments;
 };
 
+// utilize ReadProperty by putting instance.fields(shared_ptr) into `local_env` of Callable object
+// of class methods. then I can access to this.foo which is registered as `foo` key
+// need to wrap instance.fields(shared_ptr) as some sort of Expr of ReadProperty
 struct ReadProperty
 {
   const Expr base;
