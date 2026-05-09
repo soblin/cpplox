@@ -1,0 +1,26 @@
+{
+    "name": "cpplox-devcontainer",
+
+    "build": {
+        "dockerfile": "../Dockerfile"
+    },
+
+    "remoteUser": "vscode",
+
+    "initializeCommand": ".devcontainer/scripts/export_git_config.sh",
+    "postCreateCommand": ".devcontainer/scripts/import_git_config.sh",
+
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+    ],
+
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {},
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers-extra/features/pre-commit:2": {}
+    },
+
+    "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+}
