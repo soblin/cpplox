@@ -4,8 +4,6 @@
 
 [codecov](https://app.codecov.io/github/soblin/cpplox/tree/main/src)
 
-# dependency
+## development
 
-- clang/clang++(18)
-- libreadline-dev
-- libgtest-dev
+`cp .env.example .env` is required. Then `devcontainer up && devcontainer exec bash` to attach to the container.

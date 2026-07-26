@@ -1,0 +1,14 @@
+# docker-compose.yml
+services:
+  development:
+    image: cpplox-development:latest
+    container_name: cpplox-development-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      CC: ${CC}
+      CXX: ${CXX}
+      CTEST_OUTPUT_ON_FAILURE: ${CTEST_OUTPUT_ON_FAILURE}
+    command: bash
+    tty: true
