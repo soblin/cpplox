@@ -1,20 +1,14 @@
-FROM ubuntu:22.04
+# syntax=docker/dockerfile:1
+FROM ubuntu:24.04
 
 ENV CTEST_OUTPUT_ON_FAILURE=1
 ENV CC=clang
 ENV CXX=clang++
 
 ARG CLANG_VERSION=18
-ARG LIB_STDCPP_VERSION=12
+ARG LIB_STDCPP_VERSION=13
 
 RUN apt-get update && apt-get install -y git curl wget lsb-release software-properties-common
-
-WORKDIR /tmp
-
-ADD --chown=root:root --chmod=777 https://apt.llvm.org/llvm.sh llvm.sh
-
-# C++
-RUN ./llvm.sh ${CLANG_VERSION}
 
 RUN apt-get update && apt-get install -y \
     clang-${CLANG_VERSION} \
@@ -31,4 +25,4 @@ RUN update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-
 RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-${CLANG_VERSION} ${CLANG_VERSION}
 RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_VERSION} ${CLANG_VERSION}
 
-RUN apt-get update && apt-get install -y cmake libreadline-dev libgtest-dev libboost-all-dev
+RUN apt-get update && apt-get install -y cmake libreadline-dev libgtest-dev libboost-all-dev libmagicenum-dev
