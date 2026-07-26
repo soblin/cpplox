@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: sudo apt-get install -y libboost-dev libmagicenum-dev libgtest-dev lcov llvm
+        run: sudo apt-get install -y libreadline-dev libgtest-dev libboost-all-dev libmagicenum-dev lcov llvm
 
       - name: Build
         shell: bash
