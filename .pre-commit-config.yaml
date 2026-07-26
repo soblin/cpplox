@@ -49,3 +49,9 @@ repos:
         # You can test this by 'pre-commit run cppcheck --verbose'
         # args: [--enable=all --inconclusive --check-level=exhaustive \
         # --error-exitcode=1 --xml --inline-suppr -j]
+
+  # docker
+  - repo: https://github.com/shenxianpeng/hadolint-pre-commit
+    rev: v2.14.0.1
+    hooks:
+      - id: hadolint
