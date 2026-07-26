@@ -1,10 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM ubuntu:24.04
 
-ENV CTEST_OUTPUT_ON_FAILURE=1
-ENV CC=clang
-ENV CXX=clang++
-
 ARG CLANG_VERSION=18
 ARG LIB_STDCPP_VERSION=13
 

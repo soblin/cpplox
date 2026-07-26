@@ -1,15 +1,12 @@
 {
-    "build": {
-        "dockerfile": "../Dockerfile"
-    },
-
-
-    "runArgs": [
-        "--name=cpplox-devcontainer",
-        "--rm"
+    "dockerComposeFile": [
+        "../docker-compose.yaml"
     ],
+    "service": "development",
 
     "remoteUser": "ubuntu",
+
+    "workspaceFolder": "/workspace",
 
     "mounts": [
         {"type":"bind","source":"${localWorkspaceFolder}","target":"/workspace"},
@@ -23,5 +20,7 @@
         "ghcr.io/devcontainers/features/git:1": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers-extra/features/pre-commit:2": {}
-    }
+    },
+
+    "postCreateCommand": "sudo chown -R 1000:1000 /home/ubuntu/.cache"
 }
