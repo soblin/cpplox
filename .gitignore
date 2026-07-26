@@ -1,1 +1,5 @@
 ./lox
+.cache/
+build/
+.devcontainer/devcontainer-lock.json
+.devcontainer/scripts/gitconfig.export
