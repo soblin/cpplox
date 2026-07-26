@@ -42,7 +42,8 @@ jobs:
       - name: Measure Coverage
         run: |
           cd build
-          lcov -c -d . -o lcov.info --gcov-tool ${{ github.workspace }}/test/llvm-gcov.sh
+          lcov --version
+          lcov -c -d . -o lcov.info --gcov-tool ${{ github.workspace }}/test/llvm-gcov.sh --ignore-errors inconsistent
           lcov --remove lcov.info '/usr/*' --output-file lcov.info --ignore-errors inconsistent
 
       - name: Upload Coverage
