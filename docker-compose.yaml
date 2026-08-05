@@ -6,9 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      CC: ${CC}
-      CXX: ${CXX}
-      CTEST_OUTPUT_ON_FAILURE: ${CTEST_OUTPUT_ON_FAILURE}
+    env_file:
+      - .env.example
     command: bash
     tty: true
