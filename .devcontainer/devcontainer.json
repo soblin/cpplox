@@ -6,8 +6,6 @@
 
     "remoteUser": "ubuntu",
 
-    "workspaceFolder": "/workspace",
-
     "mounts": [
         {"type":"bind","source":"${localWorkspaceFolder}","target":"/workspace"},
         {"type":"volume","source":"cpplox-cache", "target":"/home/ubuntu/.cache"},
