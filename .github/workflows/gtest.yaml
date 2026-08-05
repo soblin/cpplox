@@ -39,7 +39,7 @@ jobs:
         run: |
           cd build
           lcov --version
-          lcov -c -d . -o lcov.info --gcov-tool ${{ github.workspace }}/test/llvm-gcov.sh --ignore-errors inconsistent
+          lcov -c -d . -o lcov.info --gcov-tool ../test/llvm-gcov.sh --ignore-errors inconsistent
           lcov --remove lcov.info '/usr/*' --output-file lcov.info --ignore-errors inconsistent
 
       - name: Upload Coverage
