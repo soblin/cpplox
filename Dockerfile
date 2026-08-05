@@ -24,4 +24,4 @@ RUN update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-
 RUN update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-${CLANG_VERSION} ${CLANG_VERSION}
 RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${CLANG_VERSION} ${CLANG_VERSION}
 
-RUN apt-get update && apt-get install -y cmake libreadline-dev libgtest-dev libboost-all-dev libmagicenum-dev
+RUN apt-get update && apt-get install -y cmake libreadline-dev libgtest-dev libboost-all-dev libmagicenum-dev lcov llvm
