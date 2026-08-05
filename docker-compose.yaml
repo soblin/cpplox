@@ -1,11 +1,11 @@
 # docker-compose.yml
 services:
   development:
-    image: cpplox-development:latest
+    image: ghcr.io/soblin/cpplox-devcontainer:latest
     container_name: cpplox-development-container
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     env_file:
       - .env.example
     command: bash
