@@ -22,5 +22,5 @@
         "ghcr.io/devcontainers-extra/features/pre-commit:2": {}
     },
 
-    "postCreateCommand": "sudo chown -R 1000:1000 /home/ubuntu/.cache"
+    "postCreateCommand": "sudo chown -R 1000:1000 /home/ubuntu/.cache || true"
 }
