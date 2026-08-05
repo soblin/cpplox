@@ -12,19 +12,15 @@ on:  # yamllint disable-line rule:truthy
 jobs:
   # this should be the name used in "Require status checks to pass"
   check-gtest:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/soblin/cpplox-devcontainer:latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: sudo apt-get install -y libreadline-dev libgtest-dev libboost-all-dev libmagicenum-dev lcov llvm
-
       - name: Build
         shell: bash
-        env:
-          CC: clang
-          CXX: clang++
         run: |
           mkdir build
           cd build
@@ -43,7 +39,7 @@ jobs:
         run: |
           cd build
           lcov --version
-          lcov -c -d . -o lcov.info --gcov-tool ${{ github.workspace }}/test/llvm-gcov.sh --ignore-errors inconsistent
+          lcov -c -d . -o lcov.info --gcov-tool ../test/llvm-gcov.sh --ignore-errors inconsistent
           lcov --remove lcov.info '/usr/*' --output-file lcov.info --ignore-errors inconsistent
 
       - name: Upload Coverage
