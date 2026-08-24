@@ -2,12 +2,14 @@
     "dockerComposeFile": [
         "../docker-compose.yaml"
     ],
-    "service": "development",
+    "service": "devcontainer",
 
     "remoteUser": "ubuntu",
 
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "workspaceFolder": "/workspace",
+
     "mounts": [
-        {"type":"bind","source":"${localWorkspaceFolder}","target":"/workspace"},
         {"type":"volume","source":"cpplox-cache", "target":"/home/ubuntu/.cache"},
         {"type":"volume","source":"cpplox-config", "target":"/home/ubuntu/.config"},
         {"type":"bind","source":"${localEnv:HOME}/.ssh", "target":"/home/ubuntu/.ssh"}
