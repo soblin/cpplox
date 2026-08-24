@@ -1,11 +1,15 @@
 # docker-compose.yml
 services:
-  development:
+  devcontainer:
     image: ghcr.io/soblin/cpplox-devcontainer:latest
     container_name: cpplox-development-container
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    # NOTE: on codespace, "workspaceFolder" command fails to chdir
+    # to the specified folder
+    volumes:
+      - type: bind
+        source: "."
+        target: "/workspace"
+    working_dir: "/workspace"
     env_file:
       - .env.example
     command: bash
